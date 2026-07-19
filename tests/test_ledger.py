@@ -1191,6 +1191,43 @@ class ReaderTests(CliCase):
 
         self.assertIn("compressed", error["error"].lower())
 
+    def test_show_rejects_trailing_compressed_payload_data(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "doc.md",
+            b"# Exact\n\nPayload.\n",
+            "Exact",
+            "notes",
+        )
+        document_id = scan["documents"][0]["id"]
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            trigger_sql = connection.execute(
+                """
+                SELECT sql FROM sqlite_schema
+                WHERE type = 'trigger'
+                  AND name = 'documents_payload_immutable'
+                """
+            ).fetchone()[0]
+            payload = connection.execute(
+                "SELECT content_zlib FROM documents WHERE id = ?",
+                (document_id,),
+            ).fetchone()[0]
+            connection.execute("DROP TRIGGER documents_payload_immutable")
+            connection.execute(
+                "UPDATE documents SET content_zlib = ? WHERE id = ?",
+                (payload + b"corruption", document_id),
+            )
+            connection.execute(trigger_sql)
+        connection.close()
+
+        error = self.run_json(
+            READER, "show", "--db", self.db, document_id, expected=2
+        )
+
+        self.assertIn("compressed", error["error"].lower())
+
     def test_reader_rejects_unexpandable_database_path_as_json_error(self):
         error = self.run_json(
             READER,

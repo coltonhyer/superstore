@@ -187,6 +187,21 @@ def document_projection(connection, row):
     }
 
 
+def decompress_payload(payload, source_path):
+    try:
+        decompressor = zlib.decompressobj()
+        raw = decompressor.decompress(payload) + decompressor.flush()
+    except (TypeError, zlib.error) as exc:
+        raise LedgerError(f"invalid compressed payload: {source_path}") from exc
+    if (
+        not decompressor.eof
+        or decompressor.unused_data
+        or decompressor.unconsumed_tail
+    ):
+        raise LedgerError(f"invalid compressed payload: {source_path}")
+    return raw
+
+
 def command_topics(arguments):
     connection = connect_readonly(Path(arguments.db).expanduser().absolute())
     try:
@@ -292,12 +307,7 @@ def command_show(arguments):
         ).fetchone()
         if row is None:
             raise LedgerError(f"unknown document: {arguments.document_id}")
-        try:
-            raw = zlib.decompress(row["content_zlib"])
-        except (TypeError, zlib.error) as exc:
-            raise LedgerError(
-                f"invalid compressed payload: {row['source_path']}"
-            ) from exc
+        raw = decompress_payload(row["content_zlib"], row["source_path"])
         if len(raw) != row["source_bytes"]:
             raise LedgerError(
                 f"payload byte length mismatch: {row['source_path']}"
