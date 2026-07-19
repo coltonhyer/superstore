@@ -69,9 +69,11 @@ Do not manually delete a source after exit `2`. Do not rewrite a payload,
 remove an archived document, disable integrity checks, or guess through an
 unsupported schema.
 
-If source bytes changed after scan, reject the whole attempt, leave the source
-in place, report that no document transaction committed, and require a new scan
-and explicit confirmation. A cleanup request is not confirmation of new bytes.
+Before invoking `archive`, require a fresh confirmed scan. If a candidate
+changed, stop before any transaction, leave the source, rescan, and reconfirm
+the new bytes. A cleanup request is not confirmation of new bytes. Once
+`archive` runs, use its exit result; exit `3` means the database committed and
+the source remains for the existing cleanup-retry workflow.
 
 ## Metadata correction
 
