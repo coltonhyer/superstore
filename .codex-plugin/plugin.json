@@ -1,0 +1,31 @@
+{
+  "name": "superstore",
+  "version": "0.1.0",
+  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
+  "author": {
+    "name": "Superstore contributors"
+  },
+  "keywords": [
+    "documentation",
+    "archive",
+    "sqlite",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Superstore",
+    "shortDescription": "Archive and retrieve Markdown documentation",
+    "longDescription": "Preserve exact Markdown in a searchable, verified SQLite ledger and retrieve it through focused Agent Skills.",
+    "developerName": "Superstore contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Archive Markdown documentation into the ledger.",
+      "Find an archived design document.",
+      "Restore an archived Markdown document."
+    ]
+  }
+}
