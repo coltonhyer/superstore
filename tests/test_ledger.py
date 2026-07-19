@@ -55,6 +55,62 @@ class CliCase(unittest.TestCase):
         path.write_text(json.dumps(scan), encoding="utf-8")
         return path
 
+    def scan(self, path):
+        return self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            self.workspace,
+            path,
+        )
+
+    def archive_one(
+        self,
+        database,
+        relative_path,
+        content,
+        title,
+        kind,
+        topics=(),
+        links=(),
+        run_id=None,
+    ):
+        source = self.workspace / relative_path
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes(content)
+        scan = self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            database,
+            "--workspace-root",
+            self.workspace,
+            source,
+        )
+        if run_id is not None:
+            scan["run_id"] = run_id
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                Path(relative_path).as_posix(): {
+                    "title": title,
+                    "kind": kind,
+                    "summary": (
+                        f"Archives {title} as a deterministic integration-test "
+                        "document with grounded metadata."
+                    ),
+                    "topics": list(topics),
+                    "links": list(links),
+                }
+            },
+        )
+        result = self.run_json(
+            ARCHIVE, "archive", "--db", database, "--manifest", manifest
+        )
+        return scan, result
+
 
 class ScanTests(CliCase):
     def test_scan_recurses_markdown_and_ignores_other_regular_files(self):
@@ -156,17 +212,6 @@ class ScanTests(CliCase):
 
 
 class ArchiveTests(CliCase):
-    def scan(self, path):
-        return self.run_json(
-            ARCHIVE,
-            "scan",
-            "--db",
-            self.db,
-            "--workspace-root",
-            self.workspace,
-            path,
-        )
-
     def archive_module(self):
         import importlib.util
 
@@ -387,3 +432,250 @@ class ArchiveTests(CliCase):
             )
 
         self.assertEqual(close.call_args_list, [mock.call(11), mock.call(10)])
+
+
+class RevisionAndMetadataTests(CliCase):
+    def test_duplicate_retry_deletes_source_without_creating_empty_run(self):
+        first_scan, first = self.archive_one(
+            self.db,
+            "docs/plan.md",
+            b"# Plan\n\nStable content.\n",
+            "Stable Plan",
+            "plan",
+            ["delivery"],
+        )
+        source = self.workspace / "docs/plan.md"
+        source.write_bytes(b"# Plan\n\nStable content.\n")
+        retry_scan = self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            self.workspace,
+            source,
+        )
+        manifest = self.enriched_manifest(
+            retry_scan,
+            {
+                "docs/plan.md": {
+                    "title": "Stable Plan",
+                    "kind": "plan",
+                    "summary": "Archives the same stable implementation plan during cleanup retry.",
+                    "topics": ["delivery"],
+                }
+            },
+        )
+
+        retry = self.run_json(
+            ARCHIVE, "archive", "--db", self.db, "--manifest", manifest
+        )
+
+        self.assertEqual(first["inserted_documents"], 1)
+        self.assertEqual(retry["inserted_documents"], 0)
+        self.assertEqual(retry["duplicate_documents"], 1)
+        self.assertIsNone(retry["run_id"])
+        self.assertFalse(source.exists())
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM archive_runs").fetchone()[0],
+                1,
+            )
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
+                1,
+            )
+        connection.close()
+        self.assertEqual(
+            retry_scan["documents"][0]["prior_document_id"],
+            first_scan["documents"][0]["id"],
+        )
+
+    def test_changed_same_path_automatically_supersedes_current_record(self):
+        old_scan, unused = self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nVersion one.\n",
+            "Spec v1",
+            "spec",
+            ["auth"],
+        )
+        new_scan, unused = self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nVersion two.\n",
+            "Spec v2",
+            "spec",
+            ["auth"],
+        )
+
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            edge = connection.execute(
+                """
+                SELECT from_document_id, relation, to_document_id
+                FROM document_links WHERE relation = 'supersedes'
+                """
+            ).fetchone()
+        connection.close()
+        self.assertEqual(
+            edge,
+            (
+                new_scan["documents"][0]["id"],
+                "supersedes",
+                old_scan["documents"][0]["id"],
+            ),
+        )
+
+    def test_new_link_targeting_duplicate_proposed_id_is_remapped(self):
+        old_scan, unused = self.archive_one(
+            self.db,
+            "docs/stable.md",
+            b"# Stable\n\nUnchanged.\n",
+            "Stable",
+            "spec",
+        )
+        docs = self.workspace / "docs"
+        (docs / "stable.md").write_bytes(b"# Stable\n\nUnchanged.\n")
+        (docs / "new.md").write_bytes(b"# New\n\nReferences stable.\n")
+        scan = self.scan(docs)
+        ids = {item["source_path"]: item["id"] for item in scan["documents"]}
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                "docs/stable.md": {
+                    "title": "Changed metadata is ignored",
+                    "kind": "notes",
+                    "summary": "This duplicate must retain the metadata already stored in the ledger.",
+                },
+                "docs/new.md": {
+                    "title": "New",
+                    "kind": "plan",
+                    "summary": "Links to a duplicate document by the proposed identifier from this scan.",
+                    "links": [
+                        {
+                            "relation": "references",
+                            "to_document_id": ids["docs/stable.md"],
+                        }
+                    ],
+                },
+            },
+        )
+
+        result = self.run_json(
+            ARCHIVE, "archive", "--db", self.db, "--manifest", manifest
+        )
+
+        import sqlite3
+
+        self.assertEqual(result["inserted_documents"], 1)
+        self.assertEqual(result["duplicate_documents"], 1)
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT to_document_id FROM document_links
+                    WHERE from_document_id = ? AND relation = 'references'
+                    """,
+                    (ids["docs/new.md"],),
+                ).fetchone()[0],
+                old_scan["documents"][0]["id"],
+            )
+        connection.close()
+
+    def test_metadata_replaces_discovery_fields_but_triggers_protect_payload(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nImmutable source.\n",
+            "Original title",
+            "spec",
+            ["auth"],
+        )
+        document_id = scan["documents"][0]["id"]
+        metadata = self.workspace / "metadata.json"
+        metadata.write_text(
+            json.dumps(
+                {
+                    "document_id": document_id,
+                    "title": "Corrected title",
+                    "kind": "decision-record",
+                    "summary": "Corrects discovery metadata while preserving the exact archived source payload.",
+                    "topics": ["architecture"],
+                    "links": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_json(
+            ARCHIVE, "metadata", "--db", self.db, "--manifest", metadata
+        )
+        self.assertEqual(result["document_id"], document_id)
+        self.assertEqual(result["after"]["title"], "Corrected title")
+
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(
+                connection.execute(
+                    "SELECT title, kind, summary FROM documents WHERE id = ?",
+                    (document_id,),
+                ).fetchone()[0:2],
+                ("Corrected title", "decision-record"),
+            )
+            self.assertEqual(
+                connection.execute(
+                    "SELECT topic FROM document_topics WHERE document_id = ?",
+                    (document_id,),
+                ).fetchall(),
+                [("architecture",)],
+            )
+            with self.assertRaises(sqlite3.IntegrityError):
+                connection.execute(
+                    "UPDATE documents SET content_zlib = X'00' WHERE id = ?",
+                    (document_id,),
+                )
+            with self.assertRaises(sqlite3.IntegrityError):
+                connection.execute(
+                    "DELETE FROM documents WHERE id = ?", (document_id,)
+                )
+        connection.close()
+
+    def test_metadata_rejects_non_slug_topic_as_json_error(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nImmutable source.\n",
+            "Original title",
+            "spec",
+        )
+        metadata = self.workspace / "metadata.json"
+        metadata.write_text(
+            json.dumps(
+                {
+                    "document_id": scan["documents"][0]["id"],
+                    "title": "Original title",
+                    "kind": "spec",
+                    "summary": "Preserves metadata when validation rejects a malformed topic.",
+                    "topics": [{}],
+                    "links": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        error = self.run_json(
+            ARCHIVE,
+            "metadata",
+            "--db",
+            self.db,
+            "--manifest",
+            metadata,
+            expected=2,
+        )
+
+        self.assertIn("topics", error["error"])

@@ -166,6 +166,11 @@ A complete-state metadata replacement has this shape:
 }
 ```
 
+Metadata replacement changes all and only the editable discovery state: `title`,
+`kind`, `summary`, topics, and outgoing links. It never changes incoming links or
+immutable payload fields. An agent must preview the complete replacement and
+obtain explicit user confirmation before applying a metadata correction.
+
 ## Value rules
 
 Run and document IDs are canonical UUIDv4 text. `archived_at` is RFC 3339 UTC
@@ -177,6 +182,12 @@ and `notes`; any other normalized lowercase slug is allowed.
 means the source is a newer revision of the target, and `references` is a
 general directed citation. Bespoke normalized verbs are allowed. Links are
 many-to-many; there is no one-to-one constraint.
+
+Changed content at an existing source path receives exactly one automatic
+`supersedes` edge to the latest active document at that path. When a manifest
+also contains an unchanged duplicate, links from new documents may target its
+proposed scan ID; the writer remaps that ID to the existing document before
+foreign-key validation.
 
 `source_path` uses POSIX separators and is relative when the source is beneath
 the explicit workspace root; otherwise it is absolute. Every selected Markdown
@@ -203,6 +214,10 @@ its byte length and SHA-256 immediately before deletion. A changed or replaced
 path remains in place. A cleanup failure does not roll back the committed
 archive: the database is authoritative, the command reports the retained paths,
 and the same confirmed manifest is the record for a cleanup-only retry.
+
+An all-duplicate cleanup retry inserts no documents and creates no empty archive
+run. It still performs the same secure source cleanup, and it never replaces the
+existing documents' discovery metadata.
 
 Exit code 0 means the operation and cleanup completed. Exit code 2 means
 validation, database, compression, or filesystem setup failed before a

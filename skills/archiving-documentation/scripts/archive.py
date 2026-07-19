@@ -206,6 +206,20 @@ def connect_writer(path):
     return connection
 
 
+def connect_readonly(path):
+    if not path.is_file():
+        raise LedgerError(f"ledger does not exist: {path}")
+    connection = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute("PRAGMA query_only = ON")
+        validate_schema(connection)
+        return connection
+    except Exception:
+        connection.close()
+        raise
+
+
 def validate_schema(connection):
     version = connection.execute("PRAGMA user_version").fetchone()[0]
     if version != SCHEMA_VERSION:
@@ -254,6 +268,42 @@ def ensure_schema(connection):
             connection.rollback()
             raise
     validate_schema(connection)
+
+
+def scan_context(database, source_paths):
+    if not database.exists():
+        return [], {source_path: None for source_path in source_paths}
+    connection = connect_readonly(database)
+    try:
+        topics = [
+            row[0]
+            for row in connection.execute(
+                "SELECT DISTINCT topic FROM document_topics ORDER BY topic"
+            )
+        ]
+        prior = {}
+        for source_path in source_paths:
+            row = connection.execute(
+                """
+                SELECT d.id
+                FROM documents AS d
+                JOIN archive_runs AS r ON r.id = d.archive_run_id
+                WHERE d.source_path = ?
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM document_links AS newer
+                      WHERE newer.relation = 'supersedes'
+                        AND newer.to_document_id = d.id
+                  )
+                ORDER BY r.archived_at DESC, d.id DESC
+                LIMIT 1
+                """,
+                (source_path,),
+            ).fetchone()
+            prior[source_path] = None if row is None else row[0]
+        return topics, prior
+    finally:
+        connection.close()
 
 
 def verify_database(connection):
@@ -463,13 +513,19 @@ def command_scan(arguments):
                 "prior_document_id": None,
             }
         )
+    existing_topics, prior = scan_context(
+        Path(arguments.db).expanduser().absolute(),
+        [item["source_path"] for item in documents],
+    )
+    for item in documents:
+        item["prior_document_id"] = prior[item["source_path"]]
     return {
         "schema_version": SCHEMA_VERSION,
         "run_id": str(uuid.uuid4()),
         "source_root": target.as_posix(),
         "source_type": source_type,
         "workspace_root": workspace_root.as_posix(),
-        "existing_topics": [],
+        "existing_topics": existing_topics,
         "documents": documents,
     }
 
@@ -662,6 +718,44 @@ def cleanup_sources(manifest):
     }
 
 
+def partition_prepared(connection, prepared):
+    duplicate_map = {}
+    new_documents = []
+    for item, raw in prepared:
+        row = connection.execute(
+            """
+            SELECT id FROM documents
+            WHERE source_path = ? AND content_sha256 = ?
+            """,
+            (item["source_path"], item["content_sha256"]),
+        ).fetchone()
+        if row is None:
+            new_documents.append((item, raw))
+        else:
+            duplicate_map[item["id"]] = row[0]
+    return new_documents, duplicate_map
+
+
+def active_prior_id(connection, source_path):
+    row = connection.execute(
+        """
+        SELECT d.id
+        FROM documents AS d
+        JOIN archive_runs AS r ON r.id = d.archive_run_id
+        WHERE d.source_path = ?
+          AND NOT EXISTS (
+              SELECT 1 FROM document_links AS newer
+              WHERE newer.relation = 'supersedes'
+                AND newer.to_document_id = d.id
+          )
+        ORDER BY r.archived_at DESC, d.id DESC
+        LIMIT 1
+        """,
+        (source_path,),
+    ).fetchone()
+    return None if row is None else row[0]
+
+
 def command_archive(arguments):
     require_secure_cleanup()
     manifest, prepared = load_archive_manifest(Path(arguments.manifest))
@@ -670,71 +764,95 @@ def command_archive(arguments):
     try:
         ensure_schema(connection)
         connection.execute("BEGIN")
-        archived_at = (
-            datetime.datetime.now(datetime.timezone.utc)
-            .isoformat(timespec="seconds")
-            .replace("+00:00", "Z")
-        )
-        connection.execute(
-            "INSERT INTO archive_runs(id, archived_at, source_root) VALUES (?, ?, ?)",
-            (manifest["run_id"], archived_at, manifest["source_root"]),
-        )
+        new_documents, duplicate_map = partition_prepared(connection, prepared)
         compressed_bytes = 0
         source_bytes = 0
-        for item, raw in prepared:
-            compressed = zlib.compress(raw)
-            restored = zlib.decompress(compressed)
-            if (
-                restored != raw
-                or len(restored) != item["source_bytes"]
-                or hashlib.sha256(restored).hexdigest() != item["content_sha256"]
-            ):
-                raise LedgerError(
-                    f"compression verification failed: {item['source_path']}"
-                )
+        if new_documents:
+            archived_at = (
+                datetime.datetime.now(datetime.timezone.utc)
+                .isoformat(timespec="seconds")
+                .replace("+00:00", "Z")
+            )
             connection.execute(
-                """
-                INSERT INTO documents(
-                    id, archive_run_id, source_path, title, kind, summary,
-                    content_zlib, content_sha256, source_bytes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    item["id"],
-                    manifest["run_id"],
-                    item["source_path"],
-                    item["title"],
-                    item["kind"],
-                    item["summary"],
-                    compressed,
-                    item["content_sha256"],
-                    item["source_bytes"],
-                ),
+                "INSERT INTO archive_runs(id, archived_at, source_root) VALUES (?, ?, ?)",
+                (manifest["run_id"], archived_at, manifest["source_root"]),
             )
-            source_bytes += len(raw)
-            compressed_bytes += len(compressed)
-
-        known_targets = {
-            row[0] for row in connection.execute("SELECT id FROM documents")
-        }
-        for item, _ in prepared:
-            connection.executemany(
-                "INSERT INTO document_topics(document_id, topic) VALUES (?, ?)",
-                [(item["id"], topic) for topic in item["topics"]],
-            )
-        for item, _ in prepared:
-            for link in item["links"]:
-                target = link["to_document_id"]
-                if target not in known_targets:
-                    raise LedgerError(f"missing link target: {target}")
+            id_map = {
+                **duplicate_map,
+                **{item["id"]: item["id"] for item, _ in new_documents},
+            }
+            prior_ids = {}
+            for item, raw in new_documents:
+                prior_ids[item["id"]] = active_prior_id(
+                    connection, item["source_path"]
+                )
+                compressed = zlib.compress(raw)
+                restored = zlib.decompress(compressed)
+                if (
+                    restored != raw
+                    or len(restored) != item["source_bytes"]
+                    or hashlib.sha256(restored).hexdigest()
+                    != item["content_sha256"]
+                ):
+                    raise LedgerError(
+                        f"compression verification failed: {item['source_path']}"
+                    )
                 connection.execute(
                     """
-                    INSERT INTO document_links(
-                        from_document_id, relation, to_document_id
-                    ) VALUES (?, ?, ?)
+                    INSERT INTO documents(
+                        id, archive_run_id, source_path, title, kind, summary,
+                        content_zlib, content_sha256, source_bytes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (item["id"], link["relation"], target),
+                    (
+                        item["id"],
+                        manifest["run_id"],
+                        item["source_path"],
+                        item["title"],
+                        item["kind"],
+                        item["summary"],
+                        compressed,
+                        item["content_sha256"],
+                        item["source_bytes"],
+                    ),
                 )
+                source_bytes += len(raw)
+                compressed_bytes += len(compressed)
+
+            known_targets = {
+                row[0] for row in connection.execute("SELECT id FROM documents")
+            }
+            for item, _ in new_documents:
+                connection.executemany(
+                    "INSERT INTO document_topics(document_id, topic) VALUES (?, ?)",
+                    [(item["id"], topic) for topic in item["topics"]],
+                )
+            for item, _ in new_documents:
+                for link in item["links"]:
+                    target = id_map.get(
+                        link["to_document_id"], link["to_document_id"]
+                    )
+                    if target not in known_targets:
+                        raise LedgerError(f"missing link target: {target}")
+                    connection.execute(
+                        """
+                        INSERT INTO document_links(
+                            from_document_id, relation, to_document_id
+                        ) VALUES (?, ?, ?)
+                        """,
+                        (item["id"], link["relation"], target),
+                    )
+            for item, _ in new_documents:
+                prior_id = prior_ids[item["id"]]
+                if prior_id is not None and prior_id != item["id"]:
+                    connection.execute(
+                        """
+                        INSERT OR IGNORE INTO document_links(
+                            from_document_id, relation, to_document_id
+                        ) VALUES (?, 'supersedes', ?)
+                        """,
+                        (item["id"], prior_id),
+                    )
         verify_database(connection)
         connection.commit()
     except Exception:
@@ -745,9 +863,9 @@ def command_archive(arguments):
 
     cleanup = cleanup_sources(manifest)
     result = {
-        "run_id": manifest["run_id"],
-        "inserted_documents": len(prepared),
-        "duplicate_documents": 0,
+        "run_id": manifest["run_id"] if new_documents else None,
+        "inserted_documents": len(new_documents),
+        "duplicate_documents": len(duplicate_map),
         "source_bytes": source_bytes,
         "compressed_bytes": compressed_bytes,
         "database_authoritative": True,
@@ -756,6 +874,176 @@ def command_archive(arguments):
     if not cleanup["complete"]:
         json_success(result, exit_code=3)
     return result
+
+
+def load_metadata_manifest(path):
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise LedgerError(f"cannot read metadata manifest: {exc}") from exc
+    required = {
+        "document_id",
+        "title",
+        "kind",
+        "summary",
+        "topics",
+        "links",
+    }
+    if not isinstance(data, dict) or set(data) != required:
+        raise LedgerError(
+            "metadata manifest must contain exactly document_id, title, kind, "
+            "summary, topics, and links"
+        )
+    if not isinstance(data["document_id"], str) or not data["document_id"]:
+        raise LedgerError("document_id must be non-empty text")
+    if not isinstance(data["title"], str) or not data["title"].strip():
+        raise LedgerError("title must be non-empty text")
+    if not isinstance(data["summary"], str) or not data["summary"].strip():
+        raise LedgerError("summary must be non-empty text")
+    if not isinstance(data["kind"], str) or not SLUG.fullmatch(data["kind"]):
+        raise LedgerError("kind must be a normalized lowercase slug")
+    if (
+        not isinstance(data["topics"], list)
+        or any(
+            not isinstance(value, str) or not SLUG.fullmatch(value)
+            for value in data["topics"]
+        )
+        or len(data["topics"]) != len(set(data["topics"]))
+    ):
+        raise LedgerError("topics must be unique normalized lowercase slugs")
+    if not isinstance(data["links"], list):
+        raise LedgerError("links must be a list")
+    seen_links = set()
+    for link in data["links"]:
+        if not isinstance(link, dict) or set(link) != {
+            "relation",
+            "to_document_id",
+        }:
+            raise LedgerError("each link must contain relation and to_document_id")
+        key = (link["relation"], link["to_document_id"])
+        if (
+            not isinstance(link["relation"], str)
+            or not SLUG.fullmatch(link["relation"])
+            or not isinstance(link["to_document_id"], str)
+            or not link["to_document_id"]
+            or link["to_document_id"] == data["document_id"]
+            or key in seen_links
+        ):
+            raise LedgerError("metadata links are malformed, duplicate, or self-links")
+        seen_links.add(key)
+    return data
+
+
+def editable_state(connection, document_id):
+    row = connection.execute(
+        "SELECT title, kind, summary FROM documents WHERE id = ?",
+        (document_id,),
+    ).fetchone()
+    if row is None:
+        raise LedgerError(f"unknown document: {document_id}")
+    return {
+        "title": row[0],
+        "kind": row[1],
+        "summary": row[2],
+        "topics": [
+            value[0]
+            for value in connection.execute(
+                """
+                SELECT topic FROM document_topics
+                WHERE document_id = ? ORDER BY topic
+                """,
+                (document_id,),
+            )
+        ],
+        "links": [
+            {"relation": value[0], "to_document_id": value[1]}
+            for value in connection.execute(
+                """
+                SELECT relation, to_document_id FROM document_links
+                WHERE from_document_id = ?
+                ORDER BY relation, to_document_id
+                """,
+                (document_id,),
+            )
+        ],
+    }
+
+
+def command_metadata(arguments):
+    data = load_metadata_manifest(Path(arguments.manifest))
+    connection = connect_writer(Path(arguments.db).expanduser().absolute())
+    try:
+        validate_schema(connection)
+        before = editable_state(connection, data["document_id"])
+        target_ids = {link["to_document_id"] for link in data["links"]}
+        existing = (
+            {
+                row[0]
+                for row in connection.execute(
+                    "SELECT id FROM documents WHERE id IN "
+                    f"({','.join('?' for value in target_ids)})",
+                    tuple(sorted(target_ids)),
+                )
+            }
+            if target_ids
+            else set()
+        )
+        if existing != target_ids:
+            raise LedgerError(
+                f"missing metadata link targets: {sorted(target_ids - existing)}"
+            )
+        connection.execute("BEGIN")
+        connection.execute(
+            """
+            UPDATE documents SET title = ?, kind = ?, summary = ? WHERE id = ?
+            """,
+            (
+                data["title"],
+                data["kind"],
+                data["summary"],
+                data["document_id"],
+            ),
+        )
+        connection.execute(
+            "DELETE FROM document_topics WHERE document_id = ?",
+            (data["document_id"],),
+        )
+        connection.executemany(
+            "INSERT INTO document_topics(document_id, topic) VALUES (?, ?)",
+            [(data["document_id"], topic) for topic in data["topics"]],
+        )
+        connection.execute(
+            "DELETE FROM document_links WHERE from_document_id = ?",
+            (data["document_id"],),
+        )
+        connection.executemany(
+            """
+            INSERT INTO document_links(
+                from_document_id, relation, to_document_id
+            ) VALUES (?, ?, ?)
+            """,
+            [
+                (
+                    data["document_id"],
+                    link["relation"],
+                    link["to_document_id"],
+                )
+                for link in data["links"]
+            ],
+        )
+        verify_database(connection)
+        after = editable_state(connection, data["document_id"])
+        connection.commit()
+        return {
+            "document_id": data["document_id"],
+            "before": before,
+            "after": after,
+        }
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def build_parser():
@@ -770,6 +1058,12 @@ def build_parser():
     archive.add_argument("--db", required=True)
     archive.add_argument("--manifest", required=True)
     archive.set_defaults(handler=command_archive)
+    metadata = commands.add_parser(
+        "metadata", help="replace editable discovery metadata"
+    )
+    metadata.add_argument("--db", required=True)
+    metadata.add_argument("--manifest", required=True)
+    metadata.set_defaults(handler=command_metadata)
     return parser
 
 
