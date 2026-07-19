@@ -797,6 +797,7 @@ class ReplayTests(CliCase):
         before_destination = hashlib.sha256(destination.read_bytes()).hexdigest()
         before_source = hashlib.sha256(source.read_bytes()).hexdigest()
         output = self.workspace / "merged.db"
+        output.write_bytes(b"stale output")
 
         result = self.run_json(
             ARCHIVE,
@@ -877,6 +878,48 @@ class ReplayTests(CliCase):
 
         self.assertEqual(result["imported_runs"], 0)
         self.assertEqual(result["identical_runs"], 1)
+
+    @unittest.skipIf(os.name == "nt", "symlink creation differs on Windows")
+    def test_replay_rejects_output_symlink_alias_of_input(self):
+        unused, base, destination, source = self.make_three_snapshots()
+        self.archive_one(
+            source,
+            "source.md",
+            b"# Source\n\nFeature work.\n",
+            "Source",
+            "spec",
+        )
+        before = {
+            path: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in (base, destination, source)
+        }
+        alias = self.workspace / "alias"
+        alias.symlink_to(self.workspace, target_is_directory=True)
+        output = alias / base.name
+        self.assertEqual(output.resolve(), base.resolve())
+
+        error = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            output,
+            expected=2,
+        )
+
+        self.assertIn("distinct", error["error"].lower())
+        self.assertEqual(
+            {
+                path: hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in (base, destination, source)
+            },
+            before,
+        )
 
     def test_replay_rejects_source_metadata_edit_and_divergent_run_id(self):
         seed_id, base, destination, source = self.make_three_snapshots()

@@ -493,14 +493,25 @@ def remove_temporary_family(path):
 
 
 def command_replay(arguments):
-    base_path = Path(arguments.base).expanduser().absolute()
-    destination_path = Path(arguments.destination).expanduser().absolute()
-    source_path = Path(arguments.source).expanduser().absolute()
+    base_path = Path(arguments.base).expanduser().resolve(strict=True)
+    destination_path = Path(arguments.destination).expanduser().resolve(strict=True)
+    source_path = Path(arguments.source).expanduser().resolve(strict=True)
     output_path = Path(arguments.output).expanduser().absolute()
-    if len({base_path, destination_path, source_path, output_path}) != 4:
-        raise LedgerError("base, destination, source, and output must be distinct")
     if not output_path.parent.is_dir():
         raise LedgerError(f"output parent does not exist: {output_path.parent}")
+    output_path = output_path.parent.resolve(strict=True) / output_path.name
+    paths = [base_path, destination_path, source_path]
+    canonical_paths = [*paths, output_path.resolve(strict=False)]
+    existing_paths = [*paths, *([output_path] if output_path.exists() else [])]
+    identities = {
+        (status.st_dev, status.st_ino)
+        for status in (path.stat() for path in existing_paths)
+    }
+    if (
+        len(set(canonical_paths)) != 4
+        or len(identities) != len(existing_paths)
+    ):
+        raise LedgerError("base, destination, source, and output must be distinct")
 
     temporary_path = None
     imported_documents = []
