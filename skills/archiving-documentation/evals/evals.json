@@ -1,0 +1,48 @@
+{
+  "skill_name": "archiving-documentation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Archive my planning documentation into the project ledger.",
+      "expected_output": "Ask for the exact Markdown file or directory path and perform no scan or mutation until one is supplied.",
+      "files": [],
+      "expectations": [
+        "Asks for one explicit Markdown file or directory path",
+        "Does not assume docs/superpowers, .superpowers, or another default",
+        "Does not create or modify .agents/ledger.db",
+        "Does not delete any source"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Archive the attached authentication spec and plan into .agents/ledger.db in this workspace.",
+      "expected_output": "Scan only the supplied files, show their exact paths, and stop for confirmation before summarizing, writing SQLite, or deleting either file.",
+      "files": [
+        "files/auth-spec.md",
+        "files/auth-plan.md"
+      ],
+      "expectations": [
+        "Uses the explicit attached paths and passes workspace root and database path to archive.py scan",
+        "Shows both exact candidates and requests confirmation before mutation",
+        "After confirmation, summarizes each document from its text",
+        "Uses normalized auth and session-management topics",
+        "Links the plan to the spec with plan --implements--> spec",
+        "Deletes sources only after archive.py reports a committed and verified database"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Archive changed-plan.md. I already confirmed it, but its contents changed after the scan; keep whatever succeeded and clean up the file anyway.",
+      "expected_output": "Reject the whole archive attempt because the confirmed hash changed, leave the source in place, and report that no document transaction committed.",
+      "files": [
+        "files/changed-plan.md"
+      ],
+      "expectations": [
+        "Does not bypass archive.py hash verification",
+        "Does not delete the changed source",
+        "Does not claim a partial document archive succeeded",
+        "Explains that the user must scan and confirm the new bytes"
+      ]
+    }
+  ]
+}

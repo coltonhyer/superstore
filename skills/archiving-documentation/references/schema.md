@@ -168,8 +168,7 @@ A complete-state metadata replacement has this shape:
 
 Metadata replacement changes all and only the editable discovery state: `title`,
 `kind`, `summary`, topics, and outgoing links. It never changes incoming links or
-immutable payload fields. An agent must preview the complete replacement and
-obtain explicit user confirmation before applying a metadata correction.
+immutable payload fields.
 
 ## Value rules
 

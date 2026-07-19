@@ -1,8 +1,6 @@
 # Replay parallel archive runs
 
-Binary SQLite images cannot be row-merged by Git or Jujutsu. Preserve the
-unresolved ledger and identify its common ancestor before resolving the
-conflict.
+Binary SQLite images cannot be row-merged by Git or Jujutsu.
 
 Materialize four distinct paths:
 
