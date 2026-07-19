@@ -482,23 +482,45 @@ def same_entry(first, second):
     )
 
 
+def require_secure_cleanup():
+    required_dir_fd = {os.open, os.stat, os.unlink, os.rmdir}
+    if (
+        os.name != "posix"
+        or not hasattr(os, "O_DIRECTORY")
+        or not hasattr(os, "O_NOFOLLOW")
+        or not required_dir_fd <= os.supports_dir_fd
+        or os.scandir not in os.supports_fd
+        or os.stat not in os.supports_follow_symlinks
+    ):
+        raise LedgerError("secure cleanup is unsupported on this platform")
+
+
 def open_cleanup_parent(candidate, source_root, source_type):
     directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-    descriptors = [
-        os.open(source_root.parent, os.O_RDONLY | os.O_DIRECTORY)
-    ]
+    descriptors = []
     chain = []
-    if source_type == "directory":
-        relative_parent = candidate.parent.relative_to(source_root)
-        parts = (source_root.name, *relative_parent.parts)
-        current_path = source_root.parent
-        for part in parts:
-            parent = descriptors[-1]
-            child = os.open(part, directory_flags, dir_fd=parent)
-            descriptors.append(child)
-            current_path /= part
-            chain.append((parent, part, child, current_path))
-    return descriptors[-1], descriptors, chain
+    try:
+        descriptors.append(
+            os.open(source_root.parent, os.O_RDONLY | os.O_DIRECTORY)
+        )
+        if source_type == "directory":
+            relative_parent = candidate.parent.relative_to(source_root)
+            parts = (source_root.name, *relative_parent.parts)
+            current_path = source_root.parent
+            for part in parts:
+                parent = descriptors[-1]
+                child = os.open(part, directory_flags, dir_fd=parent)
+                descriptors.append(child)
+                current_path /= part
+                chain.append((parent, part, child, current_path))
+        return descriptors[-1], descriptors, chain
+    except Exception:
+        for descriptor in reversed(descriptors):
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        raise
 
 
 def verify_cleanup_chain(chain, candidate):
@@ -641,6 +663,7 @@ def cleanup_sources(manifest):
 
 
 def command_archive(arguments):
+    require_secure_cleanup()
     manifest, prepared = load_archive_manifest(Path(arguments.manifest))
     database = Path(arguments.db).expanduser().absolute()
     connection = connect_writer(database)

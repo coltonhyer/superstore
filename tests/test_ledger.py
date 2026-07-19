@@ -167,6 +167,16 @@ class ArchiveTests(CliCase):
             path,
         )
 
+    def archive_module(self):
+        import importlib.util
+
+        specification = importlib.util.spec_from_file_location(
+            "archive_cleanup_test", ARCHIVE
+        )
+        archive = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(archive)
+        return archive
+
     def test_archive_round_trips_exact_bytes_topics_links_and_removes_empty_root(self):
         docs = self.workspace / "chosen"
         docs.mkdir()
@@ -274,7 +284,6 @@ class ArchiveTests(CliCase):
 
     @unittest.skipIf(os.name == "nt", "dir_fd cleanup is POSIX-only")
     def test_cleanup_parent_swap_retains_outside_file_and_reports_error(self):
-        import importlib.util
         from unittest import mock
 
         docs = self.workspace / "chosen"
@@ -296,11 +305,7 @@ class ArchiveTests(CliCase):
             },
         )
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        specification = importlib.util.spec_from_file_location(
-            "archive_cleanup_test", ARCHIVE
-        )
-        archive = importlib.util.module_from_spec(specification)
-        specification.loader.exec_module(archive)
+        archive = self.archive_module()
         original_sha256 = archive.hashlib.sha256
         moved = self.workspace / "moved"
         swapped = False
@@ -322,3 +327,63 @@ class ArchiveTests(CliCase):
         self.assertTrue((moved / source.name).exists())
         self.assertFalse(result["complete"])
         self.assertTrue(result["errors"])
+
+    def test_archive_rejects_unsupported_secure_cleanup_before_database_write(self):
+        import contextlib
+        import io
+        from unittest import mock
+
+        source = self.workspace / "plan.md"
+        source.write_text("# Plan\n", encoding="utf-8")
+        manifest = self.enriched_manifest(
+            self.scan(source),
+            {
+                "plan.md": {
+                    "title": "Plan",
+                    "kind": "plan",
+                    "summary": "Must remain untouched when secure cleanup APIs are unavailable.",
+                }
+            },
+        )
+        archive = self.archive_module()
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        arguments = [
+            str(ARCHIVE),
+            "archive",
+            "--db",
+            str(self.db),
+            "--manifest",
+            str(manifest),
+        ]
+
+        with (
+            mock.patch.object(archive.os, "supports_dir_fd", set()),
+            mock.patch.object(archive.sys, "argv", arguments),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+            self.assertRaises(SystemExit) as raised,
+        ):
+            archive.main()
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("secure cleanup", json.loads(stderr.getvalue())["error"].lower())
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertTrue(source.exists())
+        self.assertFalse(self.db.exists())
+
+    def test_cleanup_parent_open_failure_closes_accumulated_descriptors(self):
+        from unittest import mock
+
+        archive = self.archive_module()
+        failure = OSError("nested parent open failed")
+        with (
+            mock.patch.object(archive.os, "open", side_effect=[10, 11, failure]),
+            mock.patch.object(archive.os, "close") as close,
+            self.assertRaisesRegex(OSError, "nested parent open failed"),
+        ):
+            archive.open_cleanup_parent(
+                Path("/source/nested/plan.md"), Path("/source"), "directory"
+            )
+
+        self.assertEqual(close.call_args_list, [mock.call(11), mock.call(10)])
