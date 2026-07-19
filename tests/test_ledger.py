@@ -237,6 +237,7 @@ class ArchiveTests(CliCase):
                 },
                 {"auth", "session-management"},
             )
+        connection.close()
 
     def test_changed_source_or_invalid_manifest_preserves_all_sources(self):
         docs = self.workspace / "chosen"
@@ -270,3 +271,54 @@ class ArchiveTests(CliCase):
         self.assertIn("changed since scan", error["error"].lower())
         self.assertTrue(source.exists())
         self.assertFalse(self.db.exists())
+
+    @unittest.skipIf(os.name == "nt", "dir_fd cleanup is POSIX-only")
+    def test_cleanup_parent_swap_retains_outside_file_and_reports_error(self):
+        import importlib.util
+        from unittest import mock
+
+        docs = self.workspace / "chosen"
+        docs.mkdir()
+        source = docs / "plan.md"
+        source.write_text("# Selected\n", encoding="utf-8")
+        outside = self.workspace / "outside"
+        outside.mkdir()
+        outside_source = outside / source.name
+        outside_source.write_text("# Outside\n", encoding="utf-8")
+        manifest_path = self.enriched_manifest(
+            self.scan(docs),
+            {
+                "chosen/plan.md": {
+                    "title": "Selected",
+                    "kind": "plan",
+                    "summary": "Exercises a parent-directory swap between cleanup verification and deletion.",
+                }
+            },
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        specification = importlib.util.spec_from_file_location(
+            "archive_cleanup_test", ARCHIVE
+        )
+        archive = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(archive)
+        original_sha256 = archive.hashlib.sha256
+        moved = self.workspace / "moved"
+        swapped = False
+
+        def swap_parent_then_hash(raw):
+            nonlocal swapped
+            if not swapped:
+                docs.rename(moved)
+                docs.symlink_to(outside, target_is_directory=True)
+                swapped = True
+            return original_sha256(raw)
+
+        with mock.patch.object(
+            archive.hashlib, "sha256", side_effect=swap_parent_then_hash
+        ):
+            result = archive.cleanup_sources(manifest)
+
+        self.assertTrue(outside_source.exists())
+        self.assertTrue((moved / source.name).exists())
+        self.assertFalse(result["complete"])
+        self.assertTrue(result["errors"])

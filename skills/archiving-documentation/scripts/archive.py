@@ -474,6 +474,144 @@ def command_scan(arguments):
     }
 
 
+def same_entry(first, second):
+    return (first.st_dev, first.st_ino, stat.S_IFMT(first.st_mode)) == (
+        second.st_dev,
+        second.st_ino,
+        stat.S_IFMT(second.st_mode),
+    )
+
+
+def open_cleanup_parent(candidate, source_root, source_type):
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    descriptors = [
+        os.open(source_root.parent, os.O_RDONLY | os.O_DIRECTORY)
+    ]
+    chain = []
+    if source_type == "directory":
+        relative_parent = candidate.parent.relative_to(source_root)
+        parts = (source_root.name, *relative_parent.parts)
+        current_path = source_root.parent
+        for part in parts:
+            parent = descriptors[-1]
+            child = os.open(part, directory_flags, dir_fd=parent)
+            descriptors.append(child)
+            current_path /= part
+            chain.append((parent, part, child, current_path))
+    return descriptors[-1], descriptors, chain
+
+
+def verify_cleanup_chain(chain, candidate):
+    for parent, name, child, _ in chain:
+        current = os.stat(name, dir_fd=parent, follow_symlinks=False)
+        if not same_entry(current, os.fstat(child)):
+            raise LedgerError(f"source changed since scan: {candidate}")
+
+
+def cleanup_candidate(item, source_root, source_type):
+    candidate = Path(item["absolute_path"])
+    parent, descriptors, chain = open_cleanup_parent(
+        candidate, source_root, source_type
+    )
+    file_descriptor = None
+    try:
+        file_descriptor = os.open(
+            candidate.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent
+        )
+        file_status = os.fstat(file_descriptor)
+        if not stat.S_ISREG(file_status.st_mode):
+            raise LedgerError(f"expected a regular .md file: {candidate}")
+        with os.fdopen(file_descriptor, "rb") as source:
+            file_descriptor = None
+            raw = source.read()
+        if (
+            len(raw) != item["source_bytes"]
+            or hashlib.sha256(raw).hexdigest() != item["content_sha256"]
+        ):
+            raise LedgerError(f"source changed since scan: {candidate}")
+        verify_cleanup_chain(chain, candidate)
+        current = os.stat(
+            candidate.name, dir_fd=parent, follow_symlinks=False
+        )
+        if not same_entry(current, file_status):
+            raise LedgerError(f"source changed since scan: {candidate}")
+        os.unlink(candidate.name, dir_fd=parent)
+    finally:
+        if file_descriptor is not None:
+            os.close(file_descriptor)
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)
+
+
+def remove_empty_directories(source_root, removed_directories, errors):
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    parent_descriptor = os.open(
+        source_root.parent, os.O_RDONLY | os.O_DIRECTORY
+    )
+    try:
+        root_descriptor = os.open(
+            source_root.name, directory_flags, dir_fd=parent_descriptor
+        )
+        root_status = os.fstat(root_descriptor)
+
+        def remove_descendants(descriptor, path):
+            with os.scandir(descriptor) as entries:
+                directories = [
+                    entry.name
+                    for entry in entries
+                    if entry.is_dir(follow_symlinks=False)
+                ]
+            for name in directories:
+                child_path = path / name
+                try:
+                    child = os.open(name, directory_flags, dir_fd=descriptor)
+                except OSError as exc:
+                    errors.append(
+                        {"path": child_path.as_posix(), "error": str(exc)}
+                    )
+                    continue
+                child_status = os.fstat(child)
+                try:
+                    remove_descendants(child, child_path)
+                finally:
+                    os.close(child)
+                try:
+                    current = os.stat(
+                        name, dir_fd=descriptor, follow_symlinks=False
+                    )
+                    if not same_entry(current, child_status):
+                        raise LedgerError(
+                            f"source changed since scan: {child_path}"
+                        )
+                    os.rmdir(name, dir_fd=descriptor)
+                    removed_directories.append(child_path.as_posix())
+                except OSError as exc:
+                    if exc.errno != errno.ENOTEMPTY:
+                        errors.append(
+                            {"path": child_path.as_posix(), "error": str(exc)}
+                        )
+                except LedgerError as exc:
+                    errors.append(
+                        {"path": child_path.as_posix(), "error": str(exc)}
+                    )
+
+        try:
+            remove_descendants(root_descriptor, source_root)
+        finally:
+            os.close(root_descriptor)
+        current_root = os.stat(
+            source_root.name,
+            dir_fd=parent_descriptor,
+            follow_symlinks=False,
+        )
+        if not same_entry(current_root, root_status):
+            raise LedgerError(f"source changed since scan: {source_root}")
+        os.rmdir(source_root.name, dir_fd=parent_descriptor)
+        removed_directories.append(source_root.as_posix())
+    finally:
+        os.close(parent_descriptor)
+
+
 def cleanup_sources(manifest):
     deleted_files = []
     removed_directories = []
@@ -483,33 +621,16 @@ def cleanup_sources(manifest):
     for item in manifest["documents"]:
         candidate = Path(item["absolute_path"])
         try:
-            raw = read_without_symlinks(candidate, source_root)
-            if (
-                len(raw) != item["source_bytes"]
-                or hashlib.sha256(raw).hexdigest() != item["content_sha256"]
-            ):
-                raise LedgerError(f"source changed since scan: {candidate}")
-            candidate.unlink()
+            cleanup_candidate(item, source_root, manifest["source_type"])
             deleted_files.append(candidate.as_posix())
         except (LedgerError, OSError) as exc:
             errors.append({"path": candidate.as_posix(), "error": str(exc)})
 
     if manifest["source_type"] == "directory":
-        directories = [
-            Path(current)
-            for current, _, _ in os.walk(source_root, topdown=False, followlinks=False)
-            if Path(current) != source_root
-        ]
-        directories.append(source_root)
-        for directory in directories:
-            try:
-                directory.rmdir()
-                removed_directories.append(directory.as_posix())
-            except OSError as exc:
-                if exc.errno != errno.ENOTEMPTY:
-                    errors.append(
-                        {"path": directory.as_posix(), "error": str(exc)}
-                    )
+        try:
+            remove_empty_directories(source_root, removed_directories, errors)
+        except (LedgerError, OSError) as exc:
+            errors.append({"path": source_root.as_posix(), "error": str(exc)})
 
     return {
         "complete": not errors,
