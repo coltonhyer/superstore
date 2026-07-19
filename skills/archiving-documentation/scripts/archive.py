@@ -1,14 +1,124 @@
 #!/usr/bin/env python3
 import argparse
+import datetime
+import errno
 import hashlib
 import json
 import os
 from pathlib import Path
+import re
+import sqlite3
+import stat
 import sys
 import uuid
+import zlib
 
 
 SCHEMA_VERSION = 1
+SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+SCHEMA_STATEMENTS = (
+    """
+    CREATE TABLE archive_runs (
+        id TEXT PRIMARY KEY,
+        archived_at TEXT NOT NULL,
+        source_root TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE documents (
+        id TEXT PRIMARY KEY,
+        archive_run_id TEXT NOT NULL REFERENCES archive_runs(id),
+        source_path TEXT NOT NULL,
+        title TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        content_zlib BLOB NOT NULL,
+        content_sha256 TEXT NOT NULL CHECK (length(content_sha256) = 64),
+        source_bytes INTEGER NOT NULL CHECK (source_bytes >= 0),
+        UNIQUE (source_path, content_sha256)
+    )
+    """,
+    "CREATE INDEX documents_by_run ON documents(archive_run_id)",
+    """
+    CREATE TABLE document_topics (
+        document_id TEXT NOT NULL REFERENCES documents(id),
+        topic TEXT NOT NULL CHECK (topic <> ''),
+        PRIMARY KEY (document_id, topic)
+    )
+    """,
+    """
+    CREATE INDEX document_topics_by_topic
+    ON document_topics(topic, document_id)
+    """,
+    """
+    CREATE TABLE document_links (
+        from_document_id TEXT NOT NULL REFERENCES documents(id),
+        relation TEXT NOT NULL CHECK (relation <> ''),
+        to_document_id TEXT NOT NULL REFERENCES documents(id),
+        PRIMARY KEY (from_document_id, relation, to_document_id),
+        CHECK (from_document_id <> to_document_id)
+    )
+    """,
+    """
+    CREATE INDEX document_links_by_target
+    ON document_links(to_document_id, relation, from_document_id)
+    """,
+    """
+    CREATE TRIGGER archive_runs_immutable_update
+    BEFORE UPDATE ON archive_runs
+    BEGIN
+        SELECT RAISE(ABORT, 'archive runs are immutable');
+    END
+    """,
+    """
+    CREATE TRIGGER archive_runs_no_delete
+    BEFORE DELETE ON archive_runs
+    BEGIN
+        SELECT RAISE(ABORT, 'archive runs cannot be deleted');
+    END
+    """,
+    """
+    CREATE TRIGGER documents_payload_immutable
+    BEFORE UPDATE OF
+        id, archive_run_id, source_path, content_zlib, content_sha256, source_bytes
+    ON documents
+    BEGIN
+        SELECT RAISE(ABORT, 'archived document payload is immutable');
+    END
+    """,
+    """
+    CREATE TRIGGER documents_no_delete
+    BEFORE DELETE ON documents
+    BEGIN
+        SELECT RAISE(ABORT, 'archived documents cannot be deleted');
+    END
+    """,
+)
+EXPECTED_COLUMNS = {
+    "archive_runs": ("id", "archived_at", "source_root"),
+    "documents": (
+        "id",
+        "archive_run_id",
+        "source_path",
+        "title",
+        "kind",
+        "summary",
+        "content_zlib",
+        "content_sha256",
+        "source_bytes",
+    ),
+    "document_topics": ("document_id", "topic"),
+    "document_links": ("from_document_id", "relation", "to_document_id"),
+}
+EXPECTED_OBJECTS = {
+    ("index", "documents_by_run"),
+    ("index", "document_topics_by_topic"),
+    ("index", "document_links_by_target"),
+    ("trigger", "archive_runs_immutable_update"),
+    ("trigger", "archive_runs_no_delete"),
+    ("trigger", "documents_payload_immutable"),
+    ("trigger", "documents_no_delete"),
+}
 
 
 class LedgerError(Exception):
@@ -88,6 +198,252 @@ def stored_source_path(path, workspace_root):
         return path.as_posix()
 
 
+def connect_writer(path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path)
+    connection.execute("PRAGMA foreign_keys = ON")
+    connection.execute("PRAGMA journal_mode = DELETE")
+    return connection
+
+
+def validate_schema(connection):
+    version = connection.execute("PRAGMA user_version").fetchone()[0]
+    if version != SCHEMA_VERSION:
+        raise LedgerError(
+            f"unsupported ledger schema version {version}; expected {SCHEMA_VERSION}"
+        )
+    for table, expected in EXPECTED_COLUMNS.items():
+        actual = tuple(
+            row[1] for row in connection.execute(f"PRAGMA table_info({table})")
+        )
+        if actual != expected:
+            raise LedgerError(f"ledger schema is missing or invalid table: {table}")
+    actual_objects = {
+        (row[0], row[1])
+        for row in connection.execute(
+            """
+            SELECT type, name FROM sqlite_schema
+            WHERE type IN ('index', 'trigger')
+            """
+        )
+    }
+    missing = EXPECTED_OBJECTS - actual_objects
+    if missing:
+        raise LedgerError(f"ledger schema objects are missing: {sorted(missing)}")
+
+
+def ensure_schema(connection):
+    version = connection.execute("PRAGMA user_version").fetchone()[0]
+    tables = {
+        row[0]
+        for row in connection.execute(
+            "SELECT name FROM sqlite_schema "
+            "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+        )
+    }
+    if version == 0:
+        if tables:
+            raise LedgerError("refusing a non-empty unversioned SQLite database")
+        connection.execute("BEGIN")
+        try:
+            for statement in SCHEMA_STATEMENTS:
+                connection.execute(statement)
+            connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+    validate_schema(connection)
+
+
+def verify_database(connection):
+    foreign_keys = list(connection.execute("PRAGMA foreign_key_check"))
+    if foreign_keys:
+        raise LedgerError(f"foreign key verification failed: {foreign_keys}")
+    integrity = [row[0] for row in connection.execute("PRAGMA integrity_check")]
+    if integrity != ["ok"]:
+        raise LedgerError(f"integrity verification failed: {integrity}")
+
+
+def manifest_absolute_path(value, field):
+    if not isinstance(value, str) or not value or not Path(value).is_absolute():
+        raise LedgerError(f"{field} must be an absolute path")
+    path = Path(os.path.abspath(value))
+    if path.as_posix() != value:
+        raise LedgerError(f"{field} must be normalized")
+    return path
+
+
+def read_without_symlinks(path, source_root):
+    try:
+        relative = path.relative_to(source_root)
+    except ValueError as exc:
+        raise LedgerError(f"path is outside source root: {path}") from exc
+    current = source_root
+    for part in (None, *relative.parts):
+        if part is not None:
+            current /= part
+        try:
+            mode = current.lstat().st_mode
+        except OSError as exc:
+            raise LedgerError(f"source changed since scan: {path}: {exc}") from exc
+        if stat.S_ISLNK(mode):
+            raise LedgerError(f"symlink is not allowed: {current}")
+
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise LedgerError(f"source changed since scan: {path}: {exc}") from exc
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise LedgerError(f"expected a regular .md file: {path}")
+        with os.fdopen(descriptor, "rb") as source:
+            descriptor = -1
+            return source.read()
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+
+
+def load_archive_manifest(path):
+    with path.open(encoding="utf-8") as source:
+        manifest = json.load(source)
+    if not isinstance(manifest, dict):
+        raise LedgerError("archive manifest root must be an object")
+    if (
+        not isinstance(manifest.get("schema_version"), int)
+        or isinstance(manifest["schema_version"], bool)
+        or manifest["schema_version"] != SCHEMA_VERSION
+    ):
+        raise LedgerError(
+            f"unsupported archive manifest schema version: "
+            f"{manifest.get('schema_version')}"
+        )
+    validate_uuid4(manifest.get("run_id"), "run_id")
+    source_root = manifest_absolute_path(manifest.get("source_root"), "source_root")
+    workspace_root = manifest_absolute_path(
+        manifest.get("workspace_root"), "workspace_root"
+    )
+    source_type = manifest.get("source_type")
+    if source_type not in ("file", "directory"):
+        raise LedgerError("source_type must be file or directory")
+    documents = manifest.get("documents")
+    if not isinstance(documents, list) or not documents:
+        raise LedgerError("archive manifest documents must be a non-empty list")
+
+    document_ids = set()
+    for item in documents:
+        if not isinstance(item, dict):
+            raise LedgerError("archive manifest documents must be objects")
+        document_id = validate_uuid4(item.get("id"), "document id")
+        if document_id in document_ids:
+            raise LedgerError(f"duplicate document id: {document_id}")
+        document_ids.add(document_id)
+
+    if source_type == "file" and len(documents) != 1:
+        raise LedgerError("file source must contain exactly one document")
+
+    prepared = []
+    absolute_paths = set()
+    source_hashes = set()
+    for item in documents:
+        candidate = manifest_absolute_path(
+            item.get("absolute_path"), "document absolute_path"
+        )
+        if candidate in absolute_paths:
+            raise LedgerError(f"duplicate absolute path: {candidate}")
+        absolute_paths.add(candidate)
+
+        try:
+            relative = candidate.relative_to(source_root)
+        except ValueError as exc:
+            raise LedgerError(f"path is outside source root: {candidate}") from exc
+        if source_type == "file":
+            if candidate != source_root:
+                raise LedgerError("file document path must equal source_root")
+        elif not relative.parts:
+            raise LedgerError("directory documents must be descendants of source_root")
+
+        source_path = item.get("source_path")
+        if not isinstance(source_path, str) or not source_path:
+            raise LedgerError("document source_path must be non-empty text")
+        if source_path != stored_source_path(candidate, workspace_root):
+            raise LedgerError(f"source_path does not match absolute_path: {source_path}")
+        content_sha256 = item.get("content_sha256")
+        source_bytes = item.get("source_bytes")
+        if (
+            not isinstance(content_sha256, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", content_sha256)
+            or not isinstance(source_bytes, int)
+            or isinstance(source_bytes, bool)
+            or source_bytes < 0
+        ):
+            raise LedgerError(f"invalid source fingerprint: {source_path}")
+        source_hash = (source_path, content_sha256)
+        if source_hash in source_hashes:
+            raise LedgerError(
+                f"duplicate source path and content hash: {source_path}"
+            )
+        source_hashes.add(source_hash)
+
+        title = item.get("title")
+        summary = item.get("summary")
+        kind = item.get("kind")
+        if not isinstance(title, str) or not title.strip():
+            raise LedgerError(f"blank title: {source_path}")
+        if not isinstance(summary, str) or not summary.strip():
+            raise LedgerError(f"blank summary: {source_path}")
+        if not isinstance(kind, str) or not SLUG.fullmatch(kind):
+            raise LedgerError(f"invalid kind: {kind}")
+
+        topics = item.get("topics")
+        if not isinstance(topics, list):
+            raise LedgerError(f"topics must be a list: {source_path}")
+        if any(not isinstance(topic, str) or not SLUG.fullmatch(topic) for topic in topics):
+            raise LedgerError(f"invalid topic: {source_path}")
+        if len(topics) != len(set(topics)):
+            raise LedgerError(f"duplicate topic: {source_path}")
+
+        links = item.get("links")
+        if not isinstance(links, list):
+            raise LedgerError(f"links must be a list: {source_path}")
+        link_keys = set()
+        for link in links:
+            if not isinstance(link, dict) or set(link) != {
+                "relation",
+                "to_document_id",
+            }:
+                raise LedgerError(f"malformed link: {source_path}")
+            relation = link["relation"]
+            target = link["to_document_id"]
+            if not isinstance(relation, str) or not SLUG.fullmatch(relation):
+                raise LedgerError(f"invalid link relation: {source_path}")
+            if not isinstance(target, str) or not target.strip():
+                raise LedgerError(f"invalid link target: {source_path}")
+            if target == item["id"]:
+                raise LedgerError(f"self-link is not allowed: {source_path}")
+            link_key = (relation, target)
+            if link_key in link_keys:
+                raise LedgerError(f"duplicate link: {source_path}")
+            link_keys.add(link_key)
+
+        if candidate.suffix.lower() != ".md":
+            raise LedgerError(f"expected a regular .md file: {candidate}")
+        raw = read_without_symlinks(candidate, source_root)
+        try:
+            raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise LedgerError(f"Markdown must be valid UTF-8: {candidate}") from exc
+        if (
+            len(raw) != source_bytes
+            or hashlib.sha256(raw).hexdigest() != content_sha256
+        ):
+            raise LedgerError(f"source changed since scan: {source_path}")
+        prepared.append((item, raw))
+    return manifest, prepared
+
+
 def command_scan(arguments):
     workspace_root = Path(arguments.workspace_root).expanduser().absolute()
     if workspace_root.is_symlink() or not workspace_root.is_dir():
@@ -118,6 +474,146 @@ def command_scan(arguments):
     }
 
 
+def cleanup_sources(manifest):
+    deleted_files = []
+    removed_directories = []
+    errors = []
+    source_root = Path(manifest["source_root"])
+
+    for item in manifest["documents"]:
+        candidate = Path(item["absolute_path"])
+        try:
+            raw = read_without_symlinks(candidate, source_root)
+            if (
+                len(raw) != item["source_bytes"]
+                or hashlib.sha256(raw).hexdigest() != item["content_sha256"]
+            ):
+                raise LedgerError(f"source changed since scan: {candidate}")
+            candidate.unlink()
+            deleted_files.append(candidate.as_posix())
+        except (LedgerError, OSError) as exc:
+            errors.append({"path": candidate.as_posix(), "error": str(exc)})
+
+    if manifest["source_type"] == "directory":
+        directories = [
+            Path(current)
+            for current, _, _ in os.walk(source_root, topdown=False, followlinks=False)
+            if Path(current) != source_root
+        ]
+        directories.append(source_root)
+        for directory in directories:
+            try:
+                directory.rmdir()
+                removed_directories.append(directory.as_posix())
+            except OSError as exc:
+                if exc.errno != errno.ENOTEMPTY:
+                    errors.append(
+                        {"path": directory.as_posix(), "error": str(exc)}
+                    )
+
+    return {
+        "complete": not errors,
+        "deleted_files": deleted_files,
+        "removed_directories": removed_directories,
+        "errors": errors,
+    }
+
+
+def command_archive(arguments):
+    manifest, prepared = load_archive_manifest(Path(arguments.manifest))
+    database = Path(arguments.db).expanduser().absolute()
+    connection = connect_writer(database)
+    try:
+        ensure_schema(connection)
+        connection.execute("BEGIN")
+        archived_at = (
+            datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
+        )
+        connection.execute(
+            "INSERT INTO archive_runs(id, archived_at, source_root) VALUES (?, ?, ?)",
+            (manifest["run_id"], archived_at, manifest["source_root"]),
+        )
+        compressed_bytes = 0
+        source_bytes = 0
+        for item, raw in prepared:
+            compressed = zlib.compress(raw)
+            restored = zlib.decompress(compressed)
+            if (
+                restored != raw
+                or len(restored) != item["source_bytes"]
+                or hashlib.sha256(restored).hexdigest() != item["content_sha256"]
+            ):
+                raise LedgerError(
+                    f"compression verification failed: {item['source_path']}"
+                )
+            connection.execute(
+                """
+                INSERT INTO documents(
+                    id, archive_run_id, source_path, title, kind, summary,
+                    content_zlib, content_sha256, source_bytes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    item["id"],
+                    manifest["run_id"],
+                    item["source_path"],
+                    item["title"],
+                    item["kind"],
+                    item["summary"],
+                    compressed,
+                    item["content_sha256"],
+                    item["source_bytes"],
+                ),
+            )
+            source_bytes += len(raw)
+            compressed_bytes += len(compressed)
+
+        known_targets = {
+            row[0] for row in connection.execute("SELECT id FROM documents")
+        }
+        for item, _ in prepared:
+            connection.executemany(
+                "INSERT INTO document_topics(document_id, topic) VALUES (?, ?)",
+                [(item["id"], topic) for topic in item["topics"]],
+            )
+        for item, _ in prepared:
+            for link in item["links"]:
+                target = link["to_document_id"]
+                if target not in known_targets:
+                    raise LedgerError(f"missing link target: {target}")
+                connection.execute(
+                    """
+                    INSERT INTO document_links(
+                        from_document_id, relation, to_document_id
+                    ) VALUES (?, ?, ?)
+                    """,
+                    (item["id"], link["relation"], target),
+                )
+        verify_database(connection)
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        connection.close()
+        raise
+    connection.close()
+
+    cleanup = cleanup_sources(manifest)
+    result = {
+        "run_id": manifest["run_id"],
+        "inserted_documents": len(prepared),
+        "duplicate_documents": 0,
+        "source_bytes": source_bytes,
+        "compressed_bytes": compressed_bytes,
+        "database_authoritative": True,
+        "cleanup": cleanup,
+    }
+    if not cleanup["complete"]:
+        json_success(result, exit_code=3)
+    return result
+
+
 def build_parser():
     parser = JsonArgumentParser(description="Write the Superstore ledger")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -126,6 +622,10 @@ def build_parser():
     scan.add_argument("--workspace-root", required=True)
     scan.add_argument("path")
     scan.set_defaults(handler=command_scan)
+    archive = commands.add_parser("archive", help="archive a confirmed manifest")
+    archive.add_argument("--db", required=True)
+    archive.add_argument("--manifest", required=True)
+    archive.set_defaults(handler=command_archive)
     return parser
 
 
@@ -134,6 +634,8 @@ def main():
     try:
         json_success(arguments.handler(arguments))
     except LedgerError as exc:
+        fail(exc)
+    except (json.JSONDecodeError, sqlite3.Error, zlib.error) as exc:
         fail(exc)
     except OSError as exc:
         fail(exc)

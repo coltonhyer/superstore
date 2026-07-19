@@ -39,6 +39,22 @@ class CliCase(unittest.TestCase):
         stream = completed.stdout if expected in (0, 3) else completed.stderr
         return json.loads(stream)
 
+    def enriched_manifest(self, scan, metadata):
+        for document in scan["documents"]:
+            values = metadata[document["source_path"]]
+            document.update(
+                {
+                    "title": values["title"],
+                    "kind": values["kind"],
+                    "summary": values["summary"],
+                    "topics": values.get("topics", []),
+                    "links": values.get("links", []),
+                }
+            )
+        path = self.workspace / "archive-manifest.json"
+        path.write_text(json.dumps(scan), encoding="utf-8")
+        return path
+
 
 class ScanTests(CliCase):
     def test_scan_recurses_markdown_and_ignores_other_regular_files(self):
@@ -137,3 +153,120 @@ class ScanTests(CliCase):
             expected=2,
         )
         self.assertIn(".md", error["error"])
+
+
+class ArchiveTests(CliCase):
+    def scan(self, path):
+        return self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            self.workspace,
+            path,
+        )
+
+    def test_archive_round_trips_exact_bytes_topics_links_and_removes_empty_root(self):
+        docs = self.workspace / "chosen"
+        docs.mkdir()
+        spec = docs / "spec.md"
+        plan = docs / "plan.md"
+        spec_bytes = b"# Auth Spec\n\nUse opaque sessions.\r\n"
+        plan_bytes = b"# Auth Plan\n\nImplement the spec.\n"
+        spec.write_bytes(spec_bytes)
+        plan.write_bytes(plan_bytes)
+        scan = self.scan(docs)
+        ids = {item["source_path"]: item["id"] for item in scan["documents"]}
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                "chosen/spec.md": {
+                    "title": "Auth Spec",
+                    "kind": "spec",
+                    "summary": "Defines opaque session authentication and the constraints that later implementation work must preserve.",
+                    "topics": ["auth", "session-management"],
+                },
+                "chosen/plan.md": {
+                    "title": "Auth Plan",
+                    "kind": "plan",
+                    "summary": "Plans the implementation work required to deliver the approved opaque-session authentication design.",
+                    "topics": ["auth"],
+                    "links": [
+                        {
+                            "relation": "implements",
+                            "to_document_id": ids["chosen/spec.md"],
+                        }
+                    ],
+                },
+            },
+        )
+
+        result = self.run_json(
+            ARCHIVE, "archive", "--db", self.db, "--manifest", manifest
+        )
+
+        self.assertEqual(result["inserted_documents"], 2)
+        self.assertEqual(result["duplicate_documents"], 0)
+        self.assertTrue(result["cleanup"]["complete"])
+        self.assertFalse(docs.exists())
+        import sqlite3
+        import zlib
+
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 1)
+            rows = connection.execute(
+                "SELECT source_path, content_zlib, content_sha256, source_bytes "
+                "FROM documents ORDER BY source_path"
+            ).fetchall()
+            restored = {row[0]: zlib.decompress(row[1]) for row in rows}
+            self.assertEqual(restored["chosen/spec.md"], spec_bytes)
+            self.assertEqual(restored["chosen/plan.md"], plan_bytes)
+            self.assertEqual(
+                connection.execute(
+                    "SELECT relation FROM document_links"
+                ).fetchone()[0],
+                "implements",
+            )
+            self.assertEqual(
+                {
+                    row[0]
+                    for row in connection.execute(
+                        "SELECT topic FROM document_topics"
+                    )
+                },
+                {"auth", "session-management"},
+            )
+
+    def test_changed_source_or_invalid_manifest_preserves_all_sources(self):
+        docs = self.workspace / "chosen"
+        docs.mkdir()
+        source = docs / "plan.md"
+        source.write_text("# Plan\n\nFirst version.\n", encoding="utf-8")
+        scan = self.scan(docs)
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                "chosen/plan.md": {
+                    "title": "Plan",
+                    "kind": "plan",
+                    "summary": "Captures the first version of the implementation plan.",
+                    "topics": ["delivery"],
+                }
+            },
+        )
+        source.write_text("# Plan\n\nChanged after scan.\n", encoding="utf-8")
+
+        error = self.run_json(
+            ARCHIVE,
+            "archive",
+            "--db",
+            self.db,
+            "--manifest",
+            manifest,
+            expected=2,
+        )
+
+        self.assertIn("changed since scan", error["error"].lower())
+        self.assertTrue(source.exists())
+        self.assertFalse(self.db.exists())
