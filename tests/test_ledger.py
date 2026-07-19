@@ -1014,3 +1014,208 @@ class ReplayTests(CliCase):
 
         self.assertIn("version 2", error["error"].lower())
         self.assertFalse(output.exists())
+
+
+class ReaderTests(CliCase):
+    def create_revision_ledger(self):
+        old_scan, unused = self.archive_one(
+            self.db,
+            "docs/auth.md",
+            b"# Auth v1\n\nUse cookies.\n",
+            "Auth v1",
+            "spec",
+            ["auth", "sessions"],
+        )
+        new_scan, unused = self.archive_one(
+            self.db,
+            "docs/auth.md",
+            b"# Auth v2\n\nUse opaque sessions.\n",
+            "Auth v2",
+            "spec",
+            ["auth", "sessions"],
+            [
+                {
+                    "relation": "references",
+                    "to_document_id": old_scan["documents"][0]["id"],
+                }
+            ],
+        )
+        plan_scan, unused = self.archive_one(
+            self.db,
+            "docs/auth-plan.md",
+            b"# Auth Plan\n\nImplement opaque sessions.\n",
+            "Auth implementation",
+            "plan",
+            ["auth", "delivery"],
+            [
+                {
+                    "relation": "implements",
+                    "to_document_id": new_scan["documents"][0]["id"],
+                }
+            ],
+        )
+        return old_scan, new_scan, plan_scan
+
+    def test_topics_and_search_use_metadata_without_returning_content(self):
+        old_scan, new_scan, plan_scan = self.create_revision_ledger()
+
+        topics = self.run_json(READER, "topics", "--db", self.db)
+        self.assertEqual(
+            topics["topics"],
+            [
+                {"topic": "auth", "document_count": 3},
+                {"topic": "delivery", "document_count": 1},
+                {"topic": "sessions", "document_count": 2},
+            ],
+        )
+        result = self.run_json(
+            READER,
+            "search",
+            "--db",
+            self.db,
+            "--topic",
+            "auth",
+            "--summary",
+            "deterministic",
+        )
+        ids = {item["id"] for item in result["documents"]}
+        self.assertNotIn(old_scan["documents"][0]["id"], ids)
+        self.assertIn(new_scan["documents"][0]["id"], ids)
+        self.assertIn(plan_scan["documents"][0]["id"], ids)
+        self.assertTrue(all("content" not in item for item in result["documents"]))
+
+        history = self.run_json(
+            READER,
+            "search",
+            "--db",
+            self.db,
+            "--path",
+            "docs/auth.md",
+            "--include-superseded",
+        )
+        self.assertEqual(len(history["documents"]), 2)
+
+    def test_show_returns_verified_exact_content_and_one_hop_links(self):
+        old_scan, new_scan, plan_scan = self.create_revision_ledger()
+        document_id = plan_scan["documents"][0]["id"]
+
+        result = self.run_json(READER, "show", "--db", self.db, document_id)
+
+        self.assertEqual(result["document"]["id"], document_id)
+        self.assertEqual(
+            result["content"], "# Auth Plan\n\nImplement opaque sessions.\n"
+        )
+        self.assertEqual(
+            result["document"]["outgoing_links"][0]["relation"], "implements"
+        )
+        self.assertEqual(
+            result["document"]["outgoing_links"][0]["document_id"],
+            new_scan["documents"][0]["id"],
+        )
+        self.assertEqual(result["document"]["supersedes"], [])
+        self.assertEqual(result["document"]["superseded_by"], [])
+
+    def test_reader_rejects_corrupt_payload_and_unsupported_schema(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "doc.md",
+            b"# Exact\n\nPayload.\n",
+            "Exact",
+            "notes",
+        )
+        document_id = scan["documents"][0]["id"]
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            trigger_sql = connection.execute(
+                """
+                SELECT sql FROM sqlite_schema
+                WHERE type = 'trigger'
+                  AND name = 'documents_payload_immutable'
+                """
+            ).fetchone()[0]
+            connection.execute("DROP TRIGGER documents_payload_immutable")
+            connection.execute(
+                "UPDATE documents SET content_zlib = X'00' WHERE id = ?",
+                (document_id,),
+            )
+            connection.execute(trigger_sql)
+        connection.close()
+        error = self.run_json(
+            READER, "show", "--db", self.db, document_id, expected=2
+        )
+        self.assertIn("compressed", error["error"].lower())
+
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("PRAGMA user_version = 2")
+        connection.close()
+        error = self.run_json(
+            READER, "topics", "--db", self.db, expected=2
+        )
+        self.assertIn("version 2", error["error"].lower())
+
+    def test_show_rejects_non_blob_payload_as_json_error(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "doc.md",
+            b"# Exact\n\nPayload.\n",
+            "Exact",
+            "notes",
+        )
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            trigger_sql = connection.execute(
+                """
+                SELECT sql FROM sqlite_schema
+                WHERE type = 'trigger'
+                  AND name = 'documents_payload_immutable'
+                """
+            ).fetchone()[0]
+            connection.execute("DROP TRIGGER documents_payload_immutable")
+            connection.execute(
+                "UPDATE documents SET content_zlib = 7 WHERE id = ?",
+                (scan["documents"][0]["id"],),
+            )
+            connection.execute(trigger_sql)
+        connection.close()
+
+        error = self.run_json(
+            READER,
+            "show",
+            "--db",
+            self.db,
+            scan["documents"][0]["id"],
+            expected=2,
+        )
+
+        self.assertIn("compressed", error["error"].lower())
+
+    def test_reader_rejects_unexpandable_database_path_as_json_error(self):
+        error = self.run_json(
+            READER,
+            "topics",
+            "--db",
+            "~__superstore_user_that_does_not_exist__/ledger.db",
+            expected=2,
+        )
+
+        self.assertIn("home directory", error["error"].lower())
+
+    def test_search_rejects_non_json_metadata_as_json_error(self):
+        self.archive_one(
+            self.db,
+            "doc.md",
+            b"# Exact\n\nPayload.\n",
+            "Exact",
+            "notes",
+        )
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            connection.execute("UPDATE documents SET title = X'80'")
+        connection.close()
+
+        error = self.run_json(READER, "search", "--db", self.db, expected=2)
+
+        self.assertIn("serializable", error["error"].lower())
