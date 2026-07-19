@@ -1370,6 +1370,7 @@ class FinalSafetyTests(CliCase):
                 connection.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
                 0,
             )
+        connection.close()
 
     @unittest.skipIf(os.name == "nt", "POSIX directory permissions required")
     def test_cleanup_failure_reports_exit_three_after_verified_commit(self):
@@ -1421,6 +1422,7 @@ class FinalSafetyTests(CliCase):
                 connection.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
                 1,
             )
+        connection.close()
 
     def test_reader_rejects_non_sqlite_conflict_materialization(self):
         conflict = self.workspace / "ledger.db"
