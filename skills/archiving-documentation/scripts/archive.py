@@ -894,8 +894,7 @@ def load_metadata_manifest(path):
             "metadata manifest must contain exactly document_id, title, kind, "
             "summary, topics, and links"
         )
-    if not isinstance(data["document_id"], str) or not data["document_id"]:
-        raise LedgerError("document_id must be non-empty text")
+    validate_uuid4(data["document_id"], "document_id")
     if not isinstance(data["title"], str) or not data["title"].strip():
         raise LedgerError("title must be non-empty text")
     if not isinstance(data["summary"], str) or not data["summary"].strip():
@@ -920,15 +919,12 @@ def load_metadata_manifest(path):
             "to_document_id",
         }:
             raise LedgerError("each link must contain relation and to_document_id")
-        key = (link["relation"], link["to_document_id"])
-        if (
-            not isinstance(link["relation"], str)
-            or not SLUG.fullmatch(link["relation"])
-            or not isinstance(link["to_document_id"], str)
-            or not link["to_document_id"]
-            or link["to_document_id"] == data["document_id"]
-            or key in seen_links
-        ):
+        relation = link["relation"]
+        if not isinstance(relation, str) or not SLUG.fullmatch(relation):
+            raise LedgerError("metadata links are malformed, duplicate, or self-links")
+        target = validate_uuid4(link["to_document_id"], "metadata link target")
+        key = (relation, target)
+        if target == data["document_id"] or key in seen_links:
             raise LedgerError("metadata links are malformed, duplicate, or self-links")
         seen_links.add(key)
     return data

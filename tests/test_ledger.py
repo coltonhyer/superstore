@@ -435,6 +435,34 @@ class ArchiveTests(CliCase):
 
 
 class RevisionAndMetadataTests(CliCase):
+    def rejected_metadata(self, document_id, links):
+        metadata = self.workspace / "invalid-metadata.json"
+        metadata.write_text(
+            json.dumps(
+                {
+                    "document_id": document_id,
+                    "title": "Changed title",
+                    "kind": "decision-record",
+                    "summary": "Must not replace existing metadata when manifest validation fails.",
+                    "topics": ["architecture"],
+                    "links": links,
+                }
+            ),
+            encoding="utf-8",
+        )
+        before = self.db.read_bytes()
+        error = self.run_json(
+            ARCHIVE,
+            "metadata",
+            "--db",
+            self.db,
+            "--manifest",
+            metadata,
+            expected=2,
+        )
+        self.assertEqual(self.db.read_bytes(), before)
+        return error
+
     def test_duplicate_retry_deletes_source_without_creating_empty_run(self):
         first_scan, first = self.archive_one(
             self.db,
@@ -679,3 +707,50 @@ class RevisionAndMetadataTests(CliCase):
         )
 
         self.assertIn("topics", error["error"])
+
+    def test_metadata_rejects_non_uuid4_document_id_without_writes(self):
+        self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nImmutable source.\n",
+            "Original title",
+            "spec",
+        )
+
+        error = self.rejected_metadata(str(uuid.uuid1()), [])
+
+        self.assertIn("document_id", error["error"])
+        self.assertIn("UUIDv4", error["error"])
+
+    def test_metadata_rejects_non_uuid4_link_target_without_writes(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nImmutable source.\n",
+            "Original title",
+            "spec",
+        )
+
+        error = self.rejected_metadata(
+            scan["documents"][0]["id"],
+            [{"relation": "references", "to_document_id": str(uuid.uuid1())}],
+        )
+
+        self.assertIn("metadata link target", error["error"])
+        self.assertIn("UUIDv4", error["error"])
+
+    def test_metadata_rejects_unhashable_link_target_without_writes(self):
+        scan, unused = self.archive_one(
+            self.db,
+            "docs/spec.md",
+            b"# Spec\n\nImmutable source.\n",
+            "Original title",
+            "spec",
+        )
+
+        error = self.rejected_metadata(
+            scan["documents"][0]["id"],
+            [{"relation": "references", "to_document_id": []}],
+        )
+
+        self.assertIn("metadata link target must be a UUID", error["error"])
