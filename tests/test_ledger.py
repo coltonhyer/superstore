@@ -1256,3 +1256,181 @@ class ReaderTests(CliCase):
         error = self.run_json(READER, "search", "--db", self.db, expected=2)
 
         self.assertIn("serializable", error["error"].lower())
+
+
+class FinalSafetyTests(CliCase):
+    def test_malformed_multi_document_manifest_preserves_every_source(self):
+        docs = self.workspace / "chosen"
+        docs.mkdir()
+        first = docs / "first.md"
+        second = docs / "second.md"
+        first.write_text("# First\n", encoding="utf-8")
+        second.write_text("# Second\n", encoding="utf-8")
+        scan = self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            self.workspace,
+            docs,
+        )
+        ids = {item["source_path"]: item["id"] for item in scan["documents"]}
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                "chosen/first.md": {
+                    "title": "First",
+                    "kind": "notes",
+                    "summary": "First source in a batch that must remain atomic on malformed metadata.",
+                    "topics": ["safety"],
+                },
+                "chosen/second.md": {
+                    "title": "Second",
+                    "kind": "notes",
+                    "summary": "Second source in a batch that must remain atomic on malformed metadata.",
+                    "topics": ["safety"],
+                    "links": [
+                        {
+                            "relation": "not normalized",
+                            "to_document_id": ids["chosen/first.md"],
+                        }
+                    ],
+                },
+            },
+        )
+
+        error = self.run_json(
+            ARCHIVE,
+            "archive",
+            "--db",
+            self.db,
+            "--manifest",
+            manifest,
+            expected=2,
+        )
+
+        self.assertIn("relation", error["error"].lower())
+        self.assertTrue(first.exists())
+        self.assertTrue(second.exists())
+        self.assertFalse(self.db.exists())
+
+    def test_missing_link_target_rolls_back_every_document(self):
+        docs = self.workspace / "chosen"
+        docs.mkdir()
+        source = docs / "plan.md"
+        source.write_text("# Plan\n", encoding="utf-8")
+        scan = self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            self.workspace,
+            docs,
+        )
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                "chosen/plan.md": {
+                    "title": "Plan",
+                    "kind": "plan",
+                    "summary": "References a missing archive target to exercise atomic foreign-key safety.",
+                    "topics": ["safety"],
+                    "links": [
+                        {
+                            "relation": "references",
+                            "to_document_id": str(uuid.uuid4()),
+                        }
+                    ],
+                }
+            },
+        )
+
+        error = self.run_json(
+            ARCHIVE,
+            "archive",
+            "--db",
+            self.db,
+            "--manifest",
+            manifest,
+            expected=2,
+        )
+
+        self.assertIn("missing link target", error["error"].lower())
+        self.assertTrue(source.exists())
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM archive_runs").fetchone()[0],
+                0,
+            )
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
+                0,
+            )
+
+    @unittest.skipIf(os.name == "nt", "POSIX directory permissions required")
+    def test_cleanup_failure_reports_exit_three_after_verified_commit(self):
+        docs = self.workspace / "locked"
+        docs.mkdir()
+        source = docs / "plan.md"
+        source.write_text("# Plan\n\nCannot unlink yet.\n", encoding="utf-8")
+        scan = self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            self.workspace,
+            source,
+        )
+        manifest = self.enriched_manifest(
+            scan,
+            {
+                "locked/plan.md": {
+                    "title": "Locked cleanup",
+                    "kind": "plan",
+                    "summary": "Exercises the post-commit cleanup boundary without weakening database verification.",
+                    "topics": ["safety"],
+                }
+            },
+        )
+        docs.chmod(0o500)
+        try:
+            result = self.run_json(
+                ARCHIVE,
+                "archive",
+                "--db",
+                self.db,
+                "--manifest",
+                manifest,
+                expected=3,
+            )
+        finally:
+            docs.chmod(0o700)
+
+        self.assertTrue(result["database_authoritative"])
+        self.assertFalse(result["cleanup"]["complete"])
+        self.assertTrue(source.exists())
+        import sqlite3
+
+        with sqlite3.connect(self.db) as connection:
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM documents").fetchone()[0],
+                1,
+            )
+
+    def test_reader_rejects_non_sqlite_conflict_materialization(self):
+        conflict = self.workspace / "ledger.db"
+        conflict.write_text(
+            "<<<<<<< destination\nbinary side\n=======\nother side\n>>>>>>>\n",
+            encoding="utf-8",
+        )
+
+        error = self.run_json(
+            READER, "topics", "--db", conflict, expected=2
+        )
+
+        self.assertIn("sqlite", error["error"].lower())
