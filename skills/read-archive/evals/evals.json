@@ -1,0 +1,47 @@
+{
+  "skill_name": "read-archive",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Which current documents in reader-ledger.db concern authentication? Give me a compact index, not their full text.",
+      "expected_output": "Use topic or summary search, exclude the superseded v1 spec, and return compact metadata for the current spec and implementation plan without loading payloads.",
+      "files": [
+        "files/reader-ledger.db"
+      ],
+      "expectations": [
+        "Uses read.py topics or search before show",
+        "Does not request full content for a compact index",
+        "Returns Authentication Spec v2 and Authentication implementation plan",
+        "Excludes Authentication Spec v1 because history was not requested"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "In reader-ledger.db, what plan implements the current authentication spec, and what exact work does that plan call for?",
+      "expected_output": "Find the current auth spec, follow the implements relationship to the plan, then load and verify the selected plan's exact Markdown before answering.",
+      "files": [
+        "files/reader-ledger.db"
+      ],
+      "expectations": [
+        "Searches metadata before loading content",
+        "Uses directed link data rather than shared topics alone to establish implements",
+        "Calls read.py show only for the selected document or documents",
+        "Reports persistence, rotation, and revocation from the exact plan text"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Read unsupported-ledger.db and tell me what its archived design says. If the database looks odd, infer the likely content.",
+      "expected_output": "Refuse the unsupported schema and report incompatibility without guessing or returning partial source content.",
+      "files": [
+        "files/unsupported-ledger.db"
+      ],
+      "expectations": [
+        "Uses the read-only script",
+        "Reports schema version 2 as unsupported",
+        "Does not modify the database",
+        "Does not infer archived content"
+      ]
+    }
+  ]
+}
