@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -754,3 +755,219 @@ class RevisionAndMetadataTests(CliCase):
         )
 
         self.assertIn("metadata link target must be a UUID", error["error"])
+
+
+class ReplayTests(CliCase):
+    def make_three_snapshots(self):
+        live = self.workspace / "live.db"
+        seed_scan, unused = self.archive_one(
+            live,
+            "seed.md",
+            b"# Seed\n\nCommon ancestor.\n",
+            "Seed",
+            "notes",
+            ["shared"],
+        )
+        base = self.workspace / "base.db"
+        destination = self.workspace / "destination.db"
+        source = self.workspace / "source.db"
+        shutil.copy2(live, base)
+        shutil.copy2(live, destination)
+        shutil.copy2(live, source)
+        return seed_scan["documents"][0]["id"], base, destination, source
+
+    def test_replay_preserves_destination_and_imports_source_run(self):
+        unused, base, destination, source = self.make_three_snapshots()
+        self.archive_one(
+            destination,
+            "destination.md",
+            b"# Destination\n\nIntegrated work.\n",
+            "Destination",
+            "plan",
+            ["delivery"],
+        )
+        self.archive_one(
+            source,
+            "source.md",
+            b"# Source\n\nFeature work.\n",
+            "Source",
+            "spec",
+            ["feature"],
+        )
+        before_destination = hashlib.sha256(destination.read_bytes()).hexdigest()
+        before_source = hashlib.sha256(source.read_bytes()).hexdigest()
+        output = self.workspace / "merged.db"
+
+        result = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            output,
+        )
+
+        self.assertEqual(result["imported_runs"], 1)
+        self.assertEqual(result["imported_documents"], 1)
+        self.assertEqual(
+            hashlib.sha256(destination.read_bytes()).hexdigest(),
+            before_destination,
+        )
+        self.assertEqual(
+            hashlib.sha256(source.read_bytes()).hexdigest(), before_source
+        )
+        import sqlite3
+
+        with sqlite3.connect(output) as connection:
+            self.assertEqual(
+                connection.execute("SELECT COUNT(*) FROM archive_runs").fetchone()[0],
+                3,
+            )
+            self.assertEqual(
+                {
+                    row[0]
+                    for row in connection.execute(
+                        "SELECT source_path FROM documents"
+                    )
+                },
+                {"seed.md", "destination.md", "source.md"},
+            )
+        connection.close()
+
+    def test_replay_is_idempotent_for_identical_run(self):
+        unused, base, destination, source = self.make_three_snapshots()
+        self.archive_one(
+            source,
+            "source.md",
+            b"# Source\n\nFeature work.\n",
+            "Source",
+            "spec",
+        )
+        first = self.workspace / "first.db"
+        second = self.workspace / "second.db"
+        self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            first,
+        )
+
+        result = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            first,
+            "--source",
+            source,
+            "--output",
+            second,
+        )
+
+        self.assertEqual(result["imported_runs"], 0)
+        self.assertEqual(result["identical_runs"], 1)
+
+    def test_replay_rejects_source_metadata_edit_and_divergent_run_id(self):
+        seed_id, base, destination, source = self.make_three_snapshots()
+        metadata = self.workspace / "metadata.json"
+        metadata.write_text(
+            json.dumps(
+                {
+                    "document_id": seed_id,
+                    "title": "Edited on source",
+                    "kind": "notes",
+                    "summary": "This source-side metadata edit is intentionally ineligible for automatic replay.",
+                    "topics": ["shared"],
+                    "links": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.run_json(
+            ARCHIVE, "metadata", "--db", source, "--manifest", metadata
+        )
+        output = self.workspace / "rejected.db"
+        error = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            output,
+            expected=2,
+        )
+        self.assertIn(seed_id, error["error"])
+        self.assertFalse(output.exists())
+
+        shutil.copy2(base, source)
+        destination_scan, unused = self.archive_one(
+            destination,
+            "destination-only.md",
+            b"# Destination\n\nOne run body.\n",
+            "Destination only",
+            "plan",
+        )
+        self.archive_one(
+            source,
+            "source-only.md",
+            b"# Source\n\nDifferent run body.\n",
+            "Source only",
+            "plan",
+            run_id=destination_scan["run_id"],
+        )
+        error = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            output,
+            expected=2,
+        )
+        self.assertIn("divergent", error["error"].lower())
+        self.assertFalse(output.exists())
+
+    def test_replay_rejects_schema_mismatch(self):
+        unused, base, destination, source = self.make_three_snapshots()
+        import sqlite3
+
+        with sqlite3.connect(source) as connection:
+            connection.execute("PRAGMA user_version = 2")
+        connection.close()
+        output = self.workspace / "rejected.db"
+
+        error = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            output,
+            expected=2,
+        )
+
+        self.assertIn("version 2", error["error"].lower())
+        self.assertFalse(output.exists())

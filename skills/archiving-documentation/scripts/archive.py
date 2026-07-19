@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import contextlib
 import datetime
 import errno
 import hashlib
@@ -10,6 +11,7 @@ import re
 import sqlite3
 import stat
 import sys
+import tempfile
 import uuid
 import zlib
 
@@ -118,6 +120,16 @@ EXPECTED_OBJECTS = {
     ("trigger", "archive_runs_no_delete"),
     ("trigger", "documents_payload_immutable"),
     ("trigger", "documents_no_delete"),
+}
+PRIMARY_KEY_COLUMNS = {
+    "archive_runs": ("id",),
+    "documents": ("id",),
+    "document_topics": ("document_id", "topic"),
+    "document_links": (
+        "from_document_id",
+        "relation",
+        "to_document_id",
+    ),
 }
 
 
@@ -313,6 +325,271 @@ def verify_database(connection):
     integrity = [row[0] for row in connection.execute("PRAGMA integrity_check")]
     if integrity != ["ok"]:
         raise LedgerError(f"integrity verification failed: {integrity}")
+
+
+def table_rows(connection, table):
+    columns = EXPECTED_COLUMNS[table]
+    order = PRIMARY_KEY_COLUMNS[table]
+    sql = (
+        f"SELECT {', '.join(columns)} FROM {table} "
+        f"ORDER BY {', '.join(order)}"
+    )
+    return list(connection.execute(sql))
+
+
+def keyed_rows(connection, table):
+    columns = EXPECTED_COLUMNS[table]
+    keys = PRIMARY_KEY_COLUMNS[table]
+    key_indexes = tuple(columns.index(value) for value in keys)
+    return {
+        tuple(row[index] for index in key_indexes): tuple(row)
+        for row in table_rows(connection, table)
+    }
+
+
+def validate_snapshot(path):
+    connection = connect_readonly(path)
+    try:
+        verify_database(connection)
+        return connection
+    except Exception:
+        connection.close()
+        raise
+
+
+def ensure_source_is_insert_only(base, source):
+    affected = set()
+    base_runs = keyed_rows(base, "archive_runs")
+    source_runs = keyed_rows(source, "archive_runs")
+    for key, row in base_runs.items():
+        if source_runs.get(key) != row:
+            affected.add(key[0])
+
+    base_documents = keyed_rows(base, "documents")
+    source_documents = keyed_rows(source, "documents")
+    for key, row in base_documents.items():
+        if source_documents.get(key) != row:
+            affected.add(key[0])
+    base_ids = {key[0] for key in base_documents}
+
+    for table in ("document_topics", "document_links"):
+        base_rows = keyed_rows(base, table)
+        source_rows = keyed_rows(source, table)
+        for key, row in base_rows.items():
+            if source_rows.get(key) != row:
+                affected.add(key[0])
+        for key in source_rows.keys() - base_rows.keys():
+            if key[0] in base_ids:
+                affected.add(key[0])
+
+    new_run_ids = set(source_runs) - set(base_runs)
+    for key, row in source_documents.items():
+        if key not in base_documents and (row[1],) not in new_run_ids:
+            affected.add(key[0])
+    if affected:
+        raise LedgerError(
+            "source is not insert-only; changed existing IDs: "
+            + ", ".join(sorted(affected))
+        )
+    return {key[0] for key in new_run_ids}
+
+
+def run_bundle(connection, run_id):
+    run = connection.execute(
+        "SELECT id, archived_at, source_root FROM archive_runs WHERE id = ?",
+        (run_id,),
+    ).fetchone()
+    documents = list(
+        connection.execute(
+            """
+            SELECT id, archive_run_id, source_path, title, kind, summary,
+                   content_zlib, content_sha256, source_bytes
+            FROM documents WHERE archive_run_id = ? ORDER BY id
+            """,
+            (run_id,),
+        )
+    )
+    document_ids = [row[0] for row in documents]
+    if not document_ids:
+        raise LedgerError(f"archive run has no documents: {run_id}")
+    markers = ",".join("?" for value in document_ids)
+    topics = list(
+        connection.execute(
+            f"""
+            SELECT document_id, topic FROM document_topics
+            WHERE document_id IN ({markers})
+            ORDER BY document_id, topic
+            """,
+            document_ids,
+        )
+    )
+    links = list(
+        connection.execute(
+            f"""
+            SELECT from_document_id, relation, to_document_id
+            FROM document_links
+            WHERE from_document_id IN ({markers})
+            ORDER BY from_document_id, relation, to_document_id
+            """,
+            document_ids,
+        )
+    )
+    return run, documents, topics, links
+
+
+def verify_payload_rows(connection, document_ids):
+    for document_id in document_ids:
+        row = connection.execute(
+            """
+            SELECT source_path, content_zlib, content_sha256, source_bytes
+            FROM documents WHERE id = ?
+            """,
+            (document_id,),
+        ).fetchone()
+        if row is None:
+            raise LedgerError(f"missing imported document: {document_id}")
+        try:
+            raw = zlib.decompress(row[1])
+        except zlib.error as exc:
+            raise LedgerError(f"invalid compressed payload: {row[0]}") from exc
+        if len(raw) != row[3]:
+            raise LedgerError(f"payload byte length mismatch: {row[0]}")
+        if hashlib.sha256(raw).hexdigest() != row[2]:
+            raise LedgerError(f"payload SHA-256 mismatch: {row[0]}")
+
+
+def import_bundle_without_links(connection, bundle):
+    run, documents, topics, links = bundle
+    connection.execute(
+        "INSERT INTO archive_runs(id, archived_at, source_root) VALUES (?, ?, ?)",
+        run,
+    )
+    connection.executemany(
+        """
+        INSERT INTO documents(
+            id, archive_run_id, source_path, title, kind, summary,
+            content_zlib, content_sha256, source_bytes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        documents,
+    )
+    connection.executemany(
+        "INSERT INTO document_topics(document_id, topic) VALUES (?, ?)",
+        topics,
+    )
+    return [row[0] for row in documents], links
+
+
+def remove_temporary_family(path):
+    if path is None:
+        return
+    for candidate in (
+        path,
+        Path(str(path) + "-journal"),
+        Path(str(path) + "-wal"),
+        Path(str(path) + "-shm"),
+    ):
+        candidate.unlink(missing_ok=True)
+
+
+def command_replay(arguments):
+    base_path = Path(arguments.base).expanduser().absolute()
+    destination_path = Path(arguments.destination).expanduser().absolute()
+    source_path = Path(arguments.source).expanduser().absolute()
+    output_path = Path(arguments.output).expanduser().absolute()
+    if len({base_path, destination_path, source_path, output_path}) != 4:
+        raise LedgerError("base, destination, source, and output must be distinct")
+    if not output_path.parent.is_dir():
+        raise LedgerError(f"output parent does not exist: {output_path.parent}")
+
+    temporary_path = None
+    imported_documents = []
+    identical_runs = 0
+    with contextlib.ExitStack() as snapshots:
+        base = validate_snapshot(base_path)
+        snapshots.callback(base.close)
+        destination = validate_snapshot(destination_path)
+        snapshots.callback(destination.close)
+        source = validate_snapshot(source_path)
+        snapshots.callback(source.close)
+        new_run_ids = ensure_source_is_insert_only(base, source)
+        handle, temporary_name = tempfile.mkstemp(
+            prefix=f".{output_path.name}.",
+            suffix=".tmp",
+            dir=output_path.parent,
+        )
+        os.close(handle)
+        temporary_path = Path(temporary_name)
+        snapshots.callback(remove_temporary_family, temporary_path)
+        temporary_path.unlink()
+        output_connection = sqlite3.connect(temporary_path)
+        try:
+            destination.backup(output_connection)
+            output_connection.execute("PRAGMA foreign_keys = ON")
+            output_connection.execute("PRAGMA journal_mode = DELETE")
+            validate_schema(output_connection)
+            pending_links = []
+            output_connection.execute("BEGIN")
+            for run_id in sorted(new_run_ids):
+                source_bundle = run_bundle(source, run_id)
+                existing = output_connection.execute(
+                    "SELECT 1 FROM archive_runs WHERE id = ?", (run_id,)
+                ).fetchone()
+                if existing is not None:
+                    if run_bundle(output_connection, run_id) != source_bundle:
+                        raise LedgerError(
+                            f"divergent archive-run UUID collision: {run_id}"
+                        )
+                    identical_runs += 1
+                    continue
+                document_ids, links = import_bundle_without_links(
+                    output_connection, source_bundle
+                )
+                imported_documents.extend(document_ids)
+                pending_links.extend(links)
+            output_connection.executemany(
+                """
+                INSERT INTO document_links(
+                    from_document_id, relation, to_document_id
+                ) VALUES (?, ?, ?)
+                """,
+                pending_links,
+            )
+            verify_payload_rows(output_connection, imported_documents)
+            verify_database(output_connection)
+            output_connection.commit()
+        except sqlite3.IntegrityError as exc:
+            output_connection.rollback()
+            raise LedgerError(
+                f"replay collision, duplicate path/hash, or missing link target: {exc}"
+            ) from exc
+        except Exception:
+            output_connection.rollback()
+            raise
+        finally:
+            output_connection.close()
+        sidecars = [
+            candidate
+            for candidate in (
+                Path(str(temporary_path) + "-journal"),
+                Path(str(temporary_path) + "-wal"),
+                Path(str(temporary_path) + "-shm"),
+            )
+            if candidate.exists()
+        ]
+        if sidecars:
+            raise LedgerError(
+                "temporary replay database retained SQLite sidecars: "
+                + ", ".join(path.as_posix() for path in sidecars)
+            )
+        os.replace(temporary_path, output_path)
+        temporary_path = None
+    return {
+        "output": output_path.as_posix(),
+        "imported_runs": len(new_run_ids) - identical_runs,
+        "identical_runs": identical_runs,
+        "imported_documents": len(imported_documents),
+    }
 
 
 def manifest_absolute_path(value, field):
@@ -1060,6 +1337,14 @@ def build_parser():
     metadata.add_argument("--db", required=True)
     metadata.add_argument("--manifest", required=True)
     metadata.set_defaults(handler=command_metadata)
+    replay = commands.add_parser(
+        "replay", help="replay insert-only archive runs"
+    )
+    replay.add_argument("--base", required=True)
+    replay.add_argument("--destination", required=True)
+    replay.add_argument("--source", required=True)
+    replay.add_argument("--output", required=True)
+    replay.set_defaults(handler=command_replay)
     return parser
 
 
