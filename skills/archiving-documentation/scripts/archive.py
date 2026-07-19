@@ -351,6 +351,7 @@ def validate_snapshot(path):
     connection = connect_readonly(path)
     try:
         verify_database(connection)
+        verify_payload_rows(connection)
         return connection
     except Exception:
         connection.close()
@@ -437,7 +438,11 @@ def run_bundle(connection, run_id):
     return run, documents, topics, links
 
 
-def verify_payload_rows(connection, document_ids):
+def verify_payload_rows(connection, document_ids=None):
+    if document_ids is None:
+        document_ids = [
+            row[0] for row in connection.execute("SELECT id FROM documents")
+        ]
     for document_id in document_ids:
         row = connection.execute(
             """
@@ -449,9 +454,16 @@ def verify_payload_rows(connection, document_ids):
         if row is None:
             raise LedgerError(f"missing imported document: {document_id}")
         try:
-            raw = zlib.decompress(row[1])
-        except zlib.error as exc:
+            decompressor = zlib.decompressobj()
+            raw = decompressor.decompress(row[1]) + decompressor.flush()
+        except (TypeError, zlib.error) as exc:
             raise LedgerError(f"invalid compressed payload: {row[0]}") from exc
+        if (
+            not decompressor.eof
+            or decompressor.unused_data
+            or decompressor.unconsumed_tail
+        ):
+            raise LedgerError(f"invalid compressed payload: {row[0]}")
         if len(raw) != row[3]:
             raise LedgerError(f"payload byte length mismatch: {row[0]}")
         if hashlib.sha256(raw).hexdigest() != row[2]:
@@ -566,7 +578,7 @@ def command_replay(arguments):
                 """,
                 pending_links,
             )
-            verify_payload_rows(output_connection, imported_documents)
+            verify_payload_rows(output_connection)
             verify_database(output_connection)
             output_connection.commit()
         except sqlite3.IntegrityError as exc:
@@ -972,8 +984,13 @@ def remove_empty_directories(source_root, removed_directories, errors):
         )
         if not same_entry(current_root, root_status):
             raise LedgerError(f"source changed since scan: {source_root}")
-        os.rmdir(source_root.name, dir_fd=parent_descriptor)
-        removed_directories.append(source_root.as_posix())
+        try:
+            os.rmdir(source_root.name, dir_fd=parent_descriptor)
+        except OSError as exc:
+            if exc.errno != errno.ENOTEMPTY:
+                raise
+        else:
+            removed_directories.append(source_root.as_posix())
     finally:
         os.close(parent_descriptor)
 
@@ -1367,7 +1384,7 @@ def main():
         fail(exc)
     except (json.JSONDecodeError, sqlite3.Error, zlib.error) as exc:
         fail(exc)
-    except OSError as exc:
+    except (OSError, RuntimeError) as exc:
         fail(exc)
 
 

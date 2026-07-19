@@ -211,6 +211,23 @@ class ScanTests(CliCase):
         )
         self.assertIn(".md", error["error"])
 
+    def test_scan_reports_unexpandable_workspace_as_json_error(self):
+        source = self.workspace / "plan.md"
+        source.write_text("# Plan\n", encoding="utf-8")
+
+        error = self.run_json(
+            ARCHIVE,
+            "scan",
+            "--db",
+            self.db,
+            "--workspace-root",
+            "~__superstore_user_that_does_not_exist__",
+            source,
+            expected=2,
+        )
+
+        self.assertIn("home directory", error["error"].lower())
+
 
 class ArchiveTests(CliCase):
     def archive_module(self):
@@ -327,6 +344,33 @@ class ArchiveTests(CliCase):
         self.assertIn("changed since scan", error["error"].lower())
         self.assertTrue(source.exists())
         self.assertFalse(self.db.exists())
+
+    def test_archive_ignores_non_markdown_file_during_root_cleanup(self):
+        docs = self.workspace / "chosen"
+        docs.mkdir()
+        source = docs / "plan.md"
+        ignored = docs / "notes.txt"
+        source.write_text("# Plan\n", encoding="utf-8")
+        ignored.write_text("not Markdown\n", encoding="utf-8")
+        manifest = self.enriched_manifest(
+            self.scan(docs),
+            {
+                "chosen/plan.md": {
+                    "title": "Plan",
+                    "kind": "plan",
+                    "summary": "Archives only the selected Markdown while retaining deliberately ignored files.",
+                }
+            },
+        )
+
+        result = self.run_json(
+            ARCHIVE, "archive", "--db", self.db, "--manifest", manifest
+        )
+
+        self.assertTrue(result["cleanup"]["complete"])
+        self.assertEqual(result["cleanup"]["errors"], [])
+        self.assertFalse(source.exists())
+        self.assertTrue(ignored.exists())
 
     @unittest.skipIf(os.name == "nt", "dir_fd cleanup is POSIX-only")
     def test_cleanup_parent_swap_retains_outside_file_and_reports_error(self):
@@ -1014,6 +1058,67 @@ class ReplayTests(CliCase):
 
         self.assertIn("version 2", error["error"].lower())
         self.assertFalse(output.exists())
+
+    def test_replay_rejects_trailing_compressed_payload_without_changes(self):
+        unused, base, destination, source = self.make_three_snapshots()
+        scan, unused = self.archive_one(
+            source,
+            "source.md",
+            b"# Source\n\nFeature work.\n",
+            "Source",
+            "spec",
+        )
+        document_id = scan["documents"][0]["id"]
+        import sqlite3
+
+        with sqlite3.connect(source) as connection:
+            trigger_sql = connection.execute(
+                """
+                SELECT sql FROM sqlite_schema
+                WHERE type = 'trigger'
+                  AND name = 'documents_payload_immutable'
+                """
+            ).fetchone()[0]
+            payload = connection.execute(
+                "SELECT content_zlib FROM documents WHERE id = ?",
+                (document_id,),
+            ).fetchone()[0]
+            connection.execute("DROP TRIGGER documents_payload_immutable")
+            connection.execute(
+                "UPDATE documents SET content_zlib = ? WHERE id = ?",
+                (payload + b"trailing corruption", document_id),
+            )
+            connection.execute(trigger_sql)
+        connection.close()
+        before = {
+            path: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in (base, destination, source)
+        }
+        output = self.workspace / "rejected.db"
+
+        error = self.run_json(
+            ARCHIVE,
+            "replay",
+            "--base",
+            base,
+            "--destination",
+            destination,
+            "--source",
+            source,
+            "--output",
+            output,
+            expected=2,
+        )
+
+        self.assertIn("compressed payload", error["error"].lower())
+        self.assertFalse(output.exists())
+        self.assertEqual(
+            {
+                path: hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in (base, destination, source)
+            },
+            before,
+        )
 
 
 class ReaderTests(CliCase):
