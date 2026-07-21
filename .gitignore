@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
-.agents/plugins/
+.agents/plugins/*
+!.agents/plugins/marketplace.json
 .agents/ledger.db-journal
 .agents/ledger.db-wal
 .agents/ledger.db-shm
