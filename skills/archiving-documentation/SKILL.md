@@ -1,6 +1,6 @@
 ---
 name: archiving-documentation
-description: Use when Markdown documentation should be archived or cleaned up after a work session, archive metadata needs correction, archive cleanup needs retrying, or insert-only ledger work must be replayed across branches.
+description: Use when Markdown documentation should be archived or cleaned up after a work session, archive metadata needs correction, archive cleanup needs retrying, or a Git or Jujutsu merge conflict on the ledger database (.agents/ledger.db) must be resolved by replaying insert-only archive runs.
 ---
 
 # Archiving Documentation
@@ -38,8 +38,9 @@ committed, verified transaction.
    renamed revision.
 7. Existing topic vocabulary from `scan` is a preference, not a closed list.
    Shared topics mean shared subject matter; directed links state a specific
-   relationship. Use `auth` and `session-management` for authentication-session
-   documents.
+   relationship. Choose topics that name the document's actual subject so future
+   searches group related work — for example, an authentication-session document
+   might carry `auth` and `session-management`.
 8. For a large confirmed batch, a low-cost subagent may draft summaries in the
    background. The parent must check every summary against source text, choose
    topics, and verify link direction and target IDs.

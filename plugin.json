@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "superstore",
+  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger."
+}

@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.agents/plugins/
+.agents/ledger.db-journal
+.agents/ledger.db-wal
+.agents/ledger.db-shm
+.DS_Store

@@ -1,0 +1,8 @@
+{
+  "name": "superstore",
+  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Superstore contributors"
+  }
+}

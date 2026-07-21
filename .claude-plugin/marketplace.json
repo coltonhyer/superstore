@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "superstore",
+  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
+  "owner": {
+    "name": "Superstore contributors"
+  },
+  "plugins": [
+    {
+      "name": "superstore",
+      "source": "./",
+      "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
+      "category": "productivity"
+    }
+  ]
+}

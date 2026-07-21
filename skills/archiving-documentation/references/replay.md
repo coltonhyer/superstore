@@ -11,7 +11,7 @@ Materialize four distinct paths:
 5. Replay to a fourth, new path:
 
    ```bash
-   python3 skills/archiving-documentation/scripts/archive.py replay \
+   python3 <skill-root>/scripts/archive.py replay \
      --base base.db \
      --destination destination.db \
      --source source.db \
