@@ -548,6 +548,18 @@ class HostCommandTests(unittest.TestCase):
                 runner.find_credential_files(workspace, {secret}), ["leaked.txt"]
             )
 
+    def test_credential_paths_are_redacted_and_detected_in_workspace(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            secret = "subscription-token-123456"
+            (workspace / f"directory-{secret}").mkdir()
+            (workspace / f"file-{secret}.txt").write_text("benign", encoding="utf-8")
+
+            self.assertEqual(
+                runner.find_credential_files(workspace, {secret}),
+                ["directory-[REDACTED]", "file-[REDACTED].txt"],
+            )
+
     def test_codex_rollout_trace_preserves_reviewer_provenance(self):
         with tempfile.TemporaryDirectory() as temporary:
             state = Path(temporary)
