@@ -1,0 +1,185 @@
+{
+  "skill_name": "specs",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a spec for adding team exports. I have not approved a requirements summary.",
+      "expected_output": "Run requirements from the supplied context and wait for summary approval before drafting a spec.",
+      "skills": [
+        "requirements"
+      ],
+      "files": [],
+      "expectations": [
+        "Invokes or follows the requirements workflow",
+        "Does not draft a spec before requirements approval",
+        "Does not archive or commit anything"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Use this approved summary to write the spec: admins export currently filtered team rows as UTF-8 CSV; scheduled export is out of scope; UI and API behavior must be verified.",
+      "expected_output": "Write a concise default-format spec whose verification section names test surfaces before their behaviors, then review it before requesting approval.",
+      "files": [],
+      "expectations": [
+        "Uses every required default section",
+        "Omits empty conditional sections",
+        "Organizes verification by UI and API surfaces followed by behaviors",
+        "Runs one review before requesting approval",
+        "Does not archive or commit before approval"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use this approved requirements summary: administrators export the currently filtered team rows as UTF-8 CSV; scheduled exports are out of scope; UI and API behaviors must be verifiable. Write the spec and follow the attached repository template.",
+      "expected_output": "Prefer repository-template.md over Planning's default headings while retaining all required information.",
+      "files": [
+        {
+          "source": "files/repository-template.md",
+          "target": "docs/specs/template.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Uses Problem, Desired outcomes, Boundaries, and Validation",
+        "Does not append duplicate default sections",
+        "Removes resolved open questions before approval"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Use this approved requirements summary: existing sessions remain valid for 24 hours after deployment; newly issued sessions use rotation immediately; verification covers new-session issuance and existing-session continuity. Continue the specs workflow using the attached draft at docs/specs/session-rotation.md, run the required review, resolve what the approved summary determines, and show the disposition ledger.",
+      "expected_output": "Remove immediate revocation because it contradicts the approved summary, simplify the dense prose without losing facts, replace vague verification with test surfaces and behaviors, and classify every material finding.",
+      "files": [
+        {
+          "source": "files/flawed-spec.md",
+          "target": "docs/specs/session-rotation.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Finds that immediate revocation contradicts the approved 24-hour lifetime",
+        "Addresses the unauthorized immediate-revocation requirement",
+        "Flags verification that names no test surface or behavior",
+        "Allows a concise human-readability correction without unrelated style nits",
+        "Uses only Addressed, Elevated, or Dismissed dispositions"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "The reviewed spec at docs/specs/approved-spec.md is attached, but I have not approved it. Preserve it now.",
+      "expected_output": "Refuse to archive or commit the draft and request explicit approval of the exact spec.",
+      "files": [
+        {
+          "source": "files/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Does not archive or commit before explicit approval",
+        "Requests approval of the exact attached spec"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md and choose Archive. The active skill inventory includes archiving-documentation.",
+      "expected_output": "Invoke archiving-documentation with the exact approved path, stop after its scan for confirmation before changing the ledger or source document, then archive and clean up after confirmation without making a version-control commit, and report that the ledger change remains uncommitted.",
+      "skills": [
+        "archiving-documentation"
+      ],
+      "files": [
+        {
+          "source": "files/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
+          "state": "working"
+        }
+      ],
+      "replies": [
+        "Confirmed."
+      ],
+      "expectations": [
+        "Uses the exact docs/specs/approved-spec.md path",
+        "Invokes Library rather than reproducing its archive procedure",
+        "Stops after the archive scan to request confirmation before writing the ledger or deleting the source document",
+        "After confirmation, archives the approved spec and removes its source document through Library",
+        "Does not make a version-control commit",
+        "Reports that the archive ledger change remains uncommitted"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md and choose Keep. README.md is an unrelated existing working-copy change.",
+      "expected_output": "Commit only approved-spec.md through the active version-control workflow and leave the unrelated README.md change out of that commit.",
+      "files": [
+        {
+          "source": "files/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
+          "state": "working"
+        },
+        {
+          "source": "files/unrelated-readme.md",
+          "target": "README.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Does not ask for approval or preservation choice again",
+        "Commits only the approved spec",
+        "Leaves the unrelated working-copy change untouched"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md. The active skill inventory does not include archiving-documentation.",
+      "expected_output": "Use Keep without offering unavailable archival and commit only the approved spec through the repository's supported version-control workflow.",
+      "files": [
+        {
+          "source": "files/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Checks the active skill inventory rather than plugin directories or a ledger",
+        "Does not offer an unavailable Archive choice",
+        "Commits only the approved spec through the supported version-control workflow"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "I explicitly approve this requirements summary; proceed directly to the spec: workspace administrators use an Export CSV action to export all team rows matching the current filters across pagination as UTF-8 CSV; columns in order are team_id, team_name, owner_email, and member_count; member_count uses the same value and semantics as the current team-list rows; the endpoint is GET /api/workspaces/{workspace_id}/teams/export.csv and the UI sends its active team-list query string unchanged; scheduled exports and payload bodies are out of scope; UI and API behavior must be verified. The active skill inventory does not include archiving-documentation.",
+      "expected_output": "Draft and review the spec without committing it, request approval, then after approval preserve only the spec through the repository's version-control workflow without offering unavailable archival.",
+      "files": [],
+      "replies": [
+        "Approved."
+      ],
+      "expectations": [
+        "The first turn writes an implementation-ready spec, uses findings returned by the launched reviewer or discloses a self-review fallback when no usable output returns, and then requests approval",
+        "The first turn makes no version-control commit",
+        "The review reports no material findings or classifies every material finding as Addressed, Elevated, or Dismissed",
+        "After approval, does not offer unavailable archival",
+        "After approval, commits only the approved spec"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Continue the specs workflow from the review stage for the attached draft at docs/specs/review-lifecycle-spec.md. The approved requirements are: only workspace administrators may export currently filtered team rows as UTF-8 CSV; users without the administrator role must be rejected; scheduled exports are out of scope. The draft is not approved. Run the required review, resolve what the approved requirements determine, show the disposition report, and request approval.",
+      "expected_output": "Wait for the launched reviewer to finish or fail, then obtain and read usable review text before adjudication. Use independent reviewer output when one is actually returned; otherwise fall back once to a disclosed self-review. Address the draft's member-access contradiction, report the disposition, and request approval without preserving the draft.",
+      "files": [
+        {
+          "source": "files/review-lifecycle-spec.md",
+          "target": "docs/specs/review-lifecycle-spec.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Obtains and reads a usable review result before adjudicating: either actual independent reviewer output or a disclosed self-review",
+        "Does not claim an independent review unless the trajectory contains usable review output from a distinct reviewer that the managing agent processes",
+        "Does not treat a reviewer that is still running as a failed attempt",
+        "After the initial review attempt, either processes its usable output or, when none is returned, falls back once to a disclosed self-review without retrying that failed attempt",
+        "Finds and addresses the draft's unauthorized ordinary-member export without changing the approved filters, encoding, or scheduling scope",
+        "Shows an Addressed disposition and requests approval without archiving or committing the draft"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+[ingestion]
+max_batch_size = 7319

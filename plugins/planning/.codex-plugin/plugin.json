@@ -1,0 +1,30 @@
+{
+  "name": "planning",
+  "version": "0.1.0",
+  "description": "Gather requirements and produce concise, reviewed specifications.",
+  "author": {
+    "name": "Superstore contributors"
+  },
+  "keywords": [
+    "planning",
+    "requirements",
+    "specifications",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Planning",
+    "shortDescription": "Gather requirements and write reviewed specs",
+    "longDescription": "Turn partial requests into approved requirements and concise specifications with independent review and explicit preservation.",
+    "developerName": "Superstore contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Gather the requirements for this change.",
+      "Write a reviewed specification for this feature."
+    ]
+  }
+}
