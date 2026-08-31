@@ -1,5 +1,5 @@
 {
-  "name": "superstore",
+  "name": "library",
   "version": "0.1.0",
   "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
   "author": {
@@ -13,8 +13,8 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Superstore",
-    "shortDescription": "Archive and retrieve Markdown documentation",
+    "displayName": "Library",
+    "shortDescription": "Archive and retrieve repository documentation",
     "longDescription": "Preserve exact Markdown in a searchable, verified SQLite ledger and retrieve it through focused Agent Skills.",
     "developerName": "Superstore contributors",
     "category": "Productivity",

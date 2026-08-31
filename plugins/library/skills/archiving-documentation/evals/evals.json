@@ -21,6 +21,9 @@
         "files/auth-spec.md",
         "files/auth-plan.md"
       ],
+      "replies": [
+        "Confirmed."
+      ],
       "expectations": [
         "Uses the explicit attached paths and passes workspace root and database path to archive.py scan",
         "Shows both exact candidates and requests confirmation before mutation",

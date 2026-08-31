@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "superstore",
+      "name": "library",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./plugins/library"
       },
       "policy": {
         "installation": "AVAILABLE",
