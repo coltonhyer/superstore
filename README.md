@@ -53,3 +53,7 @@ tests/test_marketplace.py
 ```sh
 python3 -m unittest discover -s tests
 ```
+
+Planning also includes live, cross-host behavioral evals. See
+[Planning validation](plugins/planning/README.md#validation) for the model
+matrix, case format, and runner commands.
