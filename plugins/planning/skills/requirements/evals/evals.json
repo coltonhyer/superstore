@@ -1,0 +1,99 @@
+{
+  "skill_name": "requirements",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Gather requirements for CSV export on the reports page. It is admin-only, exports the currently filtered rows as UTF-8, excludes scheduled exports, and is done when UI and API behavior are covered. Start from those decisions.",
+      "expected_output": "Preserve every supplied decision, resolve only genuine remaining gaps, present the normalized requirements summary, and ask for approval.",
+      "files": [],
+      "expectations": [
+        "Does not ask the user to repeat admin scope, filters, encoding, scheduling scope, or verification",
+        "Uses engineering judgment for reversible implementation choices",
+        "Includes in-scope and out-of-scope work",
+        "Includes a verifiable definition of done",
+        "Requests explicit approval"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Gather requirements for changing batch ingestion. Inspect the attached repository context before asking me about existing limits.",
+      "expected_output": "Read project.toml, incorporate the configured maximum batch size, and do not ask the user for that discoverable fact.",
+      "files": [
+        {
+          "source": "files/project.toml",
+          "target": "project.toml",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Reads repository context before questioning",
+        "States that max_batch_size is 7319",
+        "Does not ask for the existing maximum batch size",
+        "Asks only about unresolved product intent"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Keep the public response schema unchanged, but replace its status string with an object. Finish the requirements now.",
+      "expected_output": "Identify the contradiction and ask one focused reconciliation question instead of claiming the requirements are complete.",
+      "files": [],
+      "expectations": [
+        "Names the incompatible requirements",
+        "Asks one focused question",
+        "Does not invent a compatibility decision",
+        "Does not present the requirements as approved or complete"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Gather requirements for changing authentication session rotation. The current design is in the attached reader-ledger.db, and read-archive is available.",
+      "expected_output": "Use metadata-first archive discovery, select the current authentication spec, load only current documents whose exact wording is needed for the rotation question, avoid superseded revisions, and then ask only about unresolved changes.",
+      "skills": [
+        "read-archive"
+      ],
+      "files": [
+        {
+          "source": "files/reader-ledger.db",
+          "target": ".agents/ledger.db",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Checks the available skill inventory rather than plugin directories",
+        "Searches metadata before loading content",
+        "Selects Authentication Spec v2 rather than its superseded revision",
+        "Loads no unrelated archived payload",
+        "Uses archived facts without treating them as new user input"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Gather requirements for a new webhook retry policy. Library is not installed and no historical design is referenced.",
+      "expected_output": "Continue from supplied and repository context without archive access or an installation error.",
+      "files": [],
+      "expectations": [
+        "Checks the available skill inventory rather than plugin directories or a ledger",
+        "Does not attempt archive discovery",
+        "Does not ask the user to install Library",
+        "Continues the normal requirements workflow"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Gather requirements for adding audit-log CSV export. It is admin-only, exports the currently filtered events as UTF-8, excludes scheduled exports, and is done when UI and API behavior are verified. The only unresolved product decision is whether event payload bodies are included; ask me about that before summarizing.",
+      "expected_output": "Focus the first turn only on payload inclusion, incorporate the answer into a complete requirements summary without reopening supplied decisions, request approval, and finish only after approval.",
+      "files": [],
+      "replies": [
+        "Exclude payload bodies. Include event metadata such as timestamp, actor, action, and resource.",
+        "Approved."
+      ],
+      "expectations": [
+        "Raises only the payload-inclusion decision in the first turn and does not introduce another unresolved decision",
+        "Does not ask the user to repeat supplied scope, encoding, scheduling, or verification decisions",
+        "After the answer, includes the payload exclusion and required event metadata in the requirements summary",
+        "Requests explicit approval before completing",
+        "After approval, treats the requirements workflow as complete without writing repository files"
+      ]
+    }
+  ]
+}

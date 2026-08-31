@@ -11,6 +11,12 @@
       "source": "./plugins/library",
       "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
       "category": "productivity"
+    },
+    {
+      "name": "planning",
+      "source": "./plugins/planning",
+      "description": "Gather requirements and produce concise, reviewed specifications.",
+      "category": "productivity"
     }
   ]
 }

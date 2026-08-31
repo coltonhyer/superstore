@@ -27,6 +27,7 @@ Antigravity does not support third-party marketplace installation. Install plugi
 | Name | Description | Documentation |
 | --- | --- | --- |
 | `library` | Archive finished Markdown into a verified SQLite ledger and restore it byte-for-byte. | [README](plugins/library/README.md) |
+| `planning` | Turn rough requests into approved requirements and concise, reviewed specifications. | [README](plugins/planning/README.md) |
 
 > [!NOTE]
 > Make sure you've installed the marketplace before attempting to install any plugin via its documentation instructions
