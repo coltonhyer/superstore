@@ -10,7 +10,8 @@ selecting the document needed for the task.
 
 ## Locate the ledger
 
-Use `<workspace-root>/.agents/ledger.db`. If the active workspace root is not
+Use an explicitly supplied ledger path. Otherwise use
+`<workspace-root>/.agents/ledger.db`; if the active workspace root is not
 available, ask the user rather than guessing. Pass the database explicitly to
 every command.
 
@@ -43,8 +44,9 @@ every command.
    ```
 
 6. Answer from the verified `content` and cite the archived title, source path,
-   and document ID. Repeat `show` for another ID only when one-hop link metadata
-   establishes that it is relevant.
+   and document ID. Link metadata establishes relevance, not a need for payload
+   access; repeat `show` only when the additional document's exact content is
+   needed to answer the request.
 
 Read [references/query-model.md](references/query-model.md) for filter and link
 semantics.
