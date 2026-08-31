@@ -52,6 +52,7 @@ tests/test_marketplace.py
 
 ```sh
 python3 -m unittest discover -s tests
+python3 -m unittest discover -s plugins/library/tests
 ```
 
 Planning also includes live, cross-host behavioral evals. See
