@@ -242,19 +242,25 @@ def redact_credentials(value: object, credentials: set[str]) -> object:
 
 
 def find_credential_files(workspace: Path, credentials: set[str]) -> list[str]:
-    patterns = [item.encode() for item in credential_patterns(credentials)]
+    patterns = credential_patterns(credentials)
     if not patterns or not workspace.is_dir():
         return []
+    encoded_patterns = [item.encode() for item in patterns]
     leaked = []
     for path in workspace.rglob("*"):
-        if path.is_symlink() or not path.is_file():
-            continue
-        try:
-            content = path.read_bytes()
-        except OSError:
-            continue
-        if any(pattern in content for pattern in patterns):
-            leaked.append(path.relative_to(workspace).as_posix())
+        relative = path.relative_to(workspace).as_posix()
+        path_leak = any(pattern in relative for pattern in patterns)
+        content_leak = False
+        if not path.is_symlink() and path.is_file():
+            try:
+                content = path.read_bytes()
+            except OSError:
+                content = b""
+            content_leak = any(pattern in content for pattern in encoded_patterns)
+        if path_leak or content_leak:
+            safe_relative = redact_credentials(relative, credentials)
+            assert isinstance(safe_relative, str)
+            leaked.append(safe_relative)
     return sorted(leaked)
 
 
