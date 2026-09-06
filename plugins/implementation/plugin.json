@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "implementation",
+  "description": "Execute approved implementation plans through verification, review, and local recording."
+}

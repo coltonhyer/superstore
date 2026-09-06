@@ -1,0 +1,8 @@
+{
+  "name": "implementation",
+  "description": "Execute approved implementation plans through verification, review, and local recording.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Superstore contributors"
+  }
+}

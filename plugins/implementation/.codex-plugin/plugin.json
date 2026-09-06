@@ -1,0 +1,31 @@
+{
+  "name": "implementation",
+  "version": "0.1.0",
+  "description": "Execute approved implementation plans through verification, review, and local recording.",
+  "author": {
+    "name": "Superstore contributors"
+  },
+  "keywords": [
+    "implementation",
+    "verification",
+    "review",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Implementation",
+    "shortDescription": "Execute approved plans with verification and review",
+    "longDescription": "Take approved, preserved plans through scoped execution, verification, review, and local recording without publishing.",
+    "developerName": "Superstore contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Turn this approved specification into an implementation plan.",
+      "Execute this approved, preserved implementation plan.",
+      "Review or verify this implementation change before it is recorded."
+    ]
+  }
+}
