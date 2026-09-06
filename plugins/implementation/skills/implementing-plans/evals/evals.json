@@ -1,0 +1,156 @@
+{
+  "skill_name": "implementing-plans",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Act as a delegated implementer. Your approved task brief identifies docs/specs/greeting-spec.md and docs/plans/greeting-plan.md, and authorizes only task GREET-1: make greeting.py return `Hello, <name>!`. notes.md is unrelated pre-existing working-copy work. Do not delegate, review your own work, or write supervisor progress. Implement the task, verify it before recording only greeting.py, then return your implementation report at .agents/execution/greeting-run/reports/GREET-1.md with the exact recorded revision.",
+      "expected_output": "Correct greeting.py, run the focused test before locally recording only the assigned change, preserve notes.md as working-copy work, and return a delegated-worker report without reviewer dispatch or supervisor-progress writes.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/greeting-spec.md", "target": "docs/specs/greeting-spec.md", "state": "baseline"},
+        {"source": "files/greeting-plan.md", "target": "docs/plans/greeting-plan.md", "state": "baseline"},
+        {"source": "files/test_greeting.py", "target": "test_greeting.py", "state": "baseline"},
+        {"source": "files/greeting.py", "target": "greeting.py", "state": "working"},
+        {"source": "files/unrelated-notes.md", "target": "notes.md", "state": "working"}
+      ],
+      "expectations": [
+        "Changes and verifies greeting.py before recording an assigned-task revision",
+        "Names the recorded revision in the implementation report",
+        "Leaves notes.md as unrelated working-copy work rather than including it in the task revision",
+        "Does not dispatch a reviewer or worker and does not write supervisor progress"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Execute this preserved, approved multi-task plan inline. The exact spec is docs/specs/text-spec.md; the exact plan is docs/plans/text-plan.md. Task TEXT-1 is to make slug.py normalize outer whitespace and lowercase. Task TEXT-2 is to make summary.py format `count=<number>`. Work in .agents/execution/text-run/, adding it to a local VCS exclusion before creating it. No subagent capability is available, so perform and disclose self-review under the review contract. Verify each task before recording, reconcile and maintain execution state, then perform whole-change verification and final handoff. On success, remove only this execution scratch. notes.md and the existing excluded .agents/execution/unrelated-run/sentinel.md are unrelated work and must remain separate.",
+      "expected_output": "Complete the two tasks through verify-then-record ordering, disclose self-review because subagents are unavailable, perform final assembled-change verification and a handoff with revision ranges, preserve unrelated work, and remove only the successful execution scratch.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/text-spec.md", "target": "docs/specs/text-spec.md", "state": "baseline"},
+        {"source": "files/text-plan.md", "target": "docs/plans/text-plan.md", "state": "baseline"},
+        {"source": "files/slug.py", "target": "slug.py", "state": "baseline"},
+        {"source": "files/test_slug.py", "target": "test_slug.py", "state": "baseline"},
+        {"source": "files/summary.py", "target": "summary.py", "state": "baseline"},
+        {"source": "files/test_summary.py", "target": "test_summary.py", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/unrelated-notes.md", "target": "notes.md", "state": "working"},
+        {"source": "files/unrelated-scratch-sentinel.md", "target": ".agents/execution/unrelated-run/sentinel.md", "state": "working"}
+      ],
+      "expectations": [
+        "Records each completed task only after current focused verification",
+        "Uses and discloses self-review rather than claiming independent review",
+        "Runs a whole-change check after task work and reports final handoff evidence",
+        "Keeps notes.md and unrelated-run/sentinel.md outside task revisions and removes only text-run scratch after success"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Execute task LIMIT-1 inline from the approved docs/specs/limit-spec.md and docs/plans/limit-plan.md. The working limit.py correction passes its local focused test, but test_limit_integration.py is a required integration check and its externally provisioned prerequisite is unavailable. The existing excluded .agents/execution/limit-run/execution-state.md records this state. Do not record a task revision or report LIMIT-1 complete while that required check remains unavailable; retain its scratch and report the evidence and next action.",
+      "expected_output": "Recognize that the in-scope implementation is locally verified but required integration evidence remains unavailable, avoid recording or completing LIMIT-1, and retain the supplied incomplete execution scratch.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/limit-spec.md", "target": "docs/specs/limit-spec.md", "state": "baseline"},
+        {"source": "files/limit-plan.md", "target": "docs/plans/limit-plan.md", "state": "baseline"},
+        {"source": "files/test_limit.py", "target": "test_limit.py", "state": "baseline"},
+        {"source": "files/test_limit_integration.py", "target": "test_limit_integration.py", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/limit.py", "target": "limit.py", "state": "working"},
+        {"source": "files/limit-state.md", "target": ".agents/execution/limit-run/execution-state.md", "state": "working"}
+      ],
+      "expectations": [
+        "Distinguishes passed local verification from the unavailable required integration check",
+        "Does not record a task revision or declare LIMIT-1 complete",
+        "Retains limit-run scratch because execution is incomplete"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Continue approved inline task RATE-1 using docs/specs/rate-spec.md and docs/plans/rate-plan.md. A completed task review found F-1: rate.py accepts zero despite the requirement for a positive rate. Implement only the F-1 correction, run current focused verification, record the verified task result according to repository convention, and obtain an available independent fix-range review before reporting the disposition and revised task evidence. Use .agents/execution/rate-run/.",
+      "expected_output": "Make the narrow zero-rate correction, verify and record the task result, obtain independent fix-range review output, and report F-1 with an evidence-backed disposition.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/rate-spec.md", "target": "docs/specs/rate-spec.md", "state": "baseline"},
+        {"source": "files/rate-plan.md", "target": "docs/plans/rate-plan.md", "state": "baseline"},
+        {"source": "files/rate.py", "target": "rate.py", "state": "baseline"},
+        {"source": "files/test_rate.py", "target": "test_rate.py", "state": "baseline"},
+        {"source": "files/rate-prior-change.md", "target": "rate-prior-change.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "Addresses zero-rate acceptance with a narrow correction and current focused verification",
+        "Records the verified task result without including unrelated work",
+        "Obtains independent fix-range review output and reports an evidence-backed disposition for F-1"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Resume inline execution of approved task RECORD-1 from docs/specs/record-spec.md and docs/plans/record-plan.md. The existing excluded .agents/execution/record-run/execution-state.md gives the current verification command, result, and the recorder failure. Treat the recorder as unavailable in this environment: do not claim a revision, task completion, or readiness, and do not clean record-run. Report the recoverable state and next action.",
+      "expected_output": "Return an implementation report that distinguishes successful verification from failed recording, contains no invented revision or completion claim, and retains the incomplete execution scratch.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/record-spec.md", "target": "docs/specs/record-spec.md", "state": "baseline"},
+        {"source": "files/record-plan.md", "target": "docs/plans/record-plan.md", "state": "baseline"},
+        {"source": "files/test_record.py", "target": "test_record.py", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/record.py", "target": "record.py", "state": "working"},
+        {"source": "files/record-state.md", "target": ".agents/execution/record-run/execution-state.md", "state": "working"}
+      ],
+      "expectations": [
+        "Separates passed verification from the failed recording state",
+        "Does not invent a revision, task completion, or final readiness",
+        "Retains record-run scratch and names a recoverable next action"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Resume the interrupted inline execution described by the existing excluded .agents/execution/resume-run/execution-state.md. Its exact plan and spec locators are docs/plans/resume-plan.md and docs/specs/resume-spec.md. Reconcile the state with Jujutsu before dispatching or repeating work. The progress entry says RESUME-1 is complete but supplies no recorded revision or evidence. Do not accept that checkbox as proof, do not redo the task from conversation memory, retain the supplied execution scratch, and report the blocker and next action.",
+      "expected_output": "Identify that the progress record cannot establish RESUME-1 against repository state, leave the execution blocked or awaiting reconciliation, and retain its scratch without repeating task work.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/resume-spec.md", "target": "docs/specs/resume-spec.md", "state": "baseline"},
+        {"source": "files/resume-plan.md", "target": "docs/plans/resume-plan.md", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/resume-state.md", "target": ".agents/execution/resume-run/execution-state.md", "state": "working"}
+      ],
+      "expectations": [
+        "Reconciles persistent state with actual Jujutsu evidence rather than trusting the checkbox",
+        "Does not repeat or declare RESUME-1 complete without a referenced recorded result",
+        "Retains resume-run scratch and reports a concrete blocker or reconciliation next action"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Execute approved task PROFILE-1 inline using docs/specs/profile-spec.md and docs/plans/profile-plan.md. The existing excluded .agents/execution/profile-run/execution-state.md identifies this execution. During inspection, a request arrives to add billing records and payment processing, which neither approved artifact covers. Record no implementation changes for that request. Keep profile-run and return the material scope conflict for explicit user approval or an approved plan/spec revision before affected work proceeds.",
+      "expected_output": "Recognize billing and payments as a material scope escalation, avoid implementing or recording them, retain execution scratch, and request the required approval or revision.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/profile-spec.md", "target": "docs/specs/profile-spec.md", "state": "baseline"},
+        {"source": "files/profile-plan.md", "target": "docs/plans/profile-plan.md", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/profile-state.md", "target": ".agents/execution/profile-run/execution-state.md", "state": "working"}
+      ],
+      "expectations": [
+        "Identifies the billing and payment request as outside approved scope",
+        "Does not implement or record the escalated work",
+        "Retains profile-run scratch and asks for explicit approval or a revised approved artifact"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Execute the whole approved plan at docs/plans/greeting-plan.md against docs/specs/greeting-spec.md. Delegation is available and inline work was not requested. Route through subagent-execution: give one fresh implementer only GREET-1's bounded brief, read its report and complete recorded range, arrange independent review and verified fixes if needed, then finish with whole-change review and verification. Do not implement the greeting task yourself, publish, merge, or create a worker worktree unless repository instructions require it.",
+      "expected_output": "Routes default delegated whole-plan execution through sequential supervision, retaining task and whole-change verification/review boundaries without inline implementation.",
+      "skills": ["subagent-execution", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/greeting-spec.md", "target": "docs/specs/greeting-spec.md", "state": "baseline"},
+        {"source": "files/greeting-plan.md", "target": "docs/plans/greeting-plan.md", "state": "baseline"},
+        {"source": "files/test_greeting.py", "target": "test_greeting.py", "state": "baseline"},
+        {"source": "files/greeting.py", "target": "greeting.py", "state": "working"}
+      ],
+      "expectations": [
+        "Routes the primary agent through subagent-execution when delegation is available by default",
+        "Dispatches a fresh bounded worker rather than implementing GREET-1 inline",
+        "Requires returned report, complete task-range review, verified fixes when needed, and whole-change review and verification",
+        "Does not publish, merge, or require a worker worktree without repository instruction"
+      ]
+    }
+  ]
+}
