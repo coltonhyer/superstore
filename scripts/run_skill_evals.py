@@ -140,6 +140,53 @@ def codex_rollout_trace(state: Path, session_id: str) -> list[dict]:
     return trace
 
 
+def agy_brain_trace(state: Path, seen: set[str]) -> list[dict]:
+    """Return Antigravity subagent transcripts and inter-agent messages.
+
+    The stream-json output records that a subagent was invoked but not what it
+    said; the CLI keeps that under the disposable state's ``brain`` directory.
+    """
+    brain = state / ".gemini/antigravity-cli/brain"
+    trace: list[dict] = []
+    for conversation in sorted(brain.glob("*")) if brain.is_dir() else []:
+        logs = conversation / ".system_generated/logs"
+        transcript = logs / "transcript_full.jsonl"
+        if not transcript.is_file():
+            transcript = logs / "transcript.jsonl"
+        if transcript.is_file():
+            for line in transcript.read_text(encoding="utf-8", errors="replace").splitlines():
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                key = f"{conversation.name}:step:{record.get('step_index')}"
+                if key in seen:
+                    continue
+                seen.add(key)
+                trace.append({"event": "transcript_step", "conversation": conversation.name, **record})
+        for message in sorted((conversation / ".system_generated/messages").glob("*.json")):
+            key = f"message:{message.name}"
+            if key in seen:
+                continue
+            try:
+                record = json.loads(message.read_text(encoding="utf-8", errors="replace"))
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(record, dict) or "content" not in record:
+                continue
+            seen.add(key)
+            trace.append(
+                {
+                    "event": "message",
+                    "sender": record.get("sender"),
+                    "recipient": record.get("recipient"),
+                    "title": (record.get("renderDetails") or {}).get("messageTitle"),
+                    "content": record.get("content"),
+                }
+            )
+    return trace
+
+
 def seed_auth(host: str, state: Path, home: Path | None = None) -> None:
     relative = AUTH_FILES[host]
     source = (home or Path.home()).expanduser().resolve() / relative
@@ -398,6 +445,7 @@ def run_case(
 
     turns, session_id, status = [], "", "captured"
     codex_trace_seen = 0
+    agy_trace_seen: set[str] = set()
     credentials: set[str] = set()
     discard_workspace = False
     with tempfile.TemporaryDirectory(prefix="superstore-eval-state-") as temporary:
@@ -463,6 +511,8 @@ def run_case(
                     cumulative_trace = codex_rollout_trace(state, trace_session_id)
                     provider_trace = cumulative_trace[codex_trace_seen:]
                     codex_trace_seen = len(cumulative_trace)
+                elif host == "agy":
+                    provider_trace = agy_brain_trace(state, agy_trace_seen)
                 else:
                     provider_trace = []
                 evidence = collect_evidence(prepared)
@@ -499,7 +549,7 @@ def run_case(
                 (result_dir / f"{prefix}.stderr.txt").write_text(
                     stderr, encoding="utf-8"
                 )
-                if host == "codex":
+                if host in ("codex", "agy"):
                     write_json(
                         result_dir / f"{prefix}.provider.json", provider_trace
                     )

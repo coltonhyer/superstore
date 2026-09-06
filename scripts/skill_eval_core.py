@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -51,6 +52,7 @@ class EvalCase:
     fixtures: tuple[Fixture, ...]
     replies: tuple[str, ...]
     definition_dir: Path = Path(".")
+    skill_fixtures: dict[str, Path] = field(default_factory=dict)
 
     @property
     def key(self) -> str:
@@ -69,6 +71,29 @@ def safe_relative(value: str, field: str) -> Path:
     if path.is_absolute() or ".." in path.parts:
         raise ValueError(f"{field} must be a relative path: {value}")
     return path
+
+
+def safe_skill_fixture_name(name: object) -> str:
+    if not isinstance(name, str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name):
+        raise ValueError(f"unsafe skill fixture name: {name}")
+    return name
+
+
+def parse_skill_fixtures(raw: object, skills: tuple[str, ...]) -> dict[str, Path]:
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError("skill_fixtures must be an object")
+
+    fixtures = {}
+    for raw_name, raw_source in raw.items():
+        name = safe_skill_fixture_name(raw_name)
+        if name not in skills:
+            raise ValueError(f"skill fixture {name} is not in the case inventory")
+        if not isinstance(raw_source, str):
+            raise ValueError(f"skill fixture source for {name} must be a path")
+        fixtures[name] = safe_relative(raw_source, "skill fixture source")
+    return fixtures
 
 
 def parse_fixture(raw: str | dict) -> Fixture:
@@ -108,6 +133,7 @@ def load_cases(plugin_root: Path) -> list[EvalCase]:
 
             skills = [skill]
             skills.extend(raw.get("skills", ()))
+            skills = tuple(dict.fromkeys(skills))
             cases.append(
                 EvalCase(
                     skill,
@@ -115,10 +141,11 @@ def load_cases(plugin_root: Path) -> list[EvalCase]:
                     raw["prompt"],
                     raw["expected_output"],
                     expectations,
-                    tuple(dict.fromkeys(skills)),
+                    skills,
                     tuple(parse_fixture(item) for item in raw.get("files", ())),
                     tuple(raw.get("replies", ())),
                     path.parent,
+                    parse_skill_fixtures(raw.get("skill_fixtures"), skills),
                 )
             )
     return sorted(cases, key=lambda case: (case.skill, case.identifier))
@@ -132,6 +159,33 @@ def find_skill(repo_root: Path, plugin_root: Path, name: str) -> Path:
     if len(matches) != 1:
         raise ValueError(f"expected one source for skill {name}, found {len(matches)}")
     return matches[0]
+
+
+def fixture_skill_source(case: EvalCase, name: str) -> Path:
+    safe_skill_fixture_name(name)
+    if name not in case.skills:
+        raise ValueError(f"skill fixture {name} is not in the case inventory")
+    relative = safe_relative(str(case.skill_fixtures[name]), "skill fixture source")
+    root = case.definition_dir.resolve()
+    source = case.definition_dir / relative
+
+    def check_tree(path: Path) -> None:
+        resolved = path.resolve()
+        if not resolved.is_relative_to(root):
+            raise ValueError(f"skill fixture {name} escapes the case directory")
+        if path.is_symlink():
+            raise ValueError(f"skill fixture {name} may not contain symlinks")
+        if not path.is_dir():
+            return
+        for child in path.iterdir():
+            check_tree(child)
+
+    if not source.is_dir():
+        raise ValueError(f"skill fixture directory does not exist: {source}")
+    check_tree(source)
+    if not (source / "SKILL.md").is_file():
+        raise ValueError(f"skill fixture is missing SKILL.md: {source}")
+    return source
 
 
 def run_text(command: list[str], cwd: Path, check: bool = True) -> str:
@@ -173,8 +227,13 @@ def prepare_workspace(
         agent.write_text(AGY_EVAL_AGENT, encoding="utf-8")
 
     for name in case.skills:
+        source = (
+            fixture_skill_source(case, name)
+            if name in case.skill_fixtures
+            else find_skill(repo_root, plugin_root, name)
+        )
         shutil.copytree(
-            find_skill(repo_root, plugin_root, name),
+            source,
             destination / ".eval/skills" / name,
             ignore=shutil.ignore_patterns("evals"),
         )
