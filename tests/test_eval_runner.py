@@ -203,6 +203,130 @@ class EvalCaseTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("jj"), "Jujutsu is required")
 class WorkspaceTests(unittest.TestCase):
+    def test_case_local_skill_fixture_replaces_only_its_listed_skill(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            plugin = Path(temporary) / "plugin"
+            definition_dir = plugin / "skills/specs/evals"
+            fixture = definition_dir / "files/debugging"
+            fixture.mkdir(parents=True)
+            (fixture / "SKILL.md").write_text(
+                "---\nname: debugging\ndescription: Test fixture.\n---\n\n# Fixture\n",
+                encoding="utf-8",
+            )
+            (definition_dir / "evals.json").write_text(
+                json.dumps(
+                    {
+                        "skill_name": "specs",
+                        "evals": [{
+                            "id": 1,
+                            "prompt": "Prompt",
+                            "expected_output": "Expected",
+                            "expectations": ["Criterion"],
+                            "skills": ["debugging"],
+                            "skill_fixtures": {"debugging": "files/debugging"},
+                        }],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            case = runner.load_cases(plugin)[0]
+
+            prepared = runner.prepare_workspace(
+                ROOT, PLANNING, case, Path(temporary) / "workspace"
+            )
+
+            self.assertIn("# Fixture", (prepared.workspace / ".eval/skills/debugging/SKILL.md").read_text(encoding="utf-8"))
+            self.assertTrue((prepared.workspace / ".eval/skills/specs/SKILL.md").is_file())
+            self.assertIn("- debugging: .eval/skills/debugging/SKILL.md", runner.build_prompt(case))
+
+    def test_case_local_skill_fixture_is_absent_from_following_case(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            first_definition = Path(temporary) / "first"
+            fixture = first_definition / "files/debugging"
+            fixture.mkdir(parents=True)
+            (fixture / "SKILL.md").write_text("# Fixture\n", encoding="utf-8")
+            first = eval_case(
+                skills=("specs", "debugging"),
+                definition_dir=first_definition,
+                skill_fixtures={"debugging": Path("files/debugging")},
+            )
+            runner.prepare_workspace(ROOT, PLANNING, first, Path(temporary) / "first-workspace")
+            second = eval_case(skills=("specs",))
+
+            prepared = runner.prepare_workspace(
+                ROOT, PLANNING, second, Path(temporary) / "second-workspace"
+            )
+
+            self.assertFalse((prepared.workspace / ".eval/skills/debugging").exists())
+            self.assertNotIn("debugging", runner.build_prompt(second))
+
+    def test_case_local_skill_fixture_rejects_invalid_and_escaping_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            plugin = Path(temporary) / "plugin"
+            evals = plugin / "skills/specs/evals"
+            evals.mkdir(parents=True)
+
+            def definition(mapping):
+                return {
+                    "skill_name": "specs",
+                    "evals": [{
+                        "id": 1,
+                        "prompt": "Prompt",
+                        "expected_output": "Expected",
+                        "expectations": ["Criterion"],
+                        "skills": ["debugging"],
+                        "skill_fixtures": mapping,
+                    }],
+                }
+
+            for mapping, message in (
+                ({"other": "files/debugging"}, "not in the case inventory"),
+                ({"../debugging": "files/debugging"}, "unsafe skill fixture name"),
+                ({"debugging": "../debugging"}, "relative path"),
+            ):
+                (evals / "evals.json").write_text(
+                    json.dumps(definition(mapping)), encoding="utf-8"
+                )
+                with self.assertRaisesRegex(ValueError, message):
+                    runner.load_cases(plugin)
+
+            outside = Path(temporary) / "outside"
+            outside.mkdir()
+            (outside / "SKILL.md").write_text("# Outside\n", encoding="utf-8")
+            linked = evals / "files/debugging"
+            linked.parent.mkdir()
+            linked.symlink_to(outside, target_is_directory=True)
+            (evals / "evals.json").write_text(
+                json.dumps(definition({"debugging": "files/debugging"})),
+                encoding="utf-8",
+            )
+            case = runner.load_cases(plugin)[0]
+            with self.assertRaisesRegex(ValueError, "escapes the case directory"):
+                runner.prepare_workspace(ROOT, PLANNING, case, Path(temporary) / "workspace")
+
+            linked.unlink()
+            linked.mkdir()
+            (linked / "SKILL.md").symlink_to(outside / "SKILL.md")
+            with self.assertRaisesRegex(ValueError, "escapes the case directory"):
+                runner.prepare_workspace(ROOT, PLANNING, case, Path(temporary) / "linked-workspace")
+
+            (linked / "SKILL.md").unlink()
+            with self.assertRaisesRegex(ValueError, "missing SKILL.md"):
+                runner.prepare_workspace(ROOT, PLANNING, case, Path(temporary) / "missing-workspace")
+
+    def test_unmapped_case_skills_keep_production_resolution(self):
+        case = eval_case(skills=("specs", "requirements"))
+
+        with tempfile.TemporaryDirectory() as temporary:
+            prepared = runner.prepare_workspace(
+                ROOT, PLANNING, case, Path(temporary) / "workspace"
+            )
+
+            self.assertEqual(
+                (prepared.workspace / ".eval/skills/requirements/SKILL.md").read_text(encoding="utf-8"),
+                (ROOT / "plugins/planning/skills/requirements/SKILL.md").read_text(encoding="utf-8"),
+            )
+
     def test_prepare_workspace_commits_baseline_and_leaves_working_fixtures(self):
         case = planning_case("specs", 7)
 
@@ -596,6 +720,54 @@ class HostCommandTests(unittest.TestCase):
                 ],
             )
             self.assertNotIn("encrypted-review-prompt", json.dumps(trace))
+
+    def test_agy_brain_trace_returns_subagent_transcript_and_messages_once(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            brain = state / ".gemini/antigravity-cli/brain"
+            reviewer = brain / "sub-1/.system_generated"
+            (reviewer / "logs").mkdir(parents=True)
+            (reviewer / "logs/transcript_full.jsonl").write_text(
+                json.dumps({"step_index": 0, "type": "USER_INPUT", "content": "review this"})
+                + "\n"
+                + json.dumps({"step_index": 1, "type": "PLANNER_RESPONSE", "content": "done"})
+                + "\n",
+                encoding="utf-8",
+            )
+            primary = brain / "main-1/.system_generated/messages"
+            primary.mkdir(parents=True)
+            (primary / "m1.json").write_text(
+                json.dumps(
+                    {
+                        "sender": "sub-1",
+                        "recipient": "main-1",
+                        "renderDetails": {"messageTitle": "Message from reviewer"},
+                        "content": "No material findings",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (primary / "read.json").write_text("[]", encoding="utf-8")
+
+            seen: set[str] = set()
+            trace = runner.agy_brain_trace(state, seen)
+
+            self.assertEqual(
+                trace,
+                [
+                    {
+                        "event": "message",
+                        "sender": "sub-1",
+                        "recipient": "main-1",
+                        "title": "Message from reviewer",
+                        "content": "No material findings",
+                    },
+                    {"event": "transcript_step", "conversation": "sub-1", "step_index": 0, "type": "USER_INPUT", "content": "review this"},
+                    {"event": "transcript_step", "conversation": "sub-1", "step_index": 1, "type": "PLANNER_RESPONSE", "content": "done"},
+                ],
+            )
+            self.assertEqual(runner.agy_brain_trace(state, seen), [])
+            self.assertEqual(runner.agy_brain_trace(state / "missing", set()), [])
 
     def test_codex_rollout_trace_requires_session_id(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -107,8 +107,9 @@ credentials.
 
 Every turn retains the event stream, stderr, assistant response, file hashes,
 working-copy diff, status, and commits after the fixture baseline. Antigravity
-subagent output is not retained outside its event stream, so review-path cases
-may be inconclusive when that stream lacks the result. Results default to a
+subagent output is not in its event stream, so the runner copies each
+subagent's transcript and inter-agent messages from the disposable state into
+the turn's provider trace before that state is deleted. Results default to a
 temporary directory; use `--output` to keep them at a chosen path.
 
 Codex `gpt-5.6-terra` uses the v2 multi-agent interface, which pinned Codex
