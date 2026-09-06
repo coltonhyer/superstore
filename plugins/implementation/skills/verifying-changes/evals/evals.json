@@ -1,0 +1,67 @@
+{
+  "skill_name": "verifying-changes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Verify the uncommitted change for the approved intent: normalize a supplied label by trimming outer whitespace and lowercasing it. The explicit change scope is label.py and test_label.py. Report current evidence only; do not edit or commit.",
+      "expected_output": "Inspect the uncommitted change, run the focused check, and report that the current working-copy implementation supports the approved normalization behavior without editing or committing.",
+      "files": [
+        {"source": "files/label.py", "target": "label.py", "state": "working"},
+        {"source": "files/test_label.py", "target": "test_label.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Identifies label.py as uncommitted working-copy evidence",
+        "Runs or otherwise reports a focused current check for the stated normalization behavior",
+        "Does not edit files or create a commit",
+        "Does not claim task completion"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Verify the approved intent: parse a positive whole-number quantity and reject blank, nonnumeric, zero, and negative input. The explicit change scope is quantity.py and test_quantity.py. The supplied test passes. Report what is and is not established; do not fix or commit.",
+      "expected_output": "Recognize that the passing happy-path test does not establish the required rejection behavior, identify the concrete missing invalid-input checks, and avoid an unsupported correctness verdict.",
+      "files": [
+        {"source": "files/quantity.py", "target": "quantity.py", "state": "working"},
+        {"source": "files/test_quantity.py", "target": "test_quantity.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Distinguishes the passing positive-input check from the untested rejection contract",
+        "Names blank, nonnumeric, zero, or negative input as concrete missing behavior",
+        "Does not claim that the implementation is correct overall",
+        "Does not edit or commit"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Verify the approved intent: format a code as an uppercase, zero-padded four-character string. The explicit scope is code.py and its tests. test-results.txt says the tests passed, but it was recorded before the current code.py edit. Decide what evidence is current and report any gap without changing files or history.",
+      "expected_output": "Treat the recorded pass as stale for the current code state, run a current focused check when possible, and report the current result and remaining uncertainty without editing or committing.",
+      "files": [
+        {"source": "files/code.py", "target": "code.py", "state": "working"},
+        {"source": "files/test_code.py", "target": "test_code.py", "state": "baseline"},
+        {"source": "files/test-results.txt", "target": "test-results.txt", "state": "baseline"}
+      ],
+      "expectations": [
+        "Does not rely on the pre-edit recorded result as current verification",
+        "Runs or requests a current focused check for code.py",
+        "Reports the code state to which its evidence applies",
+        "Does not edit or commit"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Verify the approved intent: export records through the required integration checker as well as the supplied unit test. The explicit scope is exporter.py and test_exporter.py. INTEGRATION.md names the required checker, but it is unavailable in this workspace. Report evidence and gaps without modifying implementation or history.",
+      "expected_output": "Run or inspect the available unit evidence, report the unavailable required integration check as a verification gap, and do not present verification as complete or successful overall.",
+      "files": [
+        {"source": "files/exporter.py", "target": "exporter.py", "state": "working"},
+        {"source": "files/test_exporter.py", "target": "test_exporter.py", "state": "baseline"},
+        {"source": "files/INTEGRATION.md", "target": "INTEGRATION.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "Reports the required checker as unavailable rather than as a passing check",
+        "Separates available unit-test evidence from integration evidence",
+        "Does not claim complete verification or task completion",
+        "Does not edit or commit"
+      ]
+    }
+  ]
+}
