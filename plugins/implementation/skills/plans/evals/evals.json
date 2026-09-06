@@ -1,0 +1,159 @@
+{
+  "skill_name": "plans",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Start implementing team exports. I have a design note but no approved specification.",
+      "expected_output": "Do not create a plan or start implementation; use Planning when available or request an approved specification.",
+      "files": [],
+      "expectations": [
+        "Does not treat the request or design note as approved specification input",
+        "Does not draft a plan, preserve a document, or start implementation",
+        "Routes to Planning when it is available or requests the missing approved specification"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The attached docs/specs/team-export.md is an approved specification. Create its implementation plan, inspect the repository conventions first, obtain the required plan review, and request approval. This is a plan-only request: do not begin implementation or preserve anything yet.",
+      "expected_output": "Create a concise, fixture-grounded small plan with an exact spec locator and concrete completion check, obtain usable independent review or disclose one self-review fallback, then request approval without preservation or execution.",
+      "files": [
+        {"source": "files/eval-repo-readme.md", "target": "README.md", "state": "baseline"},
+        {"source": "files/team-routes.py", "target": "app/teams.py", "state": "baseline"},
+        {"source": "files/team-list.js", "target": "web/team-list.js", "state": "baseline"},
+        {"source": "files/test-package-init.py", "target": "tests/__init__.py", "state": "baseline"},
+        {"source": "files/test-team-list.py", "target": "tests/test_team_list.py", "state": "baseline"},
+        {"source": "files/team-export-spec.md", "target": "docs/specs/team-export.md", "state": "working"}
+      ],
+      "expectations": [
+        "Uses the supplied UI, API, and unittest conventions rather than inventing repository paths or checks",
+        "Selects a defensible small task boundary with the intended deliverable, exact spec reference, relevant paths or patterns, and a concrete completion check",
+        "Uses usable independent reviewer output only when actually returned or discloses the self-review fallback",
+        "Does not preserve or execute the plan before explicit approval",
+        "Does not begin implementation for the plan-only request"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Draft a plan from the approved specification at docs/specs/release-publishing.md. The parser module must be available before persistence, and the command must use persisted release data. Review the plan before requesting approval; do not preserve or execute it.",
+      "expected_output": "Produce fixture-grounded, ordered, delegatable tasks whose dependencies name the parser-to-persistence-to-command interface flow, with spec references and completion checks.",
+      "files": [
+        {"source": "files/eval-repo-readme.md", "target": "README.md", "state": "baseline"},
+        {"source": "files/release-manifest.py", "target": "src/release_manifest.py", "state": "baseline"},
+        {"source": "files/release-storage.py", "target": "src/release_storage.py", "state": "baseline"},
+        {"source": "files/release-command.py", "target": "src/commands/release.py", "state": "baseline"},
+        {"source": "files/test-package-init.py", "target": "tests/__init__.py", "state": "baseline"},
+        {"source": "files/test-release-conventions.py", "target": "tests/test_release_conventions.py", "state": "baseline"},
+        {"source": "files/release-publishing-spec.md", "target": "docs/specs/release-publishing.md", "state": "working"}
+      ],
+      "expectations": [
+        "Uses the supplied parser, storage, command, and unittest conventions rather than inventing repository paths or checks",
+        "Uses stable task IDs and makes the parser prerequisite explicit before persistence",
+        "Makes the command depend on persisted release data rather than an unspecified ordering",
+        "Gives every task exact specification references and a concrete completion check without requiring an arbitrary task count",
+        "Reviews before requesting approval and does not execute or preserve"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Plan the attached approved portfolio specification as one integration effort. Its SSO migration and billing-proration deliverables can be developed, reviewed, verified, and integrated independently. Do not begin implementation.",
+      "expected_output": "Recommend separate plans with the stated relationship instead of manufacturing one oversized plan or executing either deliverable.",
+      "files": [
+        {"source": "files/portfolio-spec.md", "target": "docs/specs/portfolio.md", "state": "working"}
+      ],
+      "expectations": [
+        "Identifies separate independently integrable plan boundaries for SSO migration and billing proration",
+        "States any real dependency without inventing one",
+        "Does not manufacture tasks merely to fill a template or start implementation"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Review the attached plan at docs/plans/api-protection.md against its approved specification at docs/specs/api-protection.md. Return the review result only; do not edit, approve, preserve, execute, or assign dispositions.",
+      "expected_output": "Find the missing required rate limit and unsupported Redis assumption with evidence and impact, rather than approving the plan or making edits.",
+      "files": [
+        {"source": "files/api-protection-spec.md", "target": "docs/specs/api-protection.md", "state": "baseline"},
+        {"source": "files/api-protection-plan.md", "target": "docs/plans/api-protection.md", "state": "working"}
+      ],
+      "expectations": [
+        "Finds that the plan omits the specification's rate-limit requirement",
+        "Finds that Redis availability is an unsupported repository assumption",
+        "Returns material findings with evidence and impact without editing, approval, preservation, execution, or dispositions"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "The completed independent-review attempt for the attached plan at docs/plans/team-export.md returned only 'working on it' and no review result. Complete the required review stage against docs/specs/team-export.md, disclose the fallback, resolve what the specification determines, and request approval. Do not preserve or execute.",
+      "expected_output": "Perform and disclose one self-review fallback because the completed reviewer attempt returned unusable output, show dispositions for any material findings, and request approval without preservation or execution.",
+      "files": [
+        {"source": "files/team-export-spec.md", "target": "docs/specs/team-export.md", "state": "baseline"},
+        {"source": "files/team-export-plan.md", "target": "docs/plans/team-export.md", "state": "working"}
+      ],
+      "expectations": [
+        "Does not claim the unusable reviewer output was an independent review",
+        "Discloses a single self-review fallback under the plan-review contract",
+        "Uses only Addressed, Elevated, or Dismissed for material-finding dispositions",
+        "Does not preserve or execute before approval"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "The attached reviewed plan at docs/plans/team-export.md is awaiting approval. Do not preserve or execute it until I explicitly approve it. Once approved, I choose Archive and the active skill inventory includes archiving-documentation. After successful preservation, load and verify the exact archived plan for a subsequent handoff; do not restore or execute it.",
+      "expected_output": "Request approval first; after approval and Archive choice, invoke Library for the exact plan path, stop for scan confirmation, then load the exact newly archived plan through read-archive and report its locator, verified content, and uncommitted ledger status without a version-control commit, restore, or execution.",
+      "skills": ["archiving-documentation", "read-archive"],
+      "files": [
+        {"source": "files/team-export-plan.md", "target": "docs/plans/team-export.md", "state": "working"}
+      ],
+      "replies": ["Approved. Archive.", "Confirmed."],
+      "expectations": [
+        "Does not archive, commit, or execute before explicit approval",
+        "Invokes archiving-documentation with the exact approved docs/plans/team-export.md path",
+        "Stops after the archive scan for confirmation before ledger or source changes",
+        "After confirmation uses read-archive with the newly returned exact locator and reports verified content matching the approved plan",
+        "Reports that the archive ledger change remains uncommitted",
+        "Does not make a version-control commit, restore the plan, or start implementation"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "I explicitly approve the reviewed plan at docs/plans/team-export.md. The active skill inventory does not include archiving-documentation, so preserve it with Keep. README.md is unrelated existing working-copy work. Do not start implementation.",
+      "expected_output": "Use Keep without offering unavailable archival, record only the approved plan through the repository workflow, and leave the unrelated README change out while not executing.",
+      "files": [
+        {"source": "files/team-export-plan.md", "target": "docs/plans/team-export.md", "state": "working"},
+        {"source": "files/unrelated-readme.md", "target": "README.md", "state": "working"}
+      ],
+      "expectations": [
+        "Checks the active skill inventory rather than plugin directories or a ledger",
+        "Does not offer unavailable Archive and records only the approved plan with Keep",
+        "Leaves the unrelated README working-copy change untouched",
+        "Does not start implementation"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "I explicitly approved the exact reviewed plan at docs/plans/team-export.md and chose Archive. archiving-documentation has reported an archival failure, leaving the source plan recoverable. Report the handoff state; do not substitute Keep, commit, or begin execution.",
+      "expected_output": "Report preservation as incomplete and the plan as not execution-ready, without falling back to Keep, committing, or executing.",
+      "files": [
+        {"source": "files/team-export-plan.md", "target": "docs/plans/team-export.md", "state": "working"}
+      ],
+      "expectations": [
+        "Reports the Archive preservation failure and retained recoverable plan",
+        "Does not silently fall back to Keep or make a version-control commit",
+        "Does not claim an execution-ready plan or begin execution"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "The attached docs/plans/team-export-revision.md revises the previously approved team-export plan by adding scheduled exports. The approved specification excludes scheduled exports. Handle this material revision without executing or preserving it yet.",
+      "expected_output": "Identify the conflict with the authoritative specification, require revision and explicit approval before affected work, and do not preserve or execute the changed plan.",
+      "files": [
+        {"source": "files/team-export-spec.md", "target": "docs/specs/team-export.md", "state": "baseline"},
+        {"source": "files/team-export-revision.md", "target": "docs/plans/team-export-revision.md", "state": "working"}
+      ],
+      "expectations": [
+        "Treats the specification as authoritative over the conflicting plan instruction",
+        "Requires an appropriate reviewed revision and explicit approval before preservation or affected execution",
+        "Does not preserve or start implementation"
+      ]
+    }
+  ]
+}
