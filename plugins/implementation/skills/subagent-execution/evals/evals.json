@@ -1,0 +1,154 @@
+{
+  "skill_name": "subagent-execution",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Supervise the approved two-task plan at docs/plans/sequence-plan.md against docs/specs/sequence-spec.md. Delegation is available and inline work was not requested. notes.md and the pre-existing .agents/ledger.db preservation change are unrelated working-copy work. Use .agents/execution/sequence-run/ after confirming its local exclusion. Dispatch one fresh implementer at a time with only its task context; read each report and the complete recorded range; arrange task review; send any material finding back for a verified fix; then arrange whole-change review and verification. Return a final handoff that identifies the separately pending preservation change and remove only successful sequence-run scratch. Do not implement, publish, merge, or use a worker worktree unless repository instructions require one.",
+      "expected_output": "Sequentially delegates isolated tasks, bases task completion on actual reports, complete ranges, review and verification evidence, preserves unrelated work, and performs whole-change checks before a bounded handoff.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/sequence-spec.md", "target": "docs/specs/sequence-spec.md", "state": "baseline"},
+        {"source": "files/sequence-plan.md", "target": "docs/plans/sequence-plan.md", "state": "baseline"},
+        {"source": "files/one.py", "target": "one.py", "state": "baseline"},
+        {"source": "files/test_one.py", "target": "test_one.py", "state": "baseline"},
+        {"source": "files/two.py", "target": "two.py", "state": "baseline"},
+        {"source": "files/test_two.py", "target": "test_two.py", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/unrelated-notes.md", "target": "notes.md", "state": "working"},
+        {"source": "files/pending-preservation.txt", "target": ".agents/ledger.db", "state": "working"}
+      ],
+      "expectations": [
+        "Dispatches one fresh implementer at a time with task-only context rather than implementing tasks itself",
+        "Reads returned reports and actual full task ranges before arranging review and adjudicating evidence",
+        "Returns task findings for verified implementation fixes before advancing",
+        "Performs whole-change review and verification, preserves notes.md and separately pending ledger preservation, and does not publish or merge"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Resume delegated execution using docs/plans/resume-plan.md, docs/specs/resume-spec.md, and the excluded .agents/execution/resume-run/execution-state.md. Reconcile it with actual Jujutsu state before dispatching. The state identifies the real bootstrap revision by its unique `eval fixture` description rather than a supplied hash: resolve its immutable ID from this workspace before trusting its file-scoped evidence. This synthetic recovery fixture co-records RESUME-1 and RESUME-2 paths in that one real bootstrap revision; it does not claim separate historical task commits. RESUME-1 is complete and reviewed; RESUME-2 is reported but awaiting review. Do not redo RESUME-1. Retain scratch until the pending review and any findings are resolved.",
+      "expected_output": "Uses current Jujutsu evidence to retain a completed task without repeating it, distinguishes reported/awaiting-review from complete, and resumes at the pending review.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/resume-spec.md", "target": "docs/specs/resume-spec.md", "state": "baseline"},
+        {"source": "files/resume-plan.md", "target": "docs/plans/resume-plan.md", "state": "baseline"},
+        {"source": "files/resume-one.py", "target": "resume_one.py", "state": "baseline"},
+        {"source": "files/test_resume_one.py", "target": "test_resume_one.py", "state": "baseline"},
+        {"source": "files/resume-two.py", "target": "resume_two.py", "state": "baseline"},
+        {"source": "files/test_resume_two.py", "target": "test_resume_two.py", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/resume-state.md", "target": ".agents/execution/resume-run/execution-state.md", "state": "working"},
+        {"source": "files/resume-one-report.md", "target": ".agents/execution/resume-run/reports/RESUME-1.md", "state": "working"},
+        {"source": "files/resume-one-review.md", "target": ".agents/execution/resume-run/reviews/RESUME-1.md", "state": "working"},
+        {"source": "files/resume-two-report.md", "target": ".agents/execution/resume-run/reports/RESUME-2.md", "state": "working"}
+      ],
+      "expectations": [
+        "Reconciles the named real bootstrap revision and its disjoint task paths with Jujutsu rather than trusting a checkbox",
+        "Does not redo the completed and reviewed task",
+        "Treats the reported task as awaiting review and retains incomplete scratch"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Resume the execution in .agents/execution/altered-run/execution-state.md using its exact plan and spec locators. It claims task ALTER-1 was complete, but its cited report path is absent and its stated recorded result cannot be found in the actual Jujutsu history. Inspect the repository; do not invent a revision, redo the task from memory, or clean the scratch. Report the grounded blocker and next recovery action.",
+      "expected_output": "Detects missing or altered completion evidence against actual history, avoids duplicate task work, and retains blocked scratch for recovery.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/resume-spec.md", "target": "docs/specs/resume-spec.md", "state": "baseline"},
+        {"source": "files/resume-plan.md", "target": "docs/plans/resume-plan.md", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/altered-state.md", "target": ".agents/execution/altered-run/execution-state.md", "state": "working"}
+      ],
+      "expectations": [
+        "Checks actual repository evidence before accepting the claimed completion",
+        "Does not invent a revision or redo ALTER-1 from lost context",
+        "Retains altered-run scratch and reports a concrete reconciliation blocker"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A delegated implementer reports it lacks the exact interface requirement for task CONTEXT-1. The approved task excerpt is now supplied in docs/plans/context-plan.md and the relevant spec is docs/specs/context-spec.md. Give the missing context directly in a bounded implementer brief and continue only after it can be verified and reviewed. Do not diagnose a missing brief, broaden archive exploration, or make the implementation yourself.",
+      "expected_output": "Supplies the exact missing task context directly and preserves the delegation, verification, and review boundaries without inventing diagnostic procedure.",
+      "skills": ["implementing-plans", "verifying-changes", "reviewing-implementation"],
+      "files": [
+        {"source": "files/context-spec.md", "target": "docs/specs/context-spec.md", "state": "baseline"},
+        {"source": "files/context-plan.md", "target": "docs/plans/context-plan.md", "state": "baseline"},
+        {"source": "files/context.py", "target": "context.py", "state": "baseline"},
+        {"source": "files/test_context.py", "target": "test_context.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Supplies the relevant approved task and interface context rather than diagnosing it",
+        "Keeps the worker brief bounded and does not implement or broaden scope",
+        "Retains verification and independent-review gates"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Task RETRY-1 has a repeated unresolved defect after two evidence-backed corrections. The failure, approved intent, prior-attempt evidence, and current failing check are in docs/recovery/repeated-defect.md and docs/recovery/retry-attempts.md. Prepare a fresh diagnostic assignment and use the active Debugging skill. Return supported causes, uncertainty, conflicts, why prior attempts failed, and a correction/check recommendation for supervisor steering; do not change code or prescribe a fixed retry count.",
+      "expected_output": "Uses the installed test Debugging skill only as an active capability and produces usable, evidence-based diagnostic information without modifying code or blindly retrying.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes", "debugging"],
+      "skill_fixtures": {"debugging": "files/debugging"},
+      "files": [
+        {"source": "files/repeated-defect.md", "target": "docs/recovery/repeated-defect.md", "state": "baseline"},
+        {"source": "files/label.py", "target": "label.py", "state": "baseline"},
+        {"source": "files/test_label.py", "target": "test_label.py", "state": "baseline"},
+        {"source": "files/retry-attempts.md", "target": "docs/recovery/retry-attempts.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "Detects that repeated evidence-backed failure can justify a fresh diagnostic assignment",
+        "Uses the listed Debugging skill and returns causes, evidence, uncertainty, conflicts, prior-attempt analysis, and a correction/check",
+        "Does not edit code or choose a blind fixed-count retry"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Task RETRY-1 has the same repeated unresolved defect described in docs/recovery/repeated-defect.md and docs/recovery/retry-attempts.md, but no Debugging skill is active. Prepare the same diagnostic assignment for a fresh investigator. Return the same supported causes, uncertainty, conflicts, prior-attempt analysis, and correction/check recommendation as the present-skill branch; do not invent a fallback debugging method, change code, or retry blindly.",
+      "expected_output": "Uses ordinary investigative judgment under the same diagnostic contract when Debugging is absent and returns usable evidence-based information without a blind retry.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/repeated-defect.md", "target": "docs/recovery/repeated-defect.md", "state": "baseline"},
+        {"source": "files/label.py", "target": "label.py", "state": "baseline"},
+        {"source": "files/test_label.py", "target": "test_label.py", "state": "baseline"},
+        {"source": "files/retry-attempts.md", "target": "docs/recovery/retry-attempts.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "Does not claim or advertise an unavailable Debugging skill",
+        "Returns supported causes, evidence, uncertainty, conflicts, prior-attempt analysis, and a correction/check recommendation",
+        "Does not add a fallback methodology, edit code, or blind retry"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "During delegated task CONFLICT-1, docs/plans/conflict-plan.md says preserve the existing compact record, while the current repository code requires a new persisted audit field to meet docs/specs/conflict-spec.md. This changes approved approach and data behavior materially. Keep .agents/execution/conflict-run/, do not let a diagnostic or implementer choose the scope, and return the evidence-backed escalation required before affected work proceeds.",
+      "expected_output": "Recognizes a material plan/code conflict, preserves scratch, avoids unauthorized implementation, and requests an approved revision and explicit decision.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/conflict-spec.md", "target": "docs/specs/conflict-spec.md", "state": "baseline"},
+        {"source": "files/conflict-plan.md", "target": "docs/plans/conflict-plan.md", "state": "baseline"},
+        {"source": "files/conflict-record.py", "target": "record.py", "state": "baseline"},
+        {"source": "files/test_conflict_record.py", "target": "test_record.py", "state": "baseline"},
+        {"source": "files/local-exclude", "target": ".git/info/exclude", "state": "baseline"},
+        {"source": "files/conflict-state.md", "target": ".agents/execution/conflict-run/execution-state.md", "state": "working"}
+      ],
+      "expectations": [
+        "Identifies the material conflict between approved artifacts and current implementation context",
+        "Does not implement, record, or use diagnosis to authorize the changed approach",
+        "Retains conflict-run scratch and requests approved revision plus explicit decision"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Task UNKNOWN-1 has contradictory diagnostic evidence in docs/recovery/inconclusive.md: the approved behavior is known, but the supplied external observations conflict and the affected implementation is unavailable. Prepare a fresh diagnostic assignment using the active subagent-execution recovery contract. Return the missing information, uncertainty, any supported facts, and a correction/check only if evidence supports one. Do not invent a debugging method, change code, or retry blindly.",
+      "expected_output": "Treats genuinely contradictory, unavailable evidence as inconclusive and preserves it for steering or escalation instead of asserting a cause or retrying.",
+      "skills": ["implementing-plans", "reviewing-implementation", "verifying-changes"],
+      "files": [
+        {"source": "files/inconclusive.md", "target": "docs/recovery/inconclusive.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "Separates supported facts from conflicting or missing information",
+        "Reports uncertainty and a grounded next check or escalation without asserting an unsupported cause",
+        "Does not invent a debugging method, edit code, or authorize a blind retry"
+      ]
+    }
+  ]
+}
