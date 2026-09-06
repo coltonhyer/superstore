@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import subprocess
@@ -15,7 +16,9 @@ from scripts.skill_eval_hosts import TurnResult
 
 ROOT = Path(__file__).resolve().parents[1]
 PLANNING = ROOT / "plugins/planning"
+IMPLEMENTATION = ROOT / "plugins/implementation"
 REVIEW_SESSION_ID = "01a04fb2-ec55-7110-9805-d36e97f4c50d"
+MARKDOWN_LINK = re.compile(r"\]\(([^)]+\.md)\)")
 
 
 def response_item(item_type: str, **fields) -> dict:
@@ -203,6 +206,20 @@ class EvalCaseTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("jj"), "Jujutsu is required")
 class WorkspaceTests(unittest.TestCase):
+    def test_implementation_case_skill_links_resolve_in_copied_layout(self):
+        for case in runner.load_cases(IMPLEMENTATION):
+            with tempfile.TemporaryDirectory() as temporary, self.subTest(case=case.key):
+                prepared = runner.prepare_workspace(
+                    ROOT, IMPLEMENTATION, case, Path(temporary) / "workspace"
+                )
+                skills = prepared.workspace / ".eval/skills"
+                for markdown in skills.rglob("*.md"):
+                    for target in MARKDOWN_LINK.findall(markdown.read_text(encoding="utf-8")):
+                        self.assertTrue(
+                            (markdown.parent / target).is_file(),
+                            f"{markdown.relative_to(skills)} -> {target}",
+                        )
+
     def test_case_local_skill_fixture_replaces_only_its_listed_skill(self):
         with tempfile.TemporaryDirectory() as temporary:
             plugin = Path(temporary) / "plugin"

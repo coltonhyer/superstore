@@ -17,6 +17,12 @@
       "source": "./plugins/planning",
       "description": "Gather requirements and produce concise, reviewed specifications.",
       "category": "productivity"
+    },
+    {
+      "name": "implementation",
+      "source": "./plugins/implementation",
+      "description": "Execute approved implementation plans through verification, review, and local recording.",
+      "category": "productivity"
     }
   ]
 }

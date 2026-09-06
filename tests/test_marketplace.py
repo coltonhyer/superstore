@@ -11,6 +11,13 @@ MANIFESTS = (
     ".claude-plugin/plugin.json",
     "plugin.json",
 )
+IMPLEMENTATION_SKILLS = {
+    "plans",
+    "implementing-plans",
+    "subagent-execution",
+    "reviewing-implementation",
+    "verifying-changes",
+}
 
 
 def load_json(path):
@@ -41,6 +48,7 @@ class MarketplaceLayoutTests(unittest.TestCase):
     def test_marketplaces_agree(self):
         self.assertEqual(set(self.codex), set(self.claude))
         self.assertIn("planning", self.codex)
+        self.assertIn("implementation", self.codex)
 
         for name in self.codex:
             with self.subTest(plugin=name):
@@ -73,6 +81,29 @@ class MarketplaceLayoutTests(unittest.TestCase):
             for path in root.rglob("*.json"):
                 with self.subTest(path=path.relative_to(ROOT)):
                     load_json(path)
+
+    def test_implementation_has_the_five_public_skills(self):
+        plugin_root = ROOT / "plugins/implementation"
+        skills = {
+            path.name
+            for path in (plugin_root / "skills").iterdir()
+            if path.is_dir()
+        }
+        readme = (plugin_root / "README.md").read_text(encoding="utf-8")
+
+        self.assertEqual(skills, IMPLEMENTATION_SKILLS)
+        self.assertEqual(
+            load_json(plugin_root / ".codex-plugin/plugin.json")["skills"],
+            "./skills/",
+        )
+        self.assertLessEqual(
+            len(load_json(plugin_root / ".codex-plugin/plugin.json")["interface"]["defaultPrompt"]),
+            3,
+        )
+        for skill in IMPLEMENTATION_SKILLS:
+            with self.subTest(skill=skill):
+                self.assertTrue((plugin_root / "skills" / skill / "SKILL.md").is_file())
+                self.assertIn(f"(skills/{skill}/SKILL.md)", readme)
 
     def test_root_is_not_a_plugin(self):
         for relative in (*MANIFESTS, "skills"):
