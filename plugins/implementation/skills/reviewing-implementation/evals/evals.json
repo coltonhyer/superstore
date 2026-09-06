@@ -1,0 +1,66 @@
+{
+  "skill_name": "reviewing-implementation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review this task change against the approved intent: accept only a nonempty username of at most 12 characters, rejecting blank and overlong input. The scope is username.py and test_username.py. Return findings and verification gaps; do not edit, commit, complete the task, or assign dispositions.",
+      "expected_output": "Identify that the test merely asserts truthiness and fails to establish blank or overlong rejection, naming the concrete escaping invalid-input behavior without changing code or assigning a disposition.",
+      "files": [
+        {"source": "files/username.py", "target": "username.py", "state": "working"},
+        {"source": "files/test_username.py", "target": "test_username.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Finds the weak assertion",
+        "Names blank or overlong username acceptance as a concrete uncovered defect",
+        "Returns evidence and impact without assigning Addressed, Elevated, or Dismissed",
+        "Does not edit or commit"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this task change against the approved intent: reject malformed account identifiers before sending a request. The scope is account.py and test_account.py. Return material findings or no-material-findings with evidence; do not modify code, history, or progress.",
+      "expected_output": "Recognize that the test mocks the parser that owns malformed-input behavior, so it cannot establish the required validation contract, and identify the escaping malformed identifier defect.",
+      "files": [
+        {"source": "files/account.py", "target": "account.py", "state": "working"},
+        {"source": "files/test_account.py", "target": "test_account.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Identifies the mock as hiding the behavior under test",
+        "Names malformed identifiers reaching the request path as the escaping defect",
+        "Does not request arbitrary additional coverage",
+        "Does not edit or commit"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review this task change against the approved intent: emit a distinct error code for blank names and for names containing a slash. The scope is name.py and test_name.py. Assess redundancy and coverage with evidence; do not edit, commit, or assign dispositions.",
+      "expected_output": "Flag the genuinely duplicate blank-name test while retaining the similar slash-name test because it protects a distinct error-code contract.",
+      "files": [
+        {"source": "files/name.py", "target": "name.py", "state": "working"},
+        {"source": "files/test_name.py", "target": "test_name.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Identifies the duplicate blank-name assertion as redundant",
+        "Does not label the slash-name test redundant merely because it is similar",
+        "Explains the distinct error-code contract protected by the slash case",
+        "Does not edit or commit"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Perform a fix-range review only. Prior finding F-1 was that miles_to_km used 1.5 instead of 1.60934. The uncommitted correction is distance.py; test_distance.py is available baseline evidence. Check whether F-1 is resolved and whether this correction introduced breakage; do not expand into an unrelated fresh review, edit, commit, mark progress complete, or assign dispositions.",
+      "expected_output": "Report that F-1's ordinary conversion is corrected, identify the introduced zero-input division failure, and keep the review focused on the correction range and new breakage.",
+      "files": [
+        {"source": "files/distance.py", "target": "distance.py", "state": "working"},
+        {"source": "files/test_distance.py", "target": "test_distance.py", "state": "baseline"},
+        {"source": "files/prior-findings.md", "target": "prior-findings.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "Checks and reports resolution of F-1",
+        "Finds the zero-input breakage introduced by the correction",
+        "Keeps findings tied to the fix range and newly introduced breakage",
+        "Does not edit, commit, complete progress, or assign dispositions"
+      ]
+    }
+  ]
+}
