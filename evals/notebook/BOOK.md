@@ -34,3 +34,4 @@ are called out in the writeup when present.
 | Date | Scope | Hosts | S/MF/I | Writeup |
 |---|---|---|---|---|
 | 2026-08-31 | full matrix (22×3) | codex, claude, agy | 54/10/2 | [2026-08-31-full-matrix.md](writeups/2026-08-31-full-matrix.md) |
+| 2026-09-06 | implementation (34×3 staged, +24 follow-ups) | codex, claude, agy | 98/1/3 | [2026-09-06-implementation.md](writeups/2026-09-06-implementation.md) |
