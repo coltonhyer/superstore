@@ -27,7 +27,7 @@
     {
       "name": "maintenance",
       "source": "./plugins/maintenance",
-      "description": "Establish researched, approved coding standards and repository discovery references.",
+      "description": "Establish approved coding standards and review repositories for violations.",
       "category": "productivity"
     }
   ]

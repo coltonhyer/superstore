@@ -1,7 +1,7 @@
 {
   "name": "maintenance",
   "version": "0.1.0",
-  "description": "Establish researched, approved coding standards and repository discovery references.",
+  "description": "Establish approved coding standards and review repositories for violations.",
   "author": {
     "name": "Superstore contributors"
   },
@@ -13,8 +13,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Maintenance",
-    "shortDescription": "Set up approved repository coding standards",
-    "longDescription": "Inspect existing practices, research suitable guidance, and agree on lean coding standards before writing documentation and discovery references.",
+    "shortDescription": "Establish and review repository coding standards",
+    "longDescription": "Agree on researched coding standards and discovery references, then review repositories against established rules with evidence-backed reports and no remediation advice.",
     "developerName": "Superstore contributors",
     "category": "Productivity",
     "capabilities": [
@@ -22,7 +22,8 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Set up coding standards for this repository."
+      "Set up coding standards for this repository.",
+      "Review this repository against its coding standards and save a violations report without remediation advice."
     ]
   }
 }

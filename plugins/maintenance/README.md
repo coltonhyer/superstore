@@ -1,7 +1,8 @@
 # Maintenance
 
 Establish lean coding standards for production code, tests, and supporting
-scripts through repository inspection, research, and user decisions.
+scripts through repository inspection, research, and user decisions. Review
+repositories against those standards and report violations with evidence.
 
 ## Install
 
@@ -31,11 +32,16 @@ read/write and research capabilities; no other plugin is required.
 Ask your agent to *"Set up coding standards for this repository"* or
 *"Refine our existing coding standards."*
 
-## Skill
+For a standards audit, ask *"Audit this repository against its coding standards
+and save a violations report without remediation advice."* A named directory is
+also valid scope. Diff, PR, and ordinary change reviews use other workflows.
+
+## Skills
 
 | Skill | What it is for |
 | --- | --- |
 | [`setting-up-coding-standards`](skills/setting-up-coding-standards/SKILL.md) | Inspect practices, research suitable guidance, agree on rules, and write approved standards with discovery references. |
+| [`reviewing-coding-standards`](skills/reviewing-coding-standards/SKILL.md) | Audit established rules across a repository or named directory and save evidence-backed violations without proposing fixes. |
 
 ## Workflow and output
 
@@ -67,6 +73,24 @@ replacement content and links before reporting completion.
 
 Setup changes documentation only. It does not make code compliant, configure
 tools, produce a cleanup audit, or commit, archive, push, or publish standards.
+
+## Review output
+
+The audit requires the canonical `docs/standards/README.md` index with obligation
+words and precedence; an invalid prerequisite blocks without writing a report.
+It inspects statically by default. Only exact, relevant configured checks may run
+after explicit approval, never tests or migrations.
+
+The skill writes a Markdown report to the requested or established location,
+defaulting to `docs/reviews/coding-standards-YYYY-MM-DD.md` with a collision
+suffix rather than overwriting. It separates mandatory-rule errors,
+recommendation warnings, and unresolved assessments; records every confirmed
+occurrence, scoped exception reasoning, commands, unassessed delegated rules,
+side effects, and coverage limits. Findings cite rule IDs, source links, exact
+locations, and evidence. Only canonically applicable rules and explicitly
+adopted external baselines apply. The report contains no remediation advice and
+can be used as input to a fresh requirements workflow; the audit does not start
+that workflow.
 
 ## Validation
 
