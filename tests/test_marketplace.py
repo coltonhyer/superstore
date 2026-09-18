@@ -107,10 +107,11 @@ class MarketplaceLayoutTests(unittest.TestCase):
                 self.assertTrue((plugin_root / "skills" / skill / "SKILL.md").is_file())
                 self.assertIn(f"(skills/{skill}/SKILL.md)", readme)
 
-    def test_maintenance_has_one_public_skill_and_valid_links(self):
+    def test_maintenance_has_two_public_skills_and_valid_links(self):
         plugin_root = ROOT / "plugins/maintenance"
         skill = plugin_root / "skills/setting-up-coding-standards/SKILL.md"
-        self.assertEqual(list((plugin_root / "skills").rglob("SKILL.md")), [skill])
+        review = plugin_root / "skills/reviewing-coding-standards/SKILL.md"
+        self.assertEqual(set((plugin_root / "skills").rglob("SKILL.md")), {skill, review})
         self.assertEqual(
             load_json(plugin_root / ".codex-plugin/plugin.json")["skills"],
             "./skills/",
@@ -120,11 +121,15 @@ class MarketplaceLayoutTests(unittest.TestCase):
             "(skills/setting-up-coding-standards/SKILL.md)",
             readme.read_text(encoding="utf-8"),
         )
+        self.assertIn(
+            "(skills/reviewing-coding-standards/SKILL.md)",
+            readme.read_text(encoding="utf-8"),
+        )
         skill_text = skill.read_text(encoding="utf-8")
         for reference in ("output-format.md", "research.md"):
             self.assertIn(f"(references/{reference})", skill_text)
 
-        for document in (readme, skill, skill.parent / "references/research.md"):
+        for document in (readme, skill, review, skill.parent / "references/research.md"):
             for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
                 if "://" not in target and not target.startswith("#"):
                     with self.subTest(document=document.relative_to(ROOT), target=target):
