@@ -194,6 +194,34 @@ class EvalCaseTests(unittest.TestCase):
         )
         self.assertEqual(planning_case("specs", 2).skills, ("specs",))
 
+    def test_coding_standards_check_fixture_depends_on_source_content(self):
+        fixture = (
+            MAINTENANCE
+            / "skills/reviewing-coding-standards/evals/files/checks"
+        )
+        command = [
+            "python3",
+            str(fixture / "standards_check.py"),
+            "--config",
+            str(fixture / "standards-check.json"),
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "subject.py"
+            source.write_text("EXPLICIT_BAD = 1\nWARN_BAD = 2\n", encoding="utf-8")
+
+            failing = subprocess.run(
+                [*command, str(source)], text=True, capture_output=True, check=False
+            )
+            source.write_text("GOOD = 1\n", encoding="utf-8")
+            passing = subprocess.run(
+                [*command, str(source)], text=True, capture_output=True, check=False
+            )
+
+        self.assertEqual(failing.returncode, 1)
+        self.assertIn("subject.py:1: explicit-obligation [warn]", failing.stdout)
+        self.assertIn("subject.py:2: configured-warn [warn]", failing.stdout)
+        self.assertEqual((passing.returncode, passing.stdout), (0, ""))
+
     @staticmethod
     def case(identifier):
         return {
@@ -209,7 +237,17 @@ class EvalCaseTests(unittest.TestCase):
 class WorkspaceTests(unittest.TestCase):
     def test_maintenance_cases_prepare_fixtures_prompts_and_private_links(self):
         cases = runner.load_cases(MAINTENANCE)
-        self.assertEqual([case.identifier for case in cases], list(range(1, 17)))
+        setup = [
+            case for case in cases if case.skill == "setting-up-coding-standards"
+        ]
+        audits = [
+            case for case in cases if case.skill == "reviewing-coding-standards"
+        ]
+        self.assertEqual([case.identifier for case in setup], list(range(1, 17)))
+        self.assertEqual([case.identifier for case in audits], list(range(1, 11)))
+        self.assertTrue(
+            all("setting-up-coding-standards" in case.skills for case in audits)
+        )
         for case in cases:
             with tempfile.TemporaryDirectory() as temporary, self.subTest(case=case.key):
                 prepared = runner.prepare_workspace(
@@ -226,6 +264,15 @@ class WorkspaceTests(unittest.TestCase):
                 self.assertTrue(prompt.endswith(case.prompt))
                 for fixture in case.fixtures:
                     self.assertIn(str(fixture.target), prompt)
+                working = [
+                    fixture.target
+                    for fixture in case.fixtures
+                    if fixture.state == "working"
+                ]
+                if working:
+                    status = runner.collect_evidence(prepared)["status"]
+                    for target in working:
+                        self.assertIn(str(target), status)
                 skills = prepared.workspace / ".eval/skills"
                 self.assertFalse(list(skills.rglob("evals")))
                 for markdown in skills.rglob("*.md"):

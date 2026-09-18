@@ -1,0 +1,6 @@
+{
+  "naming_style": "mixedCase",
+  "external_baseline": "evidence/external.md",
+  "max_parameters_follow_up_enabled": true
+}
+

@@ -101,9 +101,10 @@ python3 -m unittest discover -s tests
 python3 scripts/run_skill_evals.py --plugin plugins/maintenance --list
 ```
 
-The unittest suite prepares all 16 cases, checks copied fixtures and private
-links, and validates prompt construction. Case IDs are stable; turns include
-the initial request and every fixed reply.
+The unittest suite prepares all 16 setup cases and all 10 audit cases, checks
+copied fixtures and private links, and validates prompt construction. Case IDs
+are stable within each skill; turns include the initial request and every fixed
+reply.
 
 | ID | Purpose | Turns |
 | --- | --- | --- |
@@ -134,6 +135,33 @@ establish standards usability, not native host discovery. Separate native
 sessions exercise ordinary host loading against actual generated standards.
 See the [evaluation writeup](../../evals/notebook/writeups/2026-09-18-maintenance-coding-standards.md)
 for observed coverage and limitations.
+
+The audit skill has a separate ten-case suite:
+
+```sh
+python3 scripts/run_skill_evals.py --plugin plugins/maintenance --skill reviewing-coding-standards --list
+```
+
+| ID | Audit behavior |
+| --- | --- |
+| 1 | Full static findings, exceptions, grouping, citations, counts, coverage, and report collision |
+| 2 | Narrow path/topic scope, authority precedence, adoption, timing, retirement, ambiguity, and missing source |
+| 3–5 | Absent, incomplete, or unreadable canonical index blocks without a report or check execution |
+| 6 | Compliant scoped input with zero confirmed findings and bounded coverage claims |
+| 7 | Relevant configured check declined; delegated diagnostics remain unassessed |
+| 8 | Exact configured check approved; verified output is classified and cited |
+| 9 | Non-interactive audit; unapproved check remains unrun and unassessed |
+| 10 | Request-preauthorized checks; unavailable or failed commands remain coverage gaps |
+
+Audit guided cases preload the active skill inventory and therefore establish
+behavior, not native selection. Six separate isolated native sessions exercise
+ordinary change review, standards-qualified change review, and explicit
+repository audit on Codex and Claude. A host may inspect the audit skill to
+decide applicability; acceptance depends on the workflow that executes and
+whether an audit report is written. See the [audit evaluation
+writeup](../../evals/notebook/writeups/2026-09-19-reviewing-coding-standards.md)
+for the original matrix, corrective evidence, finding dispositions, and
+limitations.
 
 Short attributed research summaries are supplied in `evidence/sources.md` in
 relevant workspaces, with original URLs and retrieval context. They cover only
