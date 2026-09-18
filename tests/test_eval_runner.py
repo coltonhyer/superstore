@@ -17,6 +17,7 @@ from scripts.skill_eval_hosts import TurnResult
 ROOT = Path(__file__).resolve().parents[1]
 PLANNING = ROOT / "plugins/planning"
 IMPLEMENTATION = ROOT / "plugins/implementation"
+MAINTENANCE = ROOT / "plugins/maintenance"
 REVIEW_SESSION_ID = "01a04fb2-ec55-7110-9805-d36e97f4c50d"
 MARKDOWN_LINK = re.compile(r"\]\(([^)]+\.md)\)")
 
@@ -206,6 +207,38 @@ class EvalCaseTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("jj"), "Jujutsu is required")
 class WorkspaceTests(unittest.TestCase):
+    def test_maintenance_cases_prepare_fixtures_prompts_and_private_links(self):
+        cases = runner.load_cases(MAINTENANCE)
+        self.assertEqual([case.identifier for case in cases], list(range(1, 17)))
+        for case in cases:
+            with tempfile.TemporaryDirectory() as temporary, self.subTest(case=case.key):
+                prepared = runner.prepare_workspace(
+                    ROOT, MAINTENANCE, case, Path(temporary) / "workspace"
+                )
+                final_sources = {item.target: item.source for item in case.fixtures}
+                for target, source in final_sources.items():
+                    self.assertEqual(
+                        (prepared.workspace / target).read_bytes(),
+                        (case.definition_dir / source).read_bytes(),
+                        str(target),
+                    )
+                prompt = runner.build_prompt(case)
+                self.assertTrue(prompt.endswith(case.prompt))
+                for fixture in case.fixtures:
+                    self.assertIn(str(fixture.target), prompt)
+                skills = prepared.workspace / ".eval/skills"
+                self.assertFalse(list(skills.rglob("evals")))
+                for markdown in skills.rglob("*.md"):
+                    prose = re.sub(
+                        r"(?ms)^(`{3,})[^\n]*\n.*?^\1\s*$", "",
+                        markdown.read_text(encoding="utf-8"),
+                    )
+                    for target in MARKDOWN_LINK.findall(prose):
+                        self.assertTrue(
+                            (markdown.parent / target).is_file(),
+                            f"{markdown.relative_to(skills)} -> {target}",
+                        )
+
     def test_implementation_case_skill_links_resolve_in_copied_layout(self):
         for case in runner.load_cases(IMPLEMENTATION):
             with tempfile.TemporaryDirectory() as temporary, self.subTest(case=case.key):

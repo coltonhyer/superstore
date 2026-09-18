@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import unittest
 
 
@@ -49,6 +50,7 @@ class MarketplaceLayoutTests(unittest.TestCase):
         self.assertEqual(set(self.codex), set(self.claude))
         self.assertIn("planning", self.codex)
         self.assertIn("implementation", self.codex)
+        self.assertIn("maintenance", self.codex)
 
         for name in self.codex:
             with self.subTest(plugin=name):
@@ -104,6 +106,54 @@ class MarketplaceLayoutTests(unittest.TestCase):
             with self.subTest(skill=skill):
                 self.assertTrue((plugin_root / "skills" / skill / "SKILL.md").is_file())
                 self.assertIn(f"(skills/{skill}/SKILL.md)", readme)
+
+    def test_maintenance_has_one_public_skill_and_valid_links(self):
+        plugin_root = ROOT / "plugins/maintenance"
+        skill = plugin_root / "skills/setting-up-coding-standards/SKILL.md"
+        self.assertEqual(list((plugin_root / "skills").rglob("SKILL.md")), [skill])
+        self.assertEqual(
+            load_json(plugin_root / ".codex-plugin/plugin.json")["skills"],
+            "./skills/",
+        )
+        readme = plugin_root / "README.md"
+        self.assertIn(
+            "(skills/setting-up-coding-standards/SKILL.md)",
+            readme.read_text(encoding="utf-8"),
+        )
+        skill_text = skill.read_text(encoding="utf-8")
+        for reference in ("output-format.md", "research.md"):
+            self.assertIn(f"(references/{reference})", skill_text)
+
+        for document in (readme, skill, skill.parent / "references/research.md"):
+            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
+                if "://" not in target and not target.startswith("#"):
+                    with self.subTest(document=document.relative_to(ROOT), target=target):
+                        self.assertTrue((document.parent / target.split("#")[0]).is_file())
+
+    def test_maintenance_output_example_has_rule_identity_and_obligations(self):
+        skill_root = ROOT / "plugins/maintenance/skills/setting-up-coding-standards"
+        output = (skill_root / "references/output-format.md").read_text(encoding="utf-8")
+        self.assertIn("docs/standards/README.md", output)
+        self.assertIn(
+            "docs/standards/README.md",
+            (skill_root / "SKILL.md").read_text(encoding="utf-8"),
+        )
+        rules = re.findall(
+            r'^<a id="([a-z]+-\d+)"></a>\n## ([A-Z]+-\d+): (\S[^\n]*)\n\n([^\n]+)',
+            output,
+            re.MULTILINE,
+        )
+        self.assertTrue(rules, "expected an example with an anchor, rule ID, and title")
+        for anchor, rule_id, title, body in rules:
+            with self.subTest(rule=rule_id):
+                self.assertEqual(anchor, rule_id.lower())
+                self.assertRegex(body.lower(), r"\b(must|should)( not)?\b")
+                self.assertIn(f".md#{anchor}", output)
+
+        index_example = re.search(r"```markdown\n(.*?)\n```", output, re.DOTALL)
+        self.assertIsNotNone(index_example)
+        for obligation in ("must", "must not", "should", "should not"):
+            self.assertRegex(index_example[1].lower(), rf"\b{obligation}\b")
 
     def test_root_is_not_a_plugin(self):
         for relative in (*MANIFESTS, "skills"):
