@@ -1,0 +1,1130 @@
+{
+  "skill_name": "setting-up-coding-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Set up coding standards for this small repository. Focus this session on readable Python function and test names; there are no other preferences settled yet. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Report the Python repository and absence of explicit standards, propose relevant naming guidance, incorporate the user choices, preview, and write only after final approval.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Use snake_case for Python functions, and recommend test names describing the behavior and expected outcome. Those are the only new rules I want in this session.",
+        "Approved. Write the complete proposal you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Does not ask refine-versus-fresh when no explicit standards exist, or ask for discoverable Python/tooling facts.",
+        "Presents concrete naming proposals with relevant reasons and a focused topic question; inferred snake_case is not already binding.",
+        "Covers production and test names; reports absent scripts without creating an empty scripts topic."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Refine our scattered coding standards. Preserve the existing purity, public-name, and narrow-exception rules, but remove the rule requiring a comment on every assignment. Keep old printed onboarding links useful. We use Codex and Claude Code. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Report categorized evidence, acknowledge refinement, preserve retained meanings/IDs and unrelated content, preview migration and retire the discarded rule, then carry out approved changes.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Yes, retain those three rules with their current meanings and drop only the assignment-comment rule. Keep release and access instructions where they are.",
+        "Approved. Apply the complete proposal and migration you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Retains SHARED-004, PY-007 and PY-011 through migration; retires PY-013 and does not reuse previously retired PY-003.",
+        "Finds mixed-purpose AGENTS.md and CONTRIBUTING.md, incoming onboarding link, and existing CLAUDE.md import; preserves release/access text, repairs links, and keeps a usable redirect at the old guide.",
+        "Does not ask for the already supplied refinement choice or change configured Ruff settings."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Set up coding standards for this repository. I want to revisit what we have before deciding what carries forward; focus on function naming only. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Inspect and report the existing standards before asking refine-or-fresh, then honor fresh selection without silently adopting prior rules.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Start fresh. Do not carry our old rules forward automatically.",
+        "Choose only snake_case for public Python functions. I want the old purity, exception, and assignment-comment policies discarded, with their IDs retired and the old guide kept as a redirect.",
+        "Approved. Write the complete proposal you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "The report precedes the mode question; fresh selection is informed by the existing explicit rules.",
+        "Adopts only the subsequently selected public-function naming rule; any retained valid identity for the same rule remains PY-007, and discarded IDs are not recycled.",
+        "Only approved standards sections are removed or redirected, and unrelated access/release/onboarding content remains."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Start fresh on coding standards, even though old guidance exists. Limit this session to function naming. I have already chosen fresh rather than refinement. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Report existing evidence and acknowledge the supplied mode without a redundant mode question, propose naming, and migrate only approved changes.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Adopt only snake_case for public Python functions. Discard the old purity, exception, and assignment-comment rules and retain the old guide as a redirect.",
+        "Approved. Apply the complete proposal you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Acknowledges fresh mode after the findings report instead of asking the same choice again.",
+        "Carries no old rule into the adopted set without agreement; retains PY-007 if the same naming meaning is adopted and retires discarded IDs.",
+        "Preserves unrelated guidance and the old-path redirect in the approved migration."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Set up standards for the Python library, JavaScript preview, tests, and supporting script. For this session discuss naming first, then code/test/script organization, then my proposed future Python line-length change from 100 to 88. Please keep that topic order. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Work through the bounded topics using both languages and repository layout; leave tools untouched and persist the selected deferred change with current behavior and follow-up.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/package.json",
+          "target": "package.json",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.js",
+          "target": "web/labels.js",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.test.js",
+          "target": "web/labels.test.js",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/check_labels.py",
+          "target": "scripts/check_labels.py",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Use snake_case for Python functions, camelCase for JavaScript functions, and recommend behavior-based test names in both languages.",
+        "Keep Python production in src/, Python tests in tests/, JavaScript production and adjacent tests in web/, and operational scripts in scripts/. Shared rules should apply across those areas.",
+        "Select 88 columns only after a separate future Ruff configuration change. Until then, the current configured 100-column limit remains effective. Document that follow-up; this setup must not edit tools.",
+        "Approved. Write the complete proposal you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Uses Python 3.11 and Node 20 ES-module evidence; distinguishes linted mechanics from naming/organization judgment.",
+        "Covers production code in src/ and web/, both test locations, and scripts/; shared applicability is explicit and no unrelated language/framework topics are created.",
+        "Records the selected 88-column policy as effective only after a later Ruff configuration change; current 100-column configuration stays in effect and unchanged, with the mismatch and follow-up beside the rule."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Set up Python standards with an explicitly adopted PEP 8 baseline limited to function naming and maximum line length, using the dated supplied reference. Our sole local naming exception is the public spelling parseLegacyLabel for compatibility; all other function naming follows the baseline. Other supplied guides are research only. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Scope and identify baseline adoption with a local ID; preview local/config/baseline precedence and the explicit local exception, without reopening the configured line-length difference.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Yes, adopt exactly that limited baseline and compatibility exception, with local rules first, existing mechanical configuration next, and the baseline after that.",
+        "Approved. Write the complete proposal you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Records a local adoption ID, the PEP 8 source/date, limited naming/line-length scope, and parseLegacyLabel exception; does not import all PEP 8 or Airbnb rules.",
+        "Existing Ruff line-length 100 is a resolved mechanical exception via precedence, not an unresolved 79-versus-100 question or required per-rule mismatch note.",
+        "Links actual pyproject.toml and existing Ruff commands rather than duplicating configured mechanics as standalone rules; does not claim tools check all baseline judgments."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Refine our current standards. Keep all rules except the assignment-comment rule, which should be retired. Do not add other rules. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Prepare a concise proposal, show its full content on request, incorporate a material correction, and wait for approval of the latest complete content.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Show me the full exact draft, including the entry-point and old-path changes, before I approve.",
+        "One correction: exempt the existing public spelling parseLegacyLabel from the snake_case requirement until clients migrate. Keep all other proposed choices. I have not approved the writes yet.",
+        "Approved. Write the latest corrected proposal, including the compatibility exception."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "The initial preview is concise rather than dumping every proposed file by default.",
+        "On request, supplies the exact full draft, including migration/reference edits, without writing target files.",
+        "Incorporates the later parseLegacyLabel exception into PY-007 without renumbering it; does not treat a prior draft or topic choice as approval for the materially corrected proposal."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Refine our standards by retiring only the assignment-comment requirement; keep everything else as is. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Show a complete approval preview, then stop with no target writes when the user withholds approval.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "I am not approving this proposal. Leave the repository unchanged; I want time to consider it."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Treats the withholding as no permission to create, update, migrate, or remove any target file.",
+        "Does not claim completion or treat a prepared draft as installed standards; final repository content remains identical to the initial supplied state."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Refine the already installed standards. Rename PY-007 to \"Public function spelling\" without changing its meaning, move PY-011 to a new focused error-handling topic, retire PY-013, and add a recommendation for behavior-based test names. Keep the rest. Use evidence/sources.md as supplied cached primary-source summaries for this bounded session; no network retrieval is requested.",
+      "expected_output": "Update existing setup without duplicate pointers or identity drift; preserve retained IDs through title and file changes and allocate a genuinely unused new ID.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/README.md",
+          "target": "docs/standards/README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/shared.md",
+          "target": "docs/standards/shared.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/python.md",
+          "target": "docs/standards/python.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Those changes are right: keep the naming and exception rules unchanged in meaning, and make test-name wording a recommendation.",
+        "Approved. Apply the complete revised proposal you just showed."
+      ],
+      "expectations": [
+        "Inspects representative repository evidence and reports profile, paths, coverage limits, explicit rules, configured checks, and uncertain inferred practices separately before discussing mode.",
+        "Keeps every target repository file unchanged until explicit approval of the current complete proposal; topic acceptance alone is not approval. Inspect per-turn evidence and tool events, not only final state.",
+        "Uses the supplied source content only within its stated coverage, attributes it as supplied/cached evidence, and does not claim live retrieval or adopt a citation-only guide.",
+        "Leaves code and tool configuration unchanged; proposed documentation uses a flat canonical index, applicable topics, unique stable rule IDs with matching lowercase anchors, and defined obligation vocabulary and precedence.",
+        "Before approval, prepares full content outside the repository and shows a concise preview of rules, files, migration, discovery, and gaps. Accept defensible topic groupings and wording rather than one golden draft.",
+        "After authorized writes, reads back content and links, installs one agent and one human index pointer, checks relevant host discovery, and reports only verified results.",
+        "Keeps SHARED-004, PY-007, PY-011 and their anchors; preserves PY-003 retirement and records retired PY-013 without recycling either ID.",
+        "The new test-name rule has an unused repository-unique ID; index applicability and moved links remain valid.",
+        "Maintains one standards pointer in existing AGENTS.md and CONTRIBUTING.md, reuses CLAUDE.md import, and preserves unrelated content.",
+        "Updates the incoming docs/onboarding.md link to PY-011 after its topic-file move without changing the rule ID or unrelated onboarding text."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Set up Python type-annotation standards for this repository. In this session there is no network or research provider available, and I have supplied no external guidance. I need a recommendation grounded in primary evidence; please account for that constraint.",
+      "expected_output": "Disclose the missing evidence rather than fabricate researched support, obtain the user decision, and leave deferred work unwritten.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "Defer the annotation recommendation until I can supply sources. Stop after the findings and gap report; do not write standards yet."
+      ],
+      "expectations": [
+        "Inspects and reports available repository facts without falsely describing inference as a standard.",
+        "Discloses that relevant research has not been performed and asks for missing material or a decision on deferring the recommendation.",
+        "Does not invent quotations, current source support, or successful live retrieval; after deferral does not claim setup is complete or change repository files."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Resume the standards migration described in handoff/operation.md. The facts there describe the previous approved operation and its interruption. Complete the remaining approved work after checking the actual partial files; report the outcome accurately.",
+      "expected_output": "Reconcile the seeded partial state against supplied prior approval, verify replacements before touching old content, and finish only the still-authorized migration.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/README.md",
+          "target": "docs/standards/README.md",
+          "state": "working"
+        },
+        {
+          "source": "files/canonical/shared.md",
+          "target": "docs/standards/shared.md",
+          "state": "working"
+        },
+        {
+          "source": "files/canonical/python.md",
+          "target": "docs/standards/python.md",
+          "state": "working"
+        },
+        {
+          "source": "files/continuation/operation.md",
+          "target": "handoff/operation.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [],
+      "expectations": [
+        "Recognizes that canonical files are already written but references and old content remain unmigrated; does not pretend the supplied state is a filesystem failure observed during this run.",
+        "Verifies retained meanings/IDs and replacements before old-guide removal/redirect, preserves mixed-purpose and release/access content, fixes incoming onboarding links, and reuses CLAUDE.md import.",
+        "Reports what was already present, what it actually completed, and any remaining failure. A real new failure requires preserving recoverable content and an accurate incomplete report, not manufactured success.",
+        "Does not unnecessarily demand a second approval when the inspected remaining work matches the unchanged supplied approved proposal."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Continue the previously approved setup described in handoff/approved-preview.md. Those were the previewed contents; the current repository includes a subsequent contributor edit. Carry out only what that approval still authorizes.",
+      "expected_output": "Detect a material new rule exception and unrelated contact in the current working file, preserve them, and seek revised approval instead of overwriting using stale approval.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/labels.py",
+          "target": "src/labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/test_labels.py",
+          "target": "tests/test_labels.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/python-style.md",
+          "target": "docs/python-style.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/onboarding.md",
+          "target": "docs/onboarding.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CONTRIBUTING-changed.md",
+          "target": "CONTRIBUTING.md",
+          "state": "working"
+        },
+        {
+          "source": "files/continuation/approved-preview.md",
+          "target": "handoff/approved-preview.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "I do not approve the revised proposal yet. Keep the contributor edit intact and do not apply the migration."
+      ],
+      "expectations": [
+        "Reads the current CONTRIBUTING.md and compares with the supplied preview facts; preserves the new emergency contact and identifies the new parseLegacyLabel exception.",
+        "Reconciles the material rule change into a new proposal and seeks renewed approval; stale approval is not permission to erase the exception.",
+        "After withheld revised approval, leaves current target content and other files untouched and makes no completion claim.",
+        "Treats baseline/working fixtures as a continuation snapshot, not evidence that the harness changed a file between live turns."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Implement parse_limit(raw: str) -> int in src/limits.py for the warehouse importer: accept integers 1 through 100 inclusive and reject malformed or out-of-range text. Add focused tests using the repository conventions and run them. src/counts.py provides adjacent input-parsing context. Explain the relevant standards behind your choices briefly.",
+      "expected_output": "Implement the same bounded parser using split topic documents.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/counts.py",
+          "target": "src/counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/test_counts.py",
+          "target": "tests/test_counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/README-split.md",
+          "target": "docs/standards/README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/shared.md",
+          "target": "docs/standards/shared.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/python.md",
+          "target": "docs/standards/python.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/tests.md",
+          "target": "docs/standards/tests.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/scripts.md",
+          "target": "docs/standards/scripts.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/limits.py",
+          "target": "src/limits.py",
+          "state": "baseline"
+        }
+      ],
+      "replies": [],
+      "expectations": [
+        "Follows ordinary implementation/review scope without invoking setup, requesting standards approval, or rewriting agreed standards.",
+        "Discovers the canonical index through repository instructions and reads applicable shared, Python, and testing guidance. Allow additional context reads when useful; do not score raw document count or insist on an exact navigation order.",
+        "Applies obligations according to strength and scope, including the reasoned docstring recommendation exception; scripts-only requirements are not imposed on library code.",
+        "Ties any standards claims to valid local rule IDs and resolving anchors; baseline-specific naming findings cite PY-009 and the upstream naming section. Supplied research alone imports no additional policy.",
+        "Assess actual trace navigation and code evidence; fixtures alone do not prove usefulness of real generated output or a universal performance advantage.",
+        "Implements valid endpoints and ValueError rejection with a limit/value message (SHARED-001), narrow exception handling (PY-001), and baseline-compatible function naming (PY-009).",
+        "Adds passing unittest coverage for endpoints, out-of-range values and malformed text (TEST-001), with meaningful test names (TEST-002); reports actual executed check and outcome.",
+        "Explains applicable valid rule IDs and leaves standards, host instructions, configuration, and unrelated code unchanged."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Implement parse_limit(raw: str) -> int in src/limits.py for the warehouse importer: accept integers 1 through 100 inclusive and reject malformed or out-of-range text. Add focused tests using the repository conventions and run them. src/counts.py provides adjacent input-parsing context. Explain the relevant standards behind your choices briefly.",
+      "expected_output": "Implement the same bounded parser using the equivalent single standards document.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/counts.py",
+          "target": "src/counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/test_counts.py",
+          "target": "tests/test_counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/README-single.md",
+          "target": "docs/standards/README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/limits.py",
+          "target": "src/limits.py",
+          "state": "baseline"
+        }
+      ],
+      "replies": [],
+      "expectations": [
+        "Follows ordinary implementation/review scope without invoking setup, requesting standards approval, or rewriting agreed standards.",
+        "Discovers the canonical index through repository instructions and reads applicable shared, Python, and testing guidance. Allow additional context reads when useful; do not score raw document count or insist on an exact navigation order.",
+        "Applies obligations according to strength and scope, including the reasoned docstring recommendation exception; scripts-only requirements are not imposed on library code.",
+        "Ties any standards claims to valid local rule IDs and resolving anchors; baseline-specific naming findings cite PY-009 and the upstream naming section. Supplied research alone imports no additional policy.",
+        "Assess actual trace navigation and code evidence; fixtures alone do not prove usefulness of real generated output or a universal performance advantage.",
+        "Implements valid endpoints and ValueError rejection with a limit/value message (SHARED-001), narrow exception handling (PY-001), and baseline-compatible function naming (PY-009).",
+        "Adds passing unittest coverage for endpoints, out-of-range values and malformed text (TEST-001), with meaningful test names (TEST-002); reports actual executed check and outcome.",
+        "Explains applicable valid rule IDs and leaves standards, host instructions, configuration, and unrelated code unchanged."
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Review the current working change to src/limits.py and tests/test_limits.py for correctness and repository standards. Report actionable findings with code locations and applicable rule IDs/links, distinguishing requirements from recommendations; do not edit files. The default_limit wrapper intentionally omits a docstring because its single forwarding line is obvious.",
+      "expected_output": "Review the same seeded defects and recommendation exception using split topic documents.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/counts.py",
+          "target": "src/counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/test_counts.py",
+          "target": "tests/test_counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/README-split.md",
+          "target": "docs/standards/README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/shared.md",
+          "target": "docs/standards/shared.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/python.md",
+          "target": "docs/standards/python.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/tests.md",
+          "target": "docs/standards/tests.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/scripts.md",
+          "target": "docs/standards/scripts.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/limits.py",
+          "target": "src/limits.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/limits-review.py",
+          "target": "src/limits.py",
+          "state": "working"
+        },
+        {
+          "source": "files/usage/test_limits-review.py",
+          "target": "tests/test_limits.py",
+          "state": "working"
+        }
+      ],
+      "replies": [],
+      "expectations": [
+        "Follows ordinary implementation/review scope without invoking setup, requesting standards approval, or rewriting agreed standards.",
+        "Discovers the canonical index through repository instructions and reads applicable shared, Python, and testing guidance. Allow additional context reads when useful; do not score raw document count or insist on an exact navigation order.",
+        "Applies obligations according to strength and scope, including the reasoned docstring recommendation exception; scripts-only requirements are not imposed on library code.",
+        "Ties any standards claims to valid local rule IDs and resolving anchors; baseline-specific naming findings cite PY-009 and the upstream naming section. Supplied research alone imports no additional policy.",
+        "Assess actual trace navigation and code evidence; fixtures alone do not prove usefulness of real generated output or a universal performance advantage.",
+        "Finds invalid input returning zero (SHARED-001) and the broad Exception catch (PY-001), with specific code evidence and focused fixes.",
+        "Finds missing endpoint/out-of-range/malformed test coverage (TEST-001) and non-baseline parseLimit naming (PY-009 plus upstream section). May combine related findings; prioritize by impact rather than count.",
+        "Treats test_1 as a recommendation issue (TEST-002), and considers the documented default_limit exception under PY-002 instead of calling it a requirement violation.",
+        "Leaves repository files unchanged."
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Review the current working change to src/limits.py and tests/test_limits.py for correctness and repository standards. Report actionable findings with code locations and applicable rule IDs/links, distinguishing requirements from recommendations; do not edit files. The default_limit wrapper intentionally omits a docstring because its single forwarding line is obvious.",
+      "expected_output": "Review the same seeded defects and recommendation exception using the equivalent single standards document.",
+      "files": [
+        {
+          "source": "files/repo/README.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/repo/pyproject.toml",
+          "target": "pyproject.toml",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/AGENTS.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/canonical/CONTRIBUTING.md",
+          "target": "CONTRIBUTING.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/existing/CLAUDE.md",
+          "target": "CLAUDE.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/counts.py",
+          "target": "src/counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/test_counts.py",
+          "target": "tests/test_counts.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/research/sources.md",
+          "target": "evidence/sources.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/README-single.md",
+          "target": "docs/standards/README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/limits.py",
+          "target": "src/limits.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/usage/limits-review.py",
+          "target": "src/limits.py",
+          "state": "working"
+        },
+        {
+          "source": "files/usage/test_limits-review.py",
+          "target": "tests/test_limits.py",
+          "state": "working"
+        }
+      ],
+      "replies": [],
+      "expectations": [
+        "Follows ordinary implementation/review scope without invoking setup, requesting standards approval, or rewriting agreed standards.",
+        "Discovers the canonical index through repository instructions and reads applicable shared, Python, and testing guidance. Allow additional context reads when useful; do not score raw document count or insist on an exact navigation order.",
+        "Applies obligations according to strength and scope, including the reasoned docstring recommendation exception; scripts-only requirements are not imposed on library code.",
+        "Ties any standards claims to valid local rule IDs and resolving anchors; baseline-specific naming findings cite PY-009 and the upstream naming section. Supplied research alone imports no additional policy.",
+        "Assess actual trace navigation and code evidence; fixtures alone do not prove usefulness of real generated output or a universal performance advantage.",
+        "Finds invalid input returning zero (SHARED-001) and the broad Exception catch (PY-001), with specific code evidence and focused fixes.",
+        "Finds missing endpoint/out-of-range/malformed test coverage (TEST-001) and non-baseline parseLimit naming (PY-009 plus upstream section). May combine related findings; prioritize by impact rather than count.",
+        "Treats test_1 as a recommendation issue (TEST-002), and considers the documented default_limit exception under PY-002 instead of calling it a requirement violation.",
+        "Leaves repository files unchanged."
+      ]
+    }
+  ]
+}

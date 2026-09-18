@@ -1,0 +1,2 @@
+MIN_LIMIT = 1
+MAX_LIMIT = 100
