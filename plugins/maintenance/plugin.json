@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "maintenance",
+  "description": "Establish researched, approved coding standards and repository discovery references."
+}
