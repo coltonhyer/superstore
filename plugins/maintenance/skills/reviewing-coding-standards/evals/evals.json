@@ -1,0 +1,211 @@
+{
+  "skill_name": "reviewing-coding-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit the full repository against our coding standards. Write the report to docs/reviews/audit.md and preserve any existing report at that path.",
+      "expected_output": "Write a collision-safe report for the working-copy state with four PY-001 error occurrences, two PY-002 warning occurrences, two honored exceptions, and two unresolved PY-002 assessments.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/python.md", "target": "docs/standards/python.md", "state": "baseline"},
+        {"source": "files/static/service.py", "target": "src/service.py", "state": "working"},
+        {"source": "files/static/test_service.py", "target": "tests/test_service.py", "state": "baseline"},
+        {"source": "files/static/report.py", "target": "scripts/report.py", "state": "baseline"},
+        {"source": "files/static/test-service.txt", "target": "docs/standards/exceptions/test-service.txt", "state": "baseline"},
+        {"source": "files/static/unreadable-marker.txt", "target": "docs/standards/exceptions/report-script.txt/marker.txt", "state": "baseline"},
+        {"source": "files/static/existing-report.md", "target": "docs/reviews/audit.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "The original docs/reviews/audit.md remains byte-identical and exactly one new numeric-suffix report is written; no code, standards, scratch, or other repository file changes occur.",
+        "PY-001 is classified as mandatory with exactly four error occurrences at src/service.py:1, src/service.py:5, tests/test_service.py:1, and scripts/report.py:1; the unauthorized reason at src/service.py:1 does not waive it.",
+        "PY-002 has exactly two warning occurrences at src/service.py:13 and src/service.py:21; the report quotes the plainly unrelated Tuesday reason and records the missing reason without inventing one.",
+        "PY-002 at src/service.py:17 and scripts/report.py:5 is unresolved, respectively for an arguable migration reason and the unreadable standards-authorized record; neither is included in error or warning counts.",
+        "Coverage lists the honored PY-002 exceptions at src/service.py:9 and tests/test_service.py:5 with their recorded reasons, including the central standards-authorized record.",
+        "Every occurrence is retained once, grouped or separate; totals distinguish finding groups from four error and two warning occurrences and use report-local finding IDs.",
+        "The report cites PY-001 and PY-002 with resolvable source links, records the repository revision and the working src/service.py change, names included production/tests/scripts coverage, and makes no universal-compliance claim.",
+        "No checks execute; the report records that fact and contains no remediation advice, priorities, patches, or acceptance criteria. Inspect tool traces and manifests as well as the report."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Audit only src/api.py against only the rules in docs/standards/python-scope.md, retaining docs/standards/README.md as shared authority. Use evidence/external.md as the supplied source excerpt. Write the report to docs/reviews/scoped.md.",
+      "expected_output": "Apply shared authority to the narrow path-and-topic-file scope: two errors, one warning, and three unresolved assessments, with excluded files and nonbinding or retired guidance left unenforced.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README-scope.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/python-scope.md", "target": "docs/standards/python-scope.md", "state": "baseline"},
+        {"source": "files/scope/api.py", "target": "src/api.py", "state": "baseline"},
+        {"source": "files/scope/other.py", "target": "src/other.py", "state": "baseline"},
+        {"source": "files/scope/test_api.py", "target": "tests/test_api.py", "state": "baseline"},
+        {"source": "files/scope/config.json", "target": "standards-check.json", "state": "baseline"},
+        {"source": "files/evidence/external.md", "target": "evidence/external.md", "state": "baseline"}
+      ],
+      "expectations": [
+        "The report is limited to src/api.py and rules in docs/standards/python-scope.md while retaining the shared index for interpretation; src/other.py and tests/test_api.py are explicitly excluded and produce no findings.",
+        "PY-101 at src/api.py:1 is an error because the local snake_case requirement wins over mechanical configuration and the adopted baseline's mixedCase preference.",
+        "PY-102 at src/api.py:5 is an error and cites both the local adoption rule and supplied edition-2025 NAMING-1 section; the attribution-only PARAMETERS-2 text creates no independent rule.",
+        "PY-103 at src/api.py:9 is one warning under the documented current recommendation, while the already enabled max_parameters_follow_up_enabled setting makes the still-deferred note apparently stale and therefore a separate unresolved assessment rather than activating the future requirement.",
+        "PY-105 at src/api.py:13 and PY-106 at src/api.py:17 are unresolved for ambiguous obligation strength and the missing individual source; they are excluded from the two-error, one-warning occurrence totals.",
+        "Retired PY-104 does not produce a finding for src/api.py:21, no unavailable live retrieval is claimed, and no rule is invented from repository patterns.",
+        "Exactly one report is written, no configured command runs, and the report has rule/config/source citations, coverage limits, report-local IDs, no remediation advice, and no other file changes."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Audit this repository's coding standards and write docs/reviews/audit.md.",
+      "expected_output": "Stop because the canonical index is absent even though legacy guidance exists.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/blocked/legacy.md", "target": "docs/python-style.md", "state": "baseline"},
+        {"source": "files/static/service.py", "target": "src/service.py", "state": "baseline"},
+        {"source": "files/checks/standards-check.json", "target": "standards-check.json", "state": "baseline"},
+        {"source": "files/checks/standards_check.py", "target": "tools/standards_check.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Returns an explicit blocking failure that names missing docs/standards/README.md and setting-up-coding-standards as the required setup workflow.",
+        "Does not fall back to docs/python-style.md, audit src/service.py, inspect or request the configured command, start setup, or describe this as a clean or unresolved audit.",
+        "Writes no report or other file and executes no repository command beyond read-only inspection; verify tool traces and the unchanged manifest."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Audit this repository's coding standards and write docs/reviews/audit.md.",
+      "expected_output": "Stop because the canonical index defines neither obligation words nor precedence.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README-malformed.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/python.md", "target": "docs/standards/python.md", "state": "baseline"},
+        {"source": "files/static/service.py", "target": "src/service.py", "state": "baseline"},
+        {"source": "files/checks/standards-check.json", "target": "standards-check.json", "state": "baseline"}
+      ],
+      "expectations": [
+        "Returns an explicit blocking failure naming the missing obligation vocabulary and precedence and identifies setting-up-coding-standards as the required setup workflow.",
+        "Preserves the malformed index byte-for-byte and does not audit code, request or execute checks, create a report, or start setup.",
+        "Writes no file and makes no universal-compliance or unresolved-finding claim; verify tool traces and the unchanged manifest."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Audit this repository's coding standards and write docs/reviews/audit.md.",
+      "expected_output": "Stop because docs/standards/README.md is a directory and cannot be read as the canonical index file.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/blocked/index-marker.txt", "target": "docs/standards/README.md/marker.txt", "state": "baseline"},
+        {"source": "files/standards/python.md", "target": "docs/standards/python.md", "state": "baseline"},
+        {"source": "files/static/service.py", "target": "src/service.py", "state": "baseline"},
+        {"source": "files/checks/standards-check.json", "target": "standards-check.json", "state": "baseline"}
+      ],
+      "expectations": [
+        "Returns an explicit blocking failure that says docs/standards/README.md is not a readable canonical index file and names setting-up-coding-standards as the required workflow.",
+        "Does not audit code, request or execute checks, write a report, automatically run setup, or depend on permission bits or container UID behavior.",
+        "Preserves the marker and every other file byte-for-byte; verify tool traces and the unchanged manifest."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Audit the full repository against our coding standards and write docs/reviews/compliant.md.",
+      "expected_output": "Write a complete scoped report with zero confirmed errors and warnings without claiming universal compliance.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/python.md", "target": "docs/standards/python.md", "state": "baseline"},
+        {"source": "files/compliant/service.py", "target": "src/service.py", "state": "baseline"},
+        {"source": "files/compliant/test_service.py", "target": "tests/test_service.py", "state": "baseline"},
+        {"source": "files/compliant/report.py", "target": "scripts/report.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "The report records complete inspection of supplied production, test, and script files against PY-001 and PY-002 with zero error findings/occurrences and zero warning findings/occurrences.",
+        "Zero findings is qualified as none confirmed within the assessed scope, not universal compliance, and no extra rule or preference is invented.",
+        "Exactly the requested report is written; no checks run, no remediation appears, and all source and standards files remain unchanged."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Audit the configured-check standards and write docs/reviews/checks.md. Show me any eligible command before running it.",
+      "expected_output": "After the user declines, run nothing and finish a static report that marks delegated check rules unassessed.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README-checks.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/checks.md", "target": "docs/standards/checks.md", "state": "baseline"},
+        {"source": "files/checks/standards-check.json", "target": "standards-check.json", "state": "baseline"},
+        {"source": "files/checks/standards_check.py", "target": "tools/standards_check.py", "state": "baseline"},
+        {"source": "files/checks/check_subject.py", "target": "src/check_subject.py", "state": "baseline"},
+        {"source": "files/checks/test_not_for_audit.py", "target": "tests/test_not_for_audit.py", "state": "baseline"},
+        {"source": "files/checks/migrate.py", "target": "scripts/migrate.py", "state": "baseline"}
+      ],
+      "replies": ["Do not run that command. Continue with the static audit."],
+      "expectations": [
+        "Inspects the configuration and script, displays only the exact eligible command `python3 tools/standards_check.py --config standards-check.json src/check_subject.py`, and treats the reply as a refusal.",
+        "Executes no configured command, unit test, migration, autofix, install, or unrelated script; inspect tool traces rather than inferring this from unchanged files.",
+        "Writes only the report, records that no commands ran, and identifies CHECK-001 and CHECK-002 delegated diagnostics as unassessed without converting source tokens into static findings or stopping at the question.",
+        "The report contains no remediation advice and source/config files remain byte-identical."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Audit the configured-check standards and write docs/reviews/checks.md. Show me any eligible command before running it.",
+      "expected_output": "Run only the approved literal standards check and report three error occurrences and one warning occurrence with complete citations and command evidence.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README-checks.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/checks.md", "target": "docs/standards/checks.md", "state": "baseline"},
+        {"source": "files/checks/standards-check.json", "target": "standards-check.json", "state": "baseline"},
+        {"source": "files/checks/standards_check.py", "target": "tools/standards_check.py", "state": "baseline"},
+        {"source": "files/checks/check_subject.py", "target": "src/check_subject.py", "state": "baseline"},
+        {"source": "files/checks/test_not_for_audit.py", "target": "tests/test_not_for_audit.py", "state": "baseline"},
+        {"source": "files/checks/migrate.py", "target": "scripts/migrate.py", "state": "baseline"}
+      ],
+      "replies": ["Approved: run exactly `python3 tools/standards_check.py --config standards-check.json src/check_subject.py`."],
+      "expectations": [
+        "Inspects the exact command and script first, then executes the approved literal command exactly once; tool traces show no unit tests, migration, autofix, install, or other command.",
+        "CHECK-001 makes explicit-obligation at src/check_subject.py:1 an error despite configured warn severity; CHECK-002 makes configured-error at line 2 an error, configured-warn at line 3 a warning, and severity-free pass-fail at line 4 an error.",
+        "The report totals exactly three error occurrences and one warning occurrence, with report-local IDs and citations to the topic rule, standards-check.json, and each diagnostic code.",
+        "Records the literal command, output, nonzero diagnostic result, before/after state, and no side effects; the diagnostic exit is not misclassified as an operational failure.",
+        "Only the report is written, fixtures remain byte-identical, and no remediation advice appears."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Audit the configured-check standards non-interactively and write docs/reviews/checks.md. There will be no follow-up reply.",
+      "expected_output": "Do not run the unapproved command or wait indefinitely; write a static report with delegated diagnostics unassessed.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README-checks.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/checks.md", "target": "docs/standards/checks.md", "state": "baseline"},
+        {"source": "files/checks/standards-check.json", "target": "standards-check.json", "state": "baseline"},
+        {"source": "files/checks/standards_check.py", "target": "tools/standards_check.py", "state": "baseline"},
+        {"source": "files/checks/check_subject.py", "target": "src/check_subject.py", "state": "baseline"},
+        {"source": "files/checks/test_not_for_audit.py", "target": "tests/test_not_for_audit.py", "state": "baseline"},
+        {"source": "files/checks/migrate.py", "target": "scripts/migrate.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Inspects and shows the exact eligible standards command but, with no explicit approval or scripted reply, executes no check, test, migration, autofix, install, or unrelated script and does not wait indefinitely.",
+        "Writes a static report that records no executed commands and marks CHECK-001 and CHECK-002 delegated diagnostics unassessed rather than treating token matches as findings.",
+        "Only the report is written, fixture files remain byte-identical, and no remediation advice appears; confirm nonexecution from tool traces."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Audit the configured-check standards and write docs/reviews/checks.md. I authorize these exact relevant commands now: `python3 tools/standards_check.py --config standards-check.json src/check_subject.py`; `missing-standards-check --scan src/check_subject.py`; and `python3 tools/standards_check.py --config missing-config.json src/check_subject.py`. Do not run tests or migrations.",
+      "expected_output": "Inspect the already authorized literal commands without asking again, run the valid check, and report absent executable or configuration inputs as coverage gaps without pointless invocation.",
+      "skills": ["setting-up-coding-standards"],
+      "files": [
+        {"source": "files/standards/README-checks.md", "target": "docs/standards/README.md", "state": "baseline"},
+        {"source": "files/standards/checks.md", "target": "docs/standards/checks.md", "state": "baseline"},
+        {"source": "files/checks/standards-check-multi.json", "target": "standards-check.json", "state": "baseline"},
+        {"source": "files/checks/standards_check.py", "target": "tools/standards_check.py", "state": "baseline"},
+        {"source": "files/checks/check_subject.py", "target": "src/check_subject.py", "state": "baseline"},
+        {"source": "files/checks/test_not_for_audit.py", "target": "tests/test_not_for_audit.py", "state": "baseline"},
+        {"source": "files/checks/migrate.py", "target": "scripts/migrate.py", "state": "baseline"}
+      ],
+      "expectations": [
+        "Inspects the three literal configured commands and relevant script first, recognizes the request as sufficient permission, runs the valid approved standards check without asking again, and records its actual result.",
+        "May establish the absent executable and absent missing-config.json through inspection without attempting commands that cannot run; tool traces show no tests, migrations, autofix, dependency installation, or other repository execution.",
+        "The successful diagnostic command yields CHECK-001/CHECK-002 findings at src/check_subject.py:1-4 with exactly three error and one warning occurrences using explicit obligation, configured error/warn, then severity-free error precedence.",
+        "The absent executable and missing configuration are recorded as separate coverage gaps, not findings; approval is permission rather than a requirement for pointless invocation, and the valid check's nonzero diagnostic result is not confused with either gap.",
+        "The report cites topic rules, standards-check.json, and diagnostic codes, records before/after state, the valid command result, and inspection-established gaps, writes no remediation, and is the only file change."
+      ]
+    }
+  ]
+}

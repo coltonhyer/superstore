@@ -1,0 +1,18 @@
+{
+  "commands": [
+    "python3 tools/standards_check.py --config standards-check.json src/check_subject.py",
+    "missing-standards-check --scan src/check_subject.py",
+    "python3 tools/standards_check.py --config missing-config.json src/check_subject.py"
+  ],
+  "out_of_scope_alternatives": [
+    "python3 -m unittest",
+    "python3 scripts/migrate.py"
+  ],
+  "rules": [
+    {"code": "explicit-obligation", "token": "EXPLICIT_BAD", "severity": "warn"},
+    {"code": "configured-error", "token": "ERROR_BAD", "severity": "error"},
+    {"code": "configured-warn", "token": "WARN_BAD", "severity": "warn"},
+    {"code": "pass-fail", "token": "DEFAULT_BAD"}
+  ]
+}
+

@@ -1,0 +1,2 @@
+This marker makes report-script.txt a directory rather than a readable record.
+
