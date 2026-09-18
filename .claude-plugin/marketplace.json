@@ -23,6 +23,12 @@
       "source": "./plugins/implementation",
       "description": "Execute approved implementation plans through verification, review, and local recording.",
       "category": "productivity"
+    },
+    {
+      "name": "maintenance",
+      "source": "./plugins/maintenance",
+      "description": "Establish researched, approved coding standards and repository discovery references.",
+      "category": "productivity"
     }
   ]
 }

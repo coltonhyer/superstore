@@ -1,0 +1,28 @@
+{
+  "name": "maintenance",
+  "version": "0.1.0",
+  "description": "Establish researched, approved coding standards and repository discovery references.",
+  "author": {
+    "name": "Superstore contributors"
+  },
+  "keywords": [
+    "maintenance",
+    "coding-standards",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Maintenance",
+    "shortDescription": "Set up approved repository coding standards",
+    "longDescription": "Inspect existing practices, research suitable guidance, and agree on lean coding standards before writing documentation and discovery references.",
+    "developerName": "Superstore contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Set up coding standards for this repository."
+    ]
+  }
+}

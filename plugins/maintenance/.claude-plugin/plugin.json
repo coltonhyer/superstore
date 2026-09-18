@@ -1,0 +1,8 @@
+{
+  "name": "maintenance",
+  "description": "Establish researched, approved coding standards and repository discovery references.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Superstore contributors"
+  }
+}
