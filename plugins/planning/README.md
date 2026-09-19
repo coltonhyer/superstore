@@ -84,7 +84,7 @@ Live evals are manual release checks, not CI tests. They require Docker and an
 active subscription login for each selected provider. Runs use your existing
 CLI logins; a refreshed token is written back only if newer. The runner builds
 [`evals/Dockerfile`](../../evals/Dockerfile) automatically; the image pins Codex
-`0.150.1`, Claude Code `2.1.251`, Antigravity `1.1.22`, and Jujutsu `0.44.0`.
+`0.155.0`, Claude Code `2.1.251`, Antigravity `1.1.22`, and Jujutsu `0.44.0`.
 
 The default subject matrix is Codex `gpt-5.6-terra`, Claude Code
 `claude-sonnet-5`, and Antigravity `gemini-3.7-flash-high`, all at high
@@ -119,7 +119,7 @@ the turn's provider trace before that state is deleted. Results default to a
 temporary directory; use `--output` to keep them at a chosen path.
 
 Codex `gpt-5.6-terra` uses the v2 multi-agent interface, which pinned Codex
-`0.150.1` disables by default. The adapter enables v2, keeps its disposable
+`0.155.0` disables by default. The adapter enables v2, keeps its disposable
 session state for the case, and leaves reviewer timing to Codex. Codex's JSON
 stream omits v2 reviewer provenance, so the runner adds a sanitized trace from
 that disposable state before deleting it. This lets a reviewer distinguish
