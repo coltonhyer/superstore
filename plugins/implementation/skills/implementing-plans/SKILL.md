@@ -20,7 +20,9 @@ plan/spec context needed for that task. Read
 [the implementation report contract](references/implementation-report.md).
 
 1. Inspect the assigned paths and the relevant repository conventions. Change
-   only the task scope; preserve unrelated working-copy changes.
+   only the task scope; preserve unrelated working-copy changes. Work from the
+   brief: do not open the full plan, other tasks, or the execution record. If
+   the brief lacks something the task needs, report the gap instead.
 2. Invoke [verifying-changes](../verifying-changes/SKILL.md) on the actual task
    change before recording it. Failed, stale, or unavailable required evidence
    is not completion: correct the task when authorized, or report the gap.
