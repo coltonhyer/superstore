@@ -31,7 +31,25 @@ fresh implementer with only the assigned task, exact applicable plan/spec
 excerpts, required interfaces and earlier decisions, workspace, report path,
 and the implementing-plans instructions. Do not require a new worker worktree
 unless repository instructions require it. Keep unrelated history, the whole
-plan, and supervisor state out of the worker context.
+plan, and supervisor state out of the worker context. Do not fork or share your
+conversation with any worker or reviewer, even when the host offers to;
+everything it needs goes in its brief.
+
+Set model and reasoning effort explicitly on every dispatch when the host
+exposes those controls; omitting them inherits yours, which is usually the
+costliest option. Work that a stronger agent will check can run cheaper than
+its check. A small mechanical change goes to the smallest model at low effort.
+Ordinary implementation from a complete brief, a repair for a named finding,
+and a verification run go to a mid-tier model. Each task review runs one tier
+above the work it checks and no higher, or at the strongest tier when the work
+already ran there. Keep the strongest available tier for diagnosis,
+whole-change review, and work where a defect is costly to reverse, such as
+authentication, secrets, cryptography, data migration, or public contracts. A
+routine role or permission check is ordinary work. When replacing a worker
+after a repeated unresolved defect, raise its tier or effort when a higher one
+is available rather than repeating the same level; at the ceiling, follow
+Recovery instead of retrying. This skill names no models; choose from those the
+host lists.
 
 Read the returned report and inspect the full recorded task range and cited
 evidence. Then dispatch `reviewing-implementation` for that exact range. Read
