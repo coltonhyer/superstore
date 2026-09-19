@@ -89,6 +89,12 @@ CLI logins; a refreshed token is written back only if newer. The runner builds
 The default subject matrix is Codex `gpt-5.6-terra`, Claude Code
 `claude-sonnet-5`, and Antigravity `gemini-3.7-flash-high`, all at high
 effort. Per-host `--<host>-model` and `--<host>-effort` flags override it.
+These defaults are already mid-tier, so cases that expect the managing agent
+to choose a cheaper reviewer or worker only exercise that choice when the
+subject runs on the host's strongest model. Judging those cases needs each
+host's tier order, which the artifacts do not record. Strongest first, it is
+currently `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` on
+Codex and `fable`, `opus`, `sonnet`, `haiku` on Claude Code.
 The runner captures evidence and reports operational errors; it does not turn
 subjective behavior into an automatic pass/fail score.
 
