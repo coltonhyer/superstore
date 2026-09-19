@@ -25,7 +25,9 @@
         "Omits empty conditional sections",
         "Organizes verification by UI and API surfaces followed by behaviors",
         "Runs one review before requesting approval",
-        "Does not archive or commit before approval"
+        "Does not archive or commit before approval",
+        "When the host exposes model or effort controls, sets them explicitly for the reviewer and steps one tier down from the strongest model for this ordinary spec, neither keeping the strongest tier nor going lower",
+        "Starts the reviewer without forking or sharing the managing conversation"
       ]
     },
     {
@@ -61,7 +63,8 @@
         "Addresses the unauthorized immediate-revocation requirement",
         "Flags verification that names no test surface or behavior",
         "Allows a concise human-readability correction without unrelated style nits",
-        "Uses only Addressed, Elevated, or Dismissed dispositions"
+        "Uses only Addressed, Elevated, or Dismissed dispositions",
+        "When the host exposes model or effort controls, keeps the strongest available tier for the reviewer because the spec governs session authentication"
       ]
     },
     {
@@ -178,7 +181,8 @@
         "Does not treat a reviewer that is still running as a failed attempt",
         "After the initial review attempt, either processes its usable output or, when none is returned, falls back once to a disclosed self-review without retrying that failed attempt",
         "Finds and addresses the draft's unauthorized ordinary-member export without changing the approved filters, encoding, or scheduling scope",
-        "Shows an Addressed disposition and requests approval without archiving or committing the draft"
+        "Shows an Addressed disposition and requests approval without archiving or committing the draft",
+        "When the host exposes model or effort controls, treats the administrator-only permission check as ordinary work and steps the reviewer one tier down from the strongest model rather than keeping the strongest tier"
       ]
     }
   ]

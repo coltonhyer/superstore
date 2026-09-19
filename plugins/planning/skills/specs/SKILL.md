@@ -64,18 +64,26 @@ any archival.
 
 ### Produce the review
 
-When subagent creation is available, launch one fresh, read-only reviewer:
+When subagent creation is available, launch one fresh, read-only reviewer. Set
+its model and reasoning effort explicitly when the host exposes those controls;
+omitting them inherits yours, which is usually the costliest option:
 
-- For ordinary work, use a capable general-purpose reviewer at the host's
-  normal intelligence and effort.
-- Prefer a stronger available tier and higher reasoning effort for security,
-  data migration, public contracts, or broad architecture.
-- Use host defaults when selection controls are unavailable. Never hard-code a
-  model or agent name.
+- For ordinary work, step one tier down from the strongest model at moderate
+  reasoning effort; if you already run below that tier, keep your own. Do not
+  go lower: everything built from the spec inherits what this review misses,
+  and nothing else checks the reviewer.
+- Keep the strongest available tier and higher reasoning effort only where a
+  missed finding is costly to reverse: authentication, secrets, or
+  cryptography; data migration; public contracts; or broad architecture. A
+  routine role or permission check is ordinary work.
+- This skill names no models; choose from those the host lists. Use host
+  defaults only when selection controls are unavailable.
 
 Give the reviewer only the approved requirements, exact draft, relevant
-repository context, and review contract. The reviewer reports findings; it
-does not edit the spec or approve it.
+repository context, and review contract. Do not fork or share your conversation
+with it, even when the host offers to; a reviewer that has seen the drafting
+discussion is not independent. The reviewer reports findings; it does not edit
+the spec or approve it.
 
 When subagent creation is unavailable, perform the same review yourself and
 disclose that it was not independent.
