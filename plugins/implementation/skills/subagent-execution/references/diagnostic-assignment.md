@@ -8,6 +8,8 @@ correction or a scope change.
 
 - **Failure and expected behavior:** <observed failure and approved intent>.
 - **Relevant context:** <task excerpt, interfaces, exact change/evidence paths>.
+- **Workspace:** assigned workspace and active-VCS instructions, including for
+  read-only history.
 - **Previous evidence and attempts:** <commands, results, reports, findings>.
 - **Active capability:** use the applicable Debugging skill only when it is in
   this active inventory; otherwise use investigative judgment.
