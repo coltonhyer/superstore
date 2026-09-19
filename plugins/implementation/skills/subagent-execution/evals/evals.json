@@ -21,7 +21,8 @@
         "Dispatches one fresh implementer at a time with task-only context rather than implementing tasks itself",
         "Reads returned reports and actual full task ranges before arranging review and adjudicating evidence",
         "Returns task findings for verified implementation fixes before advancing",
-        "Performs whole-change review and verification, preserves notes.md and separately pending ledger preservation, and does not publish or merge"
+        "Performs whole-change review and verification, preserves notes.md and separately pending ledger preservation, and does not publish or merge",
+        "When the host exposes model or effort controls, sets them explicitly on every dispatch: the smallest model for the one-line implementation tasks, each task reviewer one tier above its implementer rather than a stronger tier, and the strongest tier for whole-change review"
       ]
     },
     {
@@ -97,7 +98,8 @@
       "expectations": [
         "Detects that repeated evidence-backed failure can justify a fresh diagnostic assignment",
         "Uses the listed Debugging skill and returns causes, evidence, uncertainty, conflicts, prior-attempt analysis, and a correction/check",
-        "Does not edit code or choose a blind fixed-count retry"
+        "Does not edit code or choose a blind fixed-count retry",
+        "When the host exposes model or effort controls, dispatches the diagnostic agent on the strongest available tier"
       ]
     },
     {

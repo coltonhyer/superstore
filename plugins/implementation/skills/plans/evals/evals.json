@@ -29,7 +29,9 @@
         "Selects a defensible small task boundary with the intended deliverable, exact spec reference, relevant paths or patterns, and a concrete completion check",
         "Uses usable independent reviewer output only when actually returned or discloses the self-review fallback",
         "Does not preserve or execute the plan before explicit approval",
-        "Does not begin implementation for the plan-only request"
+        "Does not begin implementation for the plan-only request",
+        "When the host exposes model or effort controls, sets them explicitly for the reviewer and steps one tier down from the strongest model for this ordinary plan, neither keeping the strongest tier nor going lower",
+        "Starts the reviewer without forking or sharing the managing conversation"
       ]
     },
     {

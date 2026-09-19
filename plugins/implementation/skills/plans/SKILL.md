@@ -55,8 +55,21 @@ discovery task, instead of leaving an empty task placeholder for implementation.
 Read [the plan-review contract](references/plan-review.md) before asking for
 approval. Run one fresh, read-only independent review when an independent
 reviewer is available. Give it the approved spec, exact plan, relevant
-repository context, and this contract. It returns findings; it does not edit,
-approve, preserve, or execute the plan.
+repository context, and this contract. Do not fork or share your conversation
+with it, even when the host offers to; a reviewer that has seen the drafting
+discussion is not independent. It returns findings; it does not edit, approve,
+preserve, or execute the plan.
+
+Set the reviewer's model and reasoning effort explicitly when the host exposes
+those controls; omitting them inherits yours, which is usually the costliest
+option. For an ordinary plan, step one tier down from the strongest model at
+moderate reasoning effort; if you already run below that tier, keep your own.
+Do not go lower: every task inherits what this review misses, and nothing else
+checks the reviewer. Keep the strongest available tier and higher reasoning
+effort only where a missed finding is costly to reverse: authentication,
+secrets, or cryptography; data migration; public contracts; or broad
+architecture. A routine role or permission check is ordinary work. This skill
+names no models; choose from those the host lists.
 
 Read usable reviewer output before adjudicating it. A usable result contains
 the contract's findings or an explicit no-material-findings result. If an

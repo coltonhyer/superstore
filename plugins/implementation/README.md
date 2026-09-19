@@ -80,4 +80,7 @@ python3 scripts/run_skill_evals.py --plugin plugins/implementation --list
 
 Run behavioral evaluations only with an explicitly approved host and retained
 output path. Inspect the resulting evidence rather than treating a runner
-invocation as an automatic pass.
+invocation as an automatic pass. The runner's default subjects are mid-tier
+models, so cases that expect the supervisor to choose a cheaper reviewer or
+worker only exercise that choice when the subject runs on the host's strongest
+model.
