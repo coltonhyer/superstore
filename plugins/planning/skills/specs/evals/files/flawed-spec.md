@@ -1,3 +1,9 @@
+---
+title: Session rotation
+status: draft
+topics: [auth, session-management]
+---
+
 # Session Rotation
 
 ## Summary

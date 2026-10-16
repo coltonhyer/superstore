@@ -46,34 +46,50 @@
     },
     {
       "id": 4,
-      "prompt": "Gather requirements for changing authentication session rotation. The current design is in the attached reader-ledger.db, and read-archive is available.",
-      "expected_output": "Use metadata-first archive discovery, select the current authentication spec, load only current documents whose exact wording is needed for the rotation question, avoid superseded revisions, and then ask only about unresolved changes.",
+      "prompt": "Gather requirements for changing authentication session rotation so the idle timeout becomes configurable per workspace. The current design is in this repository's library under .agents/library/.",
+      "expected_output": "Find the specs on the subject by frontmatter, read the current specs/session-rotation.md, skip the superseded specs/session-lifetimes.md and the draft specs/session-revocation.md, leave the unrelated billing spec unread, and then ask only about unresolved changes without writing anything.",
       "skills": [
-        "read-archive"
+        "library"
       ],
       "files": [
         {
-          "source": "files/reader-ledger.db",
-          "target": ".agents/ledger.db",
+          "source": "files/session-lifetimes-spec.md",
+          "target": ".agents/library/specs/session-lifetimes.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/session-rotation-spec.md",
+          "target": ".agents/library/specs/session-rotation.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/session-revocation-draft-spec.md",
+          "target": ".agents/library/specs/session-revocation.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/billing-invoices-spec.md",
+          "target": ".agents/library/specs/billing-invoices.md",
           "state": "baseline"
         }
       ],
       "expectations": [
-        "Checks the available skill inventory rather than plugin directories",
-        "Searches metadata before loading content",
-        "Selects Authentication Spec v2 rather than its superseded revision",
-        "Loads no unrelated archived payload",
-        "Uses archived facts without treating them as new user input"
+        "Reads the current spec .agents/library/specs/session-rotation.md and uses its 30-minute idle timeout as the existing behavior",
+        "Skips specs/session-lifetimes.md because an approved spec supersedes it, and does not treat its 8-hour no-rotation design as current",
+        "Skips the draft specs/session-revocation.md and does not treat its supersedes line as retiring specs/session-rotation.md",
+        "Does not read the body of the unrelated specs/billing-invoices.md",
+        "Uses library facts without treating them as new user input",
+        "Does not write or edit any file"
       ]
     },
     {
       "id": 5,
-      "prompt": "Gather requirements for a new webhook retry policy. Library is not installed and no historical design is referenced.",
-      "expected_output": "Continue from supplied and repository context without archive access or an installation error.",
+      "prompt": "Gather requirements for a new webhook retry policy. This repository has no .agents/library/ folder, Library is not installed, and no historical design is referenced.",
+      "expected_output": "Continue from supplied and repository context without library discovery or an installation error.",
       "files": [],
       "expectations": [
-        "Checks the available skill inventory rather than plugin directories or a ledger",
-        "Does not attempt archive discovery",
+        "Treats the missing library as normal rather than an error",
+        "Does not search for library documents",
         "Does not ask the user to install Library",
         "Continues the normal requirements workflow"
       ]

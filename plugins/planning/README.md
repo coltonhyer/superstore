@@ -4,8 +4,8 @@ Turn rough requests into approved requirements and concise, independently
 reviewed specifications.
 
 Planning contains two Agent Skills. `requirements` discovers and confirms
-what done means. `specs` writes the approved result under `docs/specs`,
-reviews it, and preserves it after approval. Library integration is optional.
+what done means. `specs` writes the spec to `.agents/library/specs/`, reviews
+it, and commits it after approval. Library integration is optional.
 
 ## Install
 
@@ -44,7 +44,7 @@ from that context instead of asking you to repeat it.
 | Skill | What it is for |
 | --- | --- |
 | [`requirements`](skills/requirements/SKILL.md) | Inspect context, resolve gaps one question at a time, and obtain approval of a verifiable requirements summary. |
-| [`specs`](skills/specs/SKILL.md) | Write, independently review, approve, and preserve a specification under `docs/specs`. |
+| [`specs`](skills/specs/SKILL.md) | Write, independently review, approve, and commit a specification under `.agents/library/specs/`. |
 
 ## Workflow
 
@@ -54,12 +54,16 @@ shows each finding as `Addressed`, `Elevated`, or `Dismissed` before
 requesting approval. Without an approved summary, `specs` runs
 `requirements` first.
 
-## Optional Library integration
+## Library documents
 
-When Library is installed, `requirements` may consult relevant archived
-history through `read-archive`. After spec approval, `specs` offers to
-archive the document through `archiving-documentation` or keep it in
-repository history. Planning continues to work when Library is absent.
+`specs` writes each spec as a plain Markdown document in the
+`.agents/library/` convention: a frontmatter block with `title`, `status`, and
+`topics`. Approval sets `status: approved` and commits only that file;
+revising an approved spec flips it back to `draft` in place until it is
+approved again. When Library is installed, `requirements` may load its
+`library` skill to find the current documents on a subject; without it,
+`requirements` reads the library files directly. Library is used only for
+discovery, and Planning continues to work when it is absent.
 
 ## Validation
 
@@ -167,7 +171,7 @@ Fixtures use paths relative to the eval directory and repository workspace:
 ```json
 {
   "source": "files/approved-spec.md",
-  "target": "docs/specs/approved-spec.md",
+  "target": ".agents/library/specs/approved-spec.md",
   "state": "working"
 }
 ```
@@ -175,4 +179,4 @@ Fixtures use paths relative to the eval directory and repository workspace:
 `baseline` fixtures are committed before the subject starts. `working`
 fixtures are added afterward to represent existing uncommitted work. Add
 optional skill names through `skills` only when that case is meant to expose
-another plugin capability, such as `read-archive`.
+another plugin capability, such as `library`.

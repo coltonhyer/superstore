@@ -25,8 +25,23 @@ but do not silently alter an approved requirement. Ask the user when a
 consequential ambiguity requires their intent; resolve reversible internal
 choices yourself.
 
-Write the draft under `docs/specs`. Follow an established repository naming
-convention; otherwise use `docs/specs/<descriptive-slug>.md`.
+Write the draft to `.agents/library/specs/<slug>.md` unless the user names
+another location; only an explicit user-supplied path overrides it. Use a
+descriptive slug matching `^[a-z0-9]+(-[a-z0-9]+)*$`. Start the file with this
+frontmatter, followed by one blank line and the body:
+
+```markdown
+---
+title: <one-line title>
+status: draft
+topics: [<subject-slug>]
+---
+```
+
+`topics` lists at least one slug naming the subject. Add `supersedes:
+specs/<other-slug>.md` only when this spec replaces a differently named one.
+A spec written to a user-supplied path outside the library carries the same
+frontmatter without `supersedes`.
 
 Choose the document structure in this order:
 
@@ -57,10 +72,13 @@ question. Do not approve a spec with a blocking open question.
 
 ## Review the draft
 
+When the user explicitly approves a spec they describe as already reviewed,
+skip this section and go to the commit section; the earlier review need not
+have happened in this conversation.
+
 Before requesting approval, read
 [the review contract](references/spec-review.md) and produce one review result
-unless the user opts out. Initial review always uses the live Markdown before
-any archival.
+unless the user opts out. Review the draft file itself.
 
 ### Produce the review
 
@@ -123,36 +141,52 @@ After review findings are resolved or adjudicated, ask the user to approve or
 correct the exact spec. Incorporate corrections. Run another review only when
 they materially change scope or design.
 
-Do not archive or commit the spec before explicit approval.
+Do not commit the spec or set `status: approved` before explicit approval.
+A request to preserve, save, record, or commit the spec is not approval, and
+calling it reviewed is not approval; only an explicit statement that the user
+approves it is. When such a request arrives without approval, say that the
+spec stays an uncommitted draft and ask the user to approve or correct it,
+rather than reporting it preserved.
 
-## Preserve the approved spec
+## Commit the approved spec
 
-After approval, inspect the active skill inventory for
-`archiving-documentation`. Do not infer availability from a plugin directory
-or `.agents/ledger.db`. Honor an Archive or Keep choice the user already made.
+Explicit approval authorizes the commit; do not ask again or offer another
+preservation choice. When the user explicitly approves a spec they describe
+as reviewed, proceed to the commit: do not run another review, change the
+document's content, or ask for approval again. Any change made after approval
+needs the user's approval of the changed document before it is committed.
 
-When `archiving-documentation` is available and no choice exists, ask whether
-to:
+1. Set `status: approved` in the spec's frontmatter.
+2. Commit only that file through the repository's active version-control
+   workflow. Leave unrelated working-copy changes out of the commit and
+   untouched.
+3. Verify that the spec entered repository history and is no longer only in
+   the mutable working copy. Describing the working-copy change is not a
+   commit. With Jujutsu, `jj commit -m '<message>' <path>` moves it into a finished revision; confirm
+   that `jj diff -r @ <path>` prints nothing and that `jj log -r @- <path>`
+   shows a revision newer than the one you started from. With Git,
+   `git add <path> && git commit -m '<message>' <path>`; confirm that
+   `git status --porcelain <path>` prints nothing and that
+   `git log -1 -- <path>` shows the new commit. Claim a commit only when both
+   checks hold.
+4. Report the spec's locator with its revision, such as
+   `.agents/library/specs/<slug>.md@<revision>`.
 
-- **Archive:** Invoke Library with the exact approved path. Follow its scan,
-  confirmation, cleanup, and failure boundaries. Stop without making a
-  version-control commit, and report that the ledger change remains uncommitted.
-  If archival fails, preserve recoverable state and do not silently fall back to
-  Keep.
-- **Keep:** Commit only the approved spec through the repository's active
-  version-control workflow. Verify that the spec entered repository history and
-  no longer remains only in the mutable working copy before claiming it was
-  committed. Approval authorizes that commit; do not ask again or include
-  unrelated working-copy changes.
+When no supported version control exists or the commit is refused, leave the
+file in place with `status: approved` and report it uncommitted. On any
+failure, report the exact outcome without claiming completion or working
+around it.
 
-When Library is unavailable, use Keep without treating the missing integration
-as an error. If no supported version control exists, leave the spec under
-`docs/specs` and report that it was not committed. On any failure, report the
-exact outcome without claiming completion.
+## Revise an approved spec
 
-## Review an archived spec later
+Revise in place; do not create a new file for a new revision. Set
+`status: draft`, make the change, and review it again when the change is
+material. Obtain explicit approval of the revised spec, then commit it as
+above.
 
-When later work needs review against an archived spec, the managing agent uses
-`read-archive` to select and load the exact verified Markdown, then passes
-that content directly to the reviewer. Do not make the reviewer browse or load
-the archive broadly.
+## Review a preserved spec later
+
+When later work needs review against a preserved spec, the managing agent reads
+the file at its locator, through version control when the locator names a
+revision, and passes that content directly to the reviewer. Do not make the
+reviewer browse the library.

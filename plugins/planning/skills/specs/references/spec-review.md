@@ -25,5 +25,5 @@ For each finding return:
 - `Needs user intent`: yes or no.
 
 State explicitly that there are no material findings when the draft has none.
-Do not edit files, approve the spec, browse an archive, or make implementation
+Do not edit files, approve the spec, browse the library, or make implementation
 choices beyond the review evidence.

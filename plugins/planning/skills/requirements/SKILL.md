@@ -22,12 +22,15 @@ not write a requirements file or begin specification or implementation work.
 Historical documentation is relevant when the request cites an earlier design
 or changes established behavior:
 
-- Check the active skill inventory for `read-archive`; do not infer its
-  availability from plugin directories or a ledger file.
-- When it is available and history is plausibly relevant, search compact
-  metadata first and load only the selected document needed for the decision.
-- Do not search the archive for every task. A missing Library skill or ledger
-  is not an error.
+- When history is plausibly relevant and `.agents/library/` exists, load the
+  `library` skill if it is in the active skill inventory and read the current
+  documents on the subject by kind and topic. Without the skill, read the
+  library files directly. A document is current when its `status` is not
+  `draft` and no non-draft document names it in `supersedes`. Read only the
+  current documents' bodies; a draft or superseded document is ruled out from
+  its frontmatter and must not shape the questions you ask.
+- Do not search the library for every task. A missing library is not an
+  error.
 
 ## Resolve gaps
 

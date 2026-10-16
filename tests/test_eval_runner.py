@@ -144,7 +144,7 @@ class EvalCaseTests(unittest.TestCase):
             prompt="Inspect the attached repository context.",
             expected_output="SECRET EXPECTED OUTPUT",
             expectations=("SECRET CRITERION",),
-            skills=("requirements", "read-archive"),
+            skills=("requirements", "library"),
             fixtures=(
                 Fixture(
                     source=Path("files/project.toml"),
@@ -158,7 +158,7 @@ class EvalCaseTests(unittest.TestCase):
         prompt = runner.build_prompt(case)
 
         self.assertIn(".eval/skills/requirements/SKILL.md", prompt)
-        self.assertIn(".eval/skills/read-archive/SKILL.md", prompt)
+        self.assertIn(".eval/skills/library/SKILL.md", prompt)
         self.assertIn("project.toml", prompt)
         self.assertIn("uses Jujutsu", prompt)
         self.assertIn(case.prompt, prompt)
@@ -442,14 +442,14 @@ class WorkspaceTests(unittest.TestCase):
                 (prepared.workspace / ".eval/skills/specs/evals").exists()
             )
             self.assertTrue(
-                (prepared.workspace / "docs/specs/approved-spec.md").is_file()
+                (prepared.workspace / ".agents/library/specs/approved-spec.md").is_file()
             )
             self.assertTrue((prepared.workspace / "README.md").is_file())
             self.assertTrue(prepared.baseline_commit)
 
             evidence = runner.collect_evidence(prepared)
 
-            self.assertIn("docs/specs/approved-spec.md", evidence["status"])
+            self.assertIn(".agents/library/specs/approved-spec.md", evidence["status"])
             self.assertIn("README.md", evidence["status"])
             self.assertNotIn(".eval/skills", evidence["status"])
 
@@ -464,7 +464,7 @@ class WorkspaceTests(unittest.TestCase):
                 [
                     "jj",
                     "commit",
-                    "docs/specs/approved-spec.md",
+                    ".agents/library/specs/approved-spec.md",
                     "-m",
                     "preserve approved spec",
                 ],
@@ -475,7 +475,7 @@ class WorkspaceTests(unittest.TestCase):
 
             self.assertIn("preserve approved spec", evidence["committed_after_baseline"])
             self.assertIn("README.md", evidence["status"])
-            self.assertNotIn("docs/specs/approved-spec.md", evidence["status"])
+            self.assertNotIn(".agents/library/specs/approved-spec.md", evidence["status"])
 
     def test_agy_workspace_disables_inherited_customizations(self):
         case = planning_case("requirements", 1)
