@@ -1,10 +1,13 @@
 # Library
 
-Archive finished Markdown documentation into a verified SQLite ledger and restore it byte-for-byte whenever an agent needs it.
+Keep specs, plans, notes, and other agent-facing documents as plain Markdown
+under `.agents/library/`, committed with the code they describe.
 
-Library contains two Agent Skills. One moves completed Markdown out of your working tree into a searchable ledger; the other finds and restores it. Every archived document keeps a short summary, topics, and links alongside a losslessly compressed copy of the original. Nothing is deleted until the write is committed and verified.
-
-Library uses only the Python 3 standard library. It never guesses what to archive—you always name the file or directory.
+Library contains one Agent Skill, [`library`](skills/library/SKILL.md). It
+teaches agents the convention and how to find, read, pin, and compare
+documents with ordinary file tools and the repository's version control
+(Jujutsu or Git). It never writes documents, builds an index, or ignores the
+folder; the workflows that produce specs and plans write them.
 
 ## Install
 
@@ -26,60 +29,83 @@ claude plugin install library@superstore --scope user
 agy plugin install https://github.com/coltonhyer/superstore/tree/main/plugins/library
 ```
 
-No build step is required. Python 3 must be available on your `PATH`.
+No build step or runtime dependency is required beyond Markdown and your
+version control.
 
 ## Use
 
-Work through your agent rather than running the scripts directly. Ask for the operation and name the file or directory:
+Ask your agent about the documents; the skill loads automatically:
 
-- **Archive** — *"Archive `docs/design.md` into the ledger."*
-- **Recall** — *"Find the archived auth spec and restore it."*
+- *"Which spec is current on auth?"*
+- *"Show me the team export plan as it was at the last release."*
+- *"Where should a new decision record go?"*
 
-The appropriate skill loads automatically. The ledger is created at `.agents/ledger.db` on the first archive.
+## The convention
 
-## Skills
-
-| Skill | What it's for |
-| --- | --- |
-| [`archiving-documentation`](skills/archiving-documentation/SKILL.md) | Archive Markdown after a work session, correct archive metadata, retry cleanup, or resolve a ledger merge conflict. Writes the ledger. |
-| [`read-archive`](skills/read-archive/SKILL.md) | Find, inspect, restore, or compare documents already in the ledger. Read-only. |
-
-The reader never writes SQLite; the writer handles corrections and replay. Restoring puts recovered Markdown back in your working tree, not the database.
-
-## How the ledger works
-
-Everything lives in `<workspace-root>/.agents/ledger.db`:
-
-- **Lossless** — Content is zlib-compressed from the exact source bytes. A restore must reproduce the original SHA-256 and byte length.
-- **Immutable** — SQLite triggers prevent archived payloads from being edited or deleted. Discovery metadata can be corrected later.
-- **Discoverable** — Summaries, topics, and directed links let agents browse metadata without decompressing documents.
-
-Source files are deleted only after the archive commits and its bytes verify. The writer rechecks each file's hash immediately before removing it. If cleanup cannot finish, the database remains authoritative and the command reports which files remain.
-
-Full schema, JSON shapes, and value rules live in [schema.md](skills/archiving-documentation/references/schema.md).
-
-## Committing the ledger
-
-The ledger is a binary SQLite file, so Git and Jujutsu cannot merge it by row. Track it as binary and ignore its scratch files:
-
-```gitattributes
-# .gitattributes
-.agents/ledger.db binary
+```text
+.agents/library/
+  specs/<slug>.md
+  plans/<slug>.md
+  notes/<slug>.md
+  <another-plural-kind>/<slug>.md
 ```
 
-```gitignore
-# .gitignore
-.agents/ledger.db-journal
-.agents/ledger.db-wal
-.agents/ledger.db-shm
-```
+- The folder is the document's kind, named with a plural lowercase slug. The
+  filename slug (`^[a-z0-9]+(-[a-z0-9]+)*$`) is its identity.
+- The folder is committed and never ignored.
+- Each document starts with a frontmatter block, one field per line, in this
+  order:
 
-If two changes archive in parallel and collide, use the writer's [`replay` workflow](skills/archiving-documentation/references/replay.md) to combine the insert-only runs.
+  ```markdown
+  ---
+  title: Authentication sessions plan
+  status: approved
+  topics: [auth, session-management]
+  implements: specs/auth-sessions.md
+  ---
+  ```
 
-## Tests
+  `title` and `topics` are always present. `status` (`draft` or `approved`)
+  appears on specs and plans only; other kinds are final when written.
+  `implements` and `supersedes` take one path, and `references` takes an inline
+  list of paths, all relative to `.agents/library/`. No other fields, block
+  lists, nesting, or quoting, so every field is one grep-able line.
+- A document is current when it is not a draft and no non-draft document names
+  it in `supersedes`. Revisions are in-place edits; `supersedes` is only for a
+  differently named replacement.
+- A locator is a repository-relative path, written `path@revision` when pinned
+  to a Jujutsu change id or Git commit.
 
-From the Superstore checkout root:
+The [skill](skills/library/SKILL.md) has the full contract and reading
+workflow.
 
-```sh
-python3 -m unittest discover -s plugins/library/tests
-```
+## Why plain files
+
+- Files rather than SQLite: version control already gives exact bytes,
+  immutability, and history for text.
+- In the repository rather than a sidecar: the commit graph relates each
+  document state to the commits made while it was current.
+- Under `.agents/` rather than `docs/`: historical specs would pollute
+  present-tense documentation and any index built on it.
+
+## Migrating a 0.1.0 ledger
+
+Library 0.1.0 archived documents into a SQLite ledger at `.agents/ledger.db`.
+There is no migration script; migrate by hand or ask an agent to:
+
+1. Open the database with any SQLite client and read its schema.
+2. For each document, decompress its zlib-compressed content payload to
+   recover the exact Markdown.
+3. Read the topics and links tables for each document. A document is current
+   when no `document_links` row with relation `supersedes` targets it; migrate
+   only current documents.
+4. Write one library file per current document to
+   `.agents/library/<folder>/<slug>.md`, where `kind` maps to the plural
+   folder (`spec` to `specs/`, `plan` to `plans/`, `notes` to `notes/`).
+   Build frontmatter from its title, topics, and links. The ledger has no
+   status, so give specs and plans `status: approved` because every archived
+   document was final. `implements` and `references` links become
+   library-relative paths; do not copy `supersedes` links, since superseded
+   revisions are not migrated.
+5. Delete `.agents/ledger.db` and its `.gitignore` and `.gitattributes`
+   entries, then commit.

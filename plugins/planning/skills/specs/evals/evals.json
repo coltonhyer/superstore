@@ -87,9 +87,6 @@
       "id": 6,
       "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md and choose Archive. The active skill inventory includes archiving-documentation.",
       "expected_output": "Invoke archiving-documentation with the exact approved path, stop after its scan for confirmation before changing the ledger or source document, then archive and clean up after confirmation without making a version-control commit, and report that the ledger change remains uncommitted.",
-      "skills": [
-        "archiving-documentation"
-      ],
       "files": [
         {
           "source": "files/approved-spec.md",

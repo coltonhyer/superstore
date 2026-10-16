@@ -1,0 +1,129 @@
+{
+  "skill_name": "library",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Which spec in this repository's library is the current one on auth? Tell me its path and the idle session timeout it requires.",
+      "expected_output": "Filters the specs by frontmatter, excludes the draft and the superseded spec, selects specs/session-tokens.md, and reports its 30-minute idle timeout with its path.",
+      "files": [
+        {
+          "source": "files/auth-sessions-spec.md",
+          "target": ".agents/library/specs/auth-sessions.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/session-tokens-spec.md",
+          "target": ".agents/library/specs/session-tokens.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/session-revocation-draft-spec.md",
+          "target": ".agents/library/specs/session-revocation.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/billing-invoices-spec.md",
+          "target": ".agents/library/specs/billing-invoices.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Selects .agents/library/specs/session-tokens.md as the current auth spec and reports the 30-minute idle timeout",
+        "Excludes specs/auth-sessions.md because an approved spec supersedes it",
+        "Excludes the draft specs/session-revocation.md and does not treat its supersedes line as retiring specs/session-tokens.md",
+        "Cites the selected document's path",
+        "Does not write a script, index, or document",
+        "Does not read the body of specs/billing-invoices.md"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What per-export row limit did .agents/library/specs/export-limits.md set at the revision described `eval fixture`? Resolve that revision from this workspace's version control and cite the document as you read it.",
+      "expected_output": "Resolves the `eval fixture` revision through version control, reads the spec at that revision rather than the working copy, reports the 10,000-row limit, and cites path@revision.",
+      "files": [
+        {
+          "source": "files/export-limits-v1.md",
+          "target": ".agents/library/specs/export-limits.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/export-limits-v2.md",
+          "target": ".agents/library/specs/export-limits.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Resolves the `eval fixture` revision with the workspace's version control",
+        "Reads the spec at that revision through version control rather than from the working copy",
+        "Reports the 10,000-row limit, not the working copy's 100,000",
+        "Cites the document as .agents/library/specs/export-limits.md@<revision> with the resolved revision",
+        "Does not edit the spec or write a script or index"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We want to start keeping architecture decision records in the library. Where should a new decision record go, and what frontmatter does it need? Just tell me; don't create anything yet.",
+      "expected_output": "Explains that a new kind gets its own plural-slug folder such as .agents/library/decisions/<slug>.md and lists the frontmatter fields in order, with title and topics required, no status for a non-spec, non-plan kind, and optional implements, supersedes, and references.",
+      "files": [
+        {
+          "source": "files/team-export-spec.md",
+          "target": ".agents/library/specs/team-export.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Places decision records in a new plural lowercase kind folder such as .agents/library/decisions/",
+        "Names the file <slug>.md with a lowercase hyphenated slug and no id or kind field",
+        "Requires title and topics, with topics as an inline list of slugs",
+        "States that decision records omit status because only specs and plans carry it",
+        "Mentions the optional implements, supersedes, and references fields as library-relative paths",
+        "Writes no script, index, or document and does not change any ignore file"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "How do team exports handle pagination, according to the library? Cite the documents you relied on.",
+      "expected_output": "Filters by frontmatter to the export documents, reads the team export plan and the spec it implements, explains that every matching row is exported by keyset pagination over all pages, and cites both paths without reading unrelated documents.",
+      "files": [
+        {
+          "source": "files/team-export-spec.md",
+          "target": ".agents/library/specs/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/team-export-plan.md",
+          "target": ".agents/library/plans/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/auth-sessions-spec.md",
+          "target": ".agents/library/specs/auth-sessions.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/auth-sessions-plan.md",
+          "target": ".agents/library/plans/auth-sessions.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/ci-runners-note.md",
+          "target": ".agents/library/notes/ci-runners.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/onboarding-note.md",
+          "target": ".agents/library/notes/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Selects documents by frontmatter lines such as topics or titles rather than reading every file",
+        "Reads plans/team-export.md and the specs/team-export.md it implements",
+        "Explains that the export covers every matching row across all pages using keyset pagination on team_id",
+        "Cites .agents/library/plans/team-export.md and .agents/library/specs/team-export.md",
+        "Does not read the bodies of the auth or notes documents",
+        "Does not write a script, index, or document"
+      ]
+    }
+  ]
+}

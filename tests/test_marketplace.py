@@ -135,6 +135,26 @@ class MarketplaceLayoutTests(unittest.TestCase):
                     with self.subTest(document=document.relative_to(ROOT), target=target):
                         self.assertTrue((document.parent / target.split("#")[0]).is_file())
 
+    def test_library_has_one_public_skill_and_valid_links(self):
+        plugin_root = ROOT / "plugins/library"
+        skill = plugin_root / "skills/library/SKILL.md"
+        self.assertEqual(
+            {path for path in (plugin_root / "skills").iterdir() if path.is_dir()},
+            {skill.parent},
+        )
+        self.assertEqual(set((plugin_root / "skills").rglob("SKILL.md")), {skill})
+        codex = load_json(plugin_root / ".codex-plugin/plugin.json")
+        self.assertEqual(codex["skills"], "./skills/")
+        self.assertLessEqual(len(codex["interface"]["defaultPrompt"]), 3)
+        readme = plugin_root / "README.md"
+        self.assertIn("(skills/library/SKILL.md)", readme.read_text(encoding="utf-8"))
+
+        for document in (readme, skill):
+            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
+                if "://" not in target and not target.startswith("#"):
+                    with self.subTest(document=document.relative_to(ROOT), target=target):
+                        self.assertTrue((document.parent / target.split("#")[0]).is_file())
+
     def test_maintenance_output_example_has_rule_identity_and_obligations(self):
         skill_root = ROOT / "plugins/maintenance/skills/setting-up-coding-standards"
         output = (skill_root / "references/output-format.md").read_text(encoding="utf-8")

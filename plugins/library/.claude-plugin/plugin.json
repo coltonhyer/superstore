@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
+  "description": "Find, read, pin, and compare plaintext Markdown documents under .agents/library/.",
   "version": "0.1.0",
   "author": {
     "name": "Superstore contributors"

@@ -101,7 +101,6 @@
       "id": 7,
       "prompt": "The attached reviewed plan at docs/plans/team-export.md is awaiting approval. Do not preserve or execute it until I explicitly approve it. Once approved, I choose Archive and the active skill inventory includes archiving-documentation. After successful preservation, load and verify the exact archived plan for a subsequent handoff; do not restore or execute it.",
       "expected_output": "Request approval first; after approval and Archive choice, invoke Library for the exact plan path, stop for scan confirmation, then load the exact newly archived plan through read-archive and report its locator, verified content, and uncommitted ledger status without a version-control commit, restore, or execution.",
-      "skills": ["archiving-documentation", "read-archive"],
       "files": [
         {"source": "files/team-export-plan.md", "target": "docs/plans/team-export.md", "state": "working"}
       ],

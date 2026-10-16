@@ -1,5 +1,5 @@
 {
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "library",
-  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger."
+  "description": "Find, read, pin, and compare plaintext Markdown documents under .agents/library/."
 }

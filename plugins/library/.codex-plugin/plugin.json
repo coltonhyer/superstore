@@ -1,31 +1,30 @@
 {
   "name": "library",
   "version": "0.1.0",
-  "description": "Archive and retrieve Markdown documentation in a verified SQLite ledger.",
+  "description": "Find, read, pin, and compare plaintext Markdown documents under .agents/library/.",
   "author": {
     "name": "Superstore contributors"
   },
   "keywords": [
     "documentation",
-    "archive",
-    "sqlite",
+    "markdown",
+    "version-control",
     "agent-skills"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Library",
-    "shortDescription": "Archive and retrieve repository documentation",
-    "longDescription": "Preserve exact Markdown in a searchable, verified SQLite ledger and retrieve it through focused Agent Skills.",
+    "shortDescription": "Read the repository's plaintext document library",
+    "longDescription": "Keep specs, plans, and notes as committed Markdown under .agents/library/ and find, read, pin, and compare them with ordinary file tools and Jujutsu or Git.",
     "developerName": "Superstore contributors",
     "category": "Productivity",
     "capabilities": [
-      "Read",
-      "Write"
+      "Read"
     ],
     "defaultPrompt": [
-      "Archive Markdown documentation into the ledger.",
-      "Find an archived design document.",
-      "Restore an archived Markdown document."
+      "Find the current spec on a topic.",
+      "Read a library document at an earlier revision.",
+      "Explain the library's document convention."
     ]
   }
 }

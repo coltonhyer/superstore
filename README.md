@@ -26,7 +26,7 @@ Antigravity does not support third-party marketplace installation. Install plugi
 
 | Name | Description | Documentation |
 | --- | --- | --- |
-| `library` | Archive finished Markdown into a verified SQLite ledger and restore it byte-for-byte. | [README](plugins/library/README.md) |
+| `library` | Keep specs, plans, and notes as plaintext Markdown under `.agents/library/` and read them at any revision. | [README](plugins/library/README.md) |
 | `planning` | Turn rough requests into approved requirements and concise, reviewed specifications. | [README](plugins/planning/README.md) |
 | `implementation` | Execute approved plans through verification, review, and local recording. | [README](plugins/implementation/README.md) |
 | `maintenance` | Establish approved coding standards and review repositories for violations. | [README](plugins/maintenance/README.md) |
@@ -54,7 +54,6 @@ tests/test_marketplace.py
 
 ```sh
 python3 -m unittest discover -s tests
-python3 -m unittest discover -s plugins/library/tests
 ```
 
 Planning also includes live, cross-host behavioral evals. See
