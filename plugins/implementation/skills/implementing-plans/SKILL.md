@@ -5,11 +5,12 @@ description: Use when an approved, preserved implementation plan is authorized f
 
 # Implementing Plans
 
-Execution needs an approved, preserved plan, the spec it implements, and
-execution authorization. A plan alone is not authorization. If those inputs are
-missing, route an approved spec through `plans` or request the missing context;
-do not begin implementation. The spec remains authoritative when it conflicts
-with a plan.
+Execution needs the plan at its locator with `status: approved`, the spec it
+implements, and execution authorization. A plan alone is not authorization. A
+plan whose `status` is `draft` is not approved: route it back through `plans`
+for review and approval. If those inputs are missing, route an approved spec
+through `plans` or request the missing context; do not begin implementation.
+The spec remains authoritative when it conflicts with a plan.
 
 Choose the entry context before acting.
 
@@ -27,13 +28,25 @@ plan/spec context needed for that task. Read
    change before recording it. Failed, stale, or unavailable required evidence
    is not completion: correct the task when authorized, or report the gap.
 3. Record only the verified assigned change through the active VCS workflow.
-   Identify its exact revision or revision range. A recording failure leaves the
-   task incomplete even if verification passed.
+   Identify its exact revision or revision range, and apply the recording check
+   below before claiming it. A recording failure leaves the task incomplete
+   even if verification passed.
 4. Write and return the implementation report. Return to the supervisor for
    review and steering.
 
 Do not dispatch workers or reviewers, edit supervisor execution state, approve
 your work, adjudicate findings, or perform whole-plan completion.
+
+## Recording check
+
+Describing the working-copy change is not a recording. With Jujutsu,
+`jj commit -m '<message>' <paths>` moves the change into a finished revision;
+confirm that `jj diff -r @ <paths>` prints nothing and that
+`jj log -r @- <paths>` shows a revision newer than the one you started from.
+With Git, `git add <paths> && git commit -m '<message>' <paths>`; confirm that
+`git status --porcelain <paths>` prints nothing and that
+`git log -1 -- <paths>` shows the new commit. Claim a recording only when both
+checks hold. The same check applies to the handoff note.
 
 ## Inline primary: whole plan
 
@@ -50,17 +63,15 @@ was explicitly requested.
 
 Before creating plan-associated scratch, add its exact execution directory to
 the active VCS's local exclusion mechanism. Use one directory per workspace and
-exact plan version, normally `.agents/execution/<execution-id>/`. Preserve any
-uncommitted Library database change as a separately pending preservation change;
-never put it in an implementation recording.
+exact plan version, normally `.agents/execution/<execution-id>/`.
 
 Initialize or restore execution state from the exact approved plan/spec content
-and locators. For archived artifacts, use available `read-archive` capability
-to select and verify that exact content before task work; do not send workers
-broad archive exploration. On resumption, reconcile recorded task revisions,
-evidence, and findings with repository state before repeating or dispatching
-work. A status checkbox without a matching revision/evidence is not proof of
-completion.
+and locators. When a locator pins a revision, read that content through the
+active version control at that revision, not from the working copy; do not send
+workers broad library exploration. On resumption, reconcile recorded task
+revisions, evidence, and findings with repository state before repeating or
+dispatching work. A status checkbox without a matching revision/evidence is not
+proof of completion.
 
 For each task, make the scoped change, invoke
 [verifying-changes](../verifying-changes/SKILL.md) before recording, record the
@@ -79,11 +90,18 @@ consistent with the approved artifacts may be decided and recorded in state.
 
 After all tasks and fix reviews, review and verify the assembled change set.
 Final handoff identifies the plan/spec, starting revision and resulting change
-set, task and whole-change evidence, review outcomes/dispositions, limitations,
-and separately pending preservation. Do not claim readiness if required checks
-remain unavailable, stale, or failed. Do not push, create a PR/MR, merge, or
-deploy.
+set, task and whole-change evidence, review outcomes/dispositions, and
+limitations. Do not claim readiness if required checks remain unavailable,
+stale, or failed. Do not push, create a PR/MR, merge, or deploy.
+
+After whole-change checks pass, write the handoff note at
+`.agents/library/notes/<execution-id>.md` in the shape
+[execution state](references/execution-state.md) gives, and record it as its
+own revision through the active VCS workflow, and apply the recording check
+to the note's path. If recording the note fails, leave the note in place,
+report the failure, and do not claim completion.
 
 Clean up only this execution's scratch after successful completion and after
-material outcomes are preserved or surfaced. Keep scratch for incomplete,
-blocked, awaiting-decision, failed-recording, or cleanup-failure states.
+the handoff note is recorded. Keep scratch for incomplete, blocked,
+awaiting-decision, failed-recording, note-recording-failure, or
+cleanup-failure states.

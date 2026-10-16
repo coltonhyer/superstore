@@ -8,8 +8,8 @@ description: Use when a primary agent is executing an approved implementation pl
 The supervisor coordinates one approved task at a time. It does not implement,
 review its own task work, publish, merge, or turn a report into completion.
 
-Before coordination, confirm the preserved approved plan, authoritative spec,
-and execution authorization. Read [the execution state](../implementing-plans/references/execution-state.md),
+Before coordination, confirm the plan at its locator with `status: approved`,
+the authoritative spec, and execution authorization. Read [the execution state](../implementing-plans/references/execution-state.md),
 [implementation report contract](../implementing-plans/references/implementation-report.md),
 [implementer brief](references/implementer-brief.md), and, when diagnosis is
 justified, [diagnostic assignment](references/diagnostic-assignment.md). At
@@ -20,11 +20,9 @@ and [verifying-changes](../verifying-changes/SKILL.md), respectively.
 
 Before creating execution scratch, add its exact directory to the local VCS
 exclusion. Establish the starting revision and separate pre-existing
-working-copy changes, including any pending Library preservation. That database
-change remains outside task ranges and the final recording gate. On resumption,
-reconcile every recorded revision, report, evidence location, and finding with
-repository state; do not repeat a completed task solely because session context
-was lost.
+working-copy changes. On resumption, reconcile every recorded revision, report,
+evidence location, and finding with repository state; do not repeat a completed
+task solely because session context was lost.
 
 When delegation is available and inline work was not requested, dispatch one
 fresh implementer with only the assigned task, exact applicable plan/spec
@@ -81,9 +79,15 @@ After all tasks, arrange whole-change review and verification against the
 approved spec. Readiness requires covered approved requirements, resolved
 material findings, final-applicable evidence, recorded intended changes, and no
 unresolved conflict. Before cleanup, incorporate every approved material
-plan/spec decision into its preserved authoritative artifact and retain any
-lasting diagnostic or report outside scratch. Hand off the plan/spec, start and
-resulting ranges, evidence, review outcomes and dispositions, limitations, and
-any separately pending preservation change. Remove only this execution's scratch
-after those preservation and handoff gates succeed; retain it for incomplete,
+plan/spec decision into its committed authoritative artifact and retain any
+lasting diagnostic or report outside scratch, for example in the handoff
+note's Limitations or Tactical decisions sections. Hand off the
+plan/spec, start and resulting ranges, evidence, review outcomes and
+dispositions, and limitations. After whole-change checks pass, write the
+handoff note at `.agents/library/notes/<execution-id>.md` in the shape the
+execution state gives and record it as its own revision through the active VCS
+workflow, applying implementing-plans' recording check to the note's path.
+Remove only this execution's scratch after the note is recorded. If
+recording the note fails, leave the note in place, report the failure, retain
+scratch, and do not claim completion; also retain scratch for incomplete,
 blocked, or awaiting-decision work.

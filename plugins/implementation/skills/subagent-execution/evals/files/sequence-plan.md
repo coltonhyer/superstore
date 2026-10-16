@@ -1,9 +1,15 @@
+---
+title: Sequence plan
+status: approved
+topics: [sequence]
+implements: specs/sequence.md
+---
+
 # Sequence plan
 
 ## Approved specification
 
-- **Locator:** `docs/specs/sequence-spec.md`
-- **Approved version:** the committed baseline copy
+- **Locator:** `.agents/library/specs/sequence.md`
 
 ## Approach
 

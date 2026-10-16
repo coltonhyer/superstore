@@ -1,8 +1,15 @@
+---
+title: Team export implementation plan
+status: draft
+topics: [team-export]
+implements: specs/team-export.md
+---
+
 # Team export implementation plan
 
 ## Approved specification
 
-- **Locator:** `docs/specs/team-export.md`
+- **Locator:** `.agents/library/specs/team-export.md`
 
 ## Approach
 

@@ -2,8 +2,7 @@
 
 ## Approved specification
 
-- **Locator:** `<exact repository path or archive document locator>`
-- **Approved version:** `<identifier, date, or revision when available>`
+- **Locator:** `<spec path>@<approved revision>`
 
 ## Approach
 

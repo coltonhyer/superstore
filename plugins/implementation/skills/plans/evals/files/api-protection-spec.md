@@ -1,6 +1,10 @@
-# API protection specification
+---
+title: API protection specification
+status: approved
+topics: [api-protection]
+---
 
-**Status:** Approved
+# API protection specification
 
 Every public API endpoint must reject unauthenticated callers and enforce the
 documented per-user rate limit. Reuse only repository services whose presence

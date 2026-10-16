@@ -1,3 +1,9 @@
+---
+title: Portfolio specification
+status: approved
+topics: [portfolio, billing]
+---
+
 # Portfolio specification
 
 **Status:** Approved

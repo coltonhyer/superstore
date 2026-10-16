@@ -1,9 +1,15 @@
+---
+title: Text plan
+status: approved
+topics: [text]
+implements: specs/text.md
+---
+
 # Text plan
 
 ## Approved specification
 
-- **Locator:** `docs/specs/text-spec.md`
-- **Approved version:** the committed baseline copy
+- **Locator:** `.agents/library/specs/text.md`
 
 ## Approach
 

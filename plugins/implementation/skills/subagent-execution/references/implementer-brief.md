@@ -18,5 +18,6 @@ The supervisor gives a fresh implementer one bounded brief:
 ```
 
 The brief is the worker's context boundary, not a request to open the full
-plan, explore archives, or load the complete execution record. A repair brief names the finding, its
-evidence, the affected range, and the required correction/check.
+plan, browse the library, or load the complete execution record. A repair
+brief names the finding, its evidence, the affected range, and the required
+correction/check.

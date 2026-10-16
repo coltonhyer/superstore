@@ -1,3 +1,9 @@
+---
+title: Resume spec
+status: approved
+topics: [resume]
+---
+
 # Resume spec
 
 `RESUME-1` returns `one` from `resume_one.value()`. `RESUME-2` returns `two`

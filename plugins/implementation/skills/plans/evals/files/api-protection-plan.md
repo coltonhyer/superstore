@@ -1,8 +1,15 @@
+---
+title: API protection plan
+status: draft
+topics: [api-protection]
+implements: specs/api-protection.md
+---
+
 # API protection
 
 ## Approved specification
 
-- **Locator:** `docs/specs/api-protection.md`
+- **Locator:** `.agents/library/specs/api-protection.md`
 
 ## Approach
 

@@ -1,9 +1,15 @@
+---
+title: Greeting plan
+status: approved
+topics: [greeting]
+implements: specs/greeting.md
+---
+
 # Greeting plan
 
 ## Approved specification
 
-- **Locator:** `docs/specs/greeting-spec.md`
-- **Approved version:** the committed baseline copy
+- **Locator:** `.agents/library/specs/greeting.md`
 
 ## Approach
 

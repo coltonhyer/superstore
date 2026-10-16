@@ -1,7 +1,7 @@
 # Execution resume-run
 
-- **Approved plan:** docs/plans/resume-plan.md.
-- **Approved spec:** docs/specs/resume-spec.md.
+- **Approved plan:** .agents/library/plans/resume.md.
+- **Approved spec:** .agents/library/specs/resume.md.
 - **Workspace and start:** Jujutsu workspace; resolve the real bootstrap commit
   with unique description `eval fixture` to its immutable ID before accepting
   this state. This synthetic recovery fixture co-records both task path pairs in

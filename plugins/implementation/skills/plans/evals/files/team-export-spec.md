@@ -1,6 +1,10 @@
-# Team export specification
+---
+title: Team export specification
+status: approved
+topics: [team-export]
+---
 
-**Status:** Approved
+# Team export specification
 
 Workspace administrators can export the currently filtered team rows as UTF-8
 CSV. The UI sends its existing team-list query unchanged to
