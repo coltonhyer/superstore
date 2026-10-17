@@ -88,10 +88,10 @@ Live evals are manual release checks, not CI tests. They require Docker and an
 active subscription login for each selected provider. Runs use your existing
 CLI logins; a refreshed token is written back only if newer. The runner builds
 [`evals/Dockerfile`](../../evals/Dockerfile) automatically; the image pins Codex
-`0.155.0`, Claude Code `2.1.251`, Antigravity `1.1.22`, and Jujutsu `0.44.0`.
+`0.155.0`, Claude Code `2.1.251`, Antigravity `1.4.0`, and Jujutsu `0.44.0`.
 
 The default subject matrix is Codex `gpt-5.6-terra`, Claude Code
-`claude-sonnet-5`, and Antigravity `gemini-3.7-flash-high`, all at high
+`claude-sonnet-5`, and Antigravity `gemini-3.8-flash-high`, all at high
 effort. Per-host `--<host>-model` and `--<host>-effort` flags override it.
 These defaults are already mid-tier, so cases that expect the managing agent
 to choose a cheaper reviewer or worker only exercise that choice when the

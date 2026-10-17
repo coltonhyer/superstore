@@ -22,7 +22,7 @@ class TurnResult:
 HOSTS = {
     "codex": HostConfig("gpt-5.6-terra", "high"),
     "claude": HostConfig("claude-sonnet-5", "high"),
-    "agy": HostConfig("gemini-3.7-flash-high", "high"),
+    "agy": HostConfig("gemini-3.8-flash-high", "high"),  # effort is part of the model id; the CLI rejects --effort
 }
 
 def build_command(
@@ -60,7 +60,7 @@ def build_command(
         return [
             "agy", "--new-project", "--agent", "superstore-eval",
             "--disable-slash-commands", "--output-format", "stream-json",
-            "--model", model, "--effort", effort, "--mode", "accept-edits",
+            "--model", model, "--mode", "accept-edits",
             "--sandbox", "--dangerously-skip-permissions", "--print-timeout",
             f"{timeout}s", "--print", prompt,
         ]
@@ -98,8 +98,8 @@ def build_resume_command(
     if host == "agy":
         return [
             "agy", "--conversation", session_id, "--disable-slash-commands",
-            "--output-format", "stream-json", "--model", model, "--effort",
-            effort, "--mode", "accept-edits", "--sandbox",
+            "--output-format", "stream-json", "--model", model,
+            "--mode", "accept-edits", "--sandbox",
             "--dangerously-skip-permissions", "--print-timeout", f"{timeout}s",
             "--print", reply,
         ]
