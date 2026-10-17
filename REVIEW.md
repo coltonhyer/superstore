@@ -18,9 +18,11 @@ Reserve Important for:
 - Skill text that admits a wrong reading: a term that gates an action with no
   definition (`approved`, `reviewed`, `recorded`, `current`, `independent`);
   one situation that two sentences send to different outcomes; a step that
-  claims a repository effect without naming the check that proves it; a
-  request word that is not approval (`preserve`, `save`, `commit`) left
-  unnamed where approval is defined.
+  claims a repository effect without naming the check that proves it, or
+  without saying what its failure path leaves behind; a request word that is
+  not approval (`preserve`, `save`, `commit`) left unnamed where approval is
+  defined; a gate the text makes the agent re-run after the user has
+  explicitly passed it, such as a second review or a second approval ask.
 - Twin passages that disagree on a shared rule, and a rule removed in a
   rewrite with no new home.
 - A removed or renamed name still mentioned outside a legacy section.
@@ -67,13 +69,16 @@ a skill description is not evidence. For a claim about history, paste the
   repository or tells the user, name the most plausible wrong reading that
   changes that outcome. Report it when no sentence in the skill rules it out,
   an ordinary request or eval prompt could produce it, and it would cross a
-  gate the skill defines or is one of the four kinds the first bullet of
-  "What Important means here" lists. One situation that two sentences send
+  gate the skill defines or is one of the kinds the first bullet of "What
+  Important means here" lists. One situation that two sentences send
   to different outcomes is a finding; a sequence of steps under one trigger
   is not.
-- Every step that records, commits, or deletes names its proof. A commit is
-  claimed only when the working copy no longer changes the file and a new
-  revision contains it, in both the Jujutsu and Git forms.
+- Every step that records, commits, or deletes names its proof: a command or
+  observable condition in both the Jujutsu and Git forms. "Verify that it
+  entered history" is not one. A commit is claimed only when the working copy
+  no longer changes the file and a new revision contains it. The step's
+  failure path says what it leaves behind for everything the success path
+  changes.
 - Every passage with a twin still agrees with it on every shared rule: the
   approval, commit, and revise sections of `planning/specs` and
   `implementation/plans`; the recording check in `implementing-plans`, its
