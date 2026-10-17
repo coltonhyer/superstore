@@ -150,3 +150,57 @@ squash resolved by making the bump the final task commit.
   command text; the affected cases were rerun under `rerun2-<host>/`.
 - Antigravity could not run until the image pin, default model, and command
   builder were corrected; the earlier agy error artifacts were discarded.
+
+## Review calibration
+
+After the run, `REVIEW.md` was added at the repository root (`klnqwrqp`) to
+give reviewers of skill text the checks that would have found the repairs
+above before any eval ran. To test it, a fresh Opus reviewer was given
+`REVIEW.md` and the tree as it stood before repair 1 (`rryxkwlq`, 41e75ab8)
+as a change against `zrkzwyku`, exported so the repaired text and this
+writeup were out of its reach, and scored against F1 to F6. Run 2 used the
+`REVIEW.md` tightened after run 1 (`vrzlxukk`): a proof must be a command or
+observable condition in both VCS forms, a failure path must say what it
+leaves behind, and a gate re-run after the user has passed it is Important.
+
+| Target | Run 1 | Run 2 |
+| --- | --- | --- |
+| F1 read every body when handed a list | Hit | Hit |
+| F2 re-reviewed after explicit approval | Miss | Miss |
+| F3 commit claimed without a check | Miss | Hit |
+| F4 failure path left status undefined | Miss | Hit |
+| F5 preserve treated as approval | Hit | Miss |
+| F6 note recorded without a check | Hit | Hit |
+
+Each run took about 25 minutes, one agent, no containers, and neither
+reported a false Important finding. The two rules added for F3 and F4
+worked; the one added for F2 did not fire, and both reviewers read the
+pre-repair "unless the user opts out" clause as covering it. F2 is a
+compliance failure that only running finds. F5 was found by one reviewer
+with the repair's wording and judged covered by the other, so a single pass
+recalls about two thirds and two independent passes nearly all. No further
+rules were added.
+
+Open findings from the two reviews, outside this run's ledger because they
+came from reading, not from a subject run:
+
+- C1 (both runs): the execution gate in `implementing-plans` and
+  `subagent-execution` checks only `status: approved`, so an approved but
+  uncommitted plan, the end state of plans case 9, passes it while `plans`
+  calls such a plan not execution-ready. Skill change; needs a bump.
+- C2 (run 1): the three handoff-note passages disagree on when the note is
+  written ("After whole-change checks pass" against "At successful
+  whole-plan handoff, after whole-change checks pass"), which matters when
+  the whole-change review leaves a decision outstanding.
+- C3 (run 1): `plans` has no rule for a non-material edit to an approved
+  plan where `specs` has one; run 2 judged the difference acceptable.
+- C4 (run 2): plans case 3 supplies only a path for the outside-library spec
+  while its expectation requires a revision.
+- Fixture nits (both runs): fixture plans carry unpinned Locator lines
+  against the template, and the sample finish note's title does not follow
+  the execution-state rule.
+
+Run 2 also showed that `jj commit -m <message> <path>` on an ignored path
+exits 0 with a warning and creates an empty revision; the recording check
+the repairs added catches it, because `jj log -r @- <path>` then shows
+nothing.
