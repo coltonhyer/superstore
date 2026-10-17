@@ -11,3 +11,12 @@ plugin update only when its version changes, so a changeset published without
 a bump may never reach installed copies. While the plugins are in v0, use a
 minor bump for changed behavior and a patch bump for fixes. Changes limited to
 a README or eval cases need no bump.
+
+## Reviews
+
+When reviewing a change to this repository, read `REVIEW.md` first and follow
+it. Every rule under its "What Important means here" and "Always check"
+sections came from a failure recorded under `evals/notebook/writeups/` or a
+review finding on this repository. Add a rule only with such a precedent and
+name it in the commit message. Remove a rule once a test under `tests/`
+enforces it.

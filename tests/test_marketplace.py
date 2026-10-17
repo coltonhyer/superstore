@@ -184,6 +184,14 @@ class MarketplaceLayoutTests(unittest.TestCase):
         for relative in (*MANIFESTS, "skills"):
             self.assertFalse((ROOT / relative).exists(), relative)
 
+    def test_skill_files_stay_under_500_lines(self):
+        paths = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md"))
+        self.assertTrue(paths)
+        for path in paths:
+            with self.subTest(skill=str(path.relative_to(ROOT))):
+                lines = len(path.read_text(encoding="utf-8").splitlines())
+                self.assertLess(lines, 500)
+
 
 if __name__ == "__main__":
     unittest.main()
