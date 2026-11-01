@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -154,6 +155,16 @@ class MarketplaceLayoutTests(unittest.TestCase):
                 if "://" not in target and not target.startswith("#"):
                     with self.subTest(document=document.relative_to(ROOT), target=target):
                         self.assertTrue((document.parent / target.split("#")[0]).is_file())
+
+    def test_library_okf_references_match_pinned_checksums(self):
+        references = ROOT / "plugins/library/skills/library/references"
+        expected = {
+            "okf-spec.md": "26aa5da029278939f914e578107242d9607d4f2dc5fe153272b82f9ed1030101",
+            "okf-LICENSE.md": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",
+        }
+        for name, digest in expected.items():
+            with self.subTest(reference=name):
+                self.assertEqual(hashlib.sha256((references / name).read_bytes()).hexdigest(), digest)
 
     def test_maintenance_output_example_has_rule_identity_and_obligations(self):
         skill_root = ROOT / "plugins/maintenance/skills/setting-up-coding-standards"
