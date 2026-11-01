@@ -18,6 +18,8 @@ import uuid
 
 if __package__:
     from .skill_eval_core import (
+        EVAL_USER_EMAIL,
+        EVAL_USER_NAME,
         EvalCase,
         build_prompt,
         collect_evidence,
@@ -32,6 +34,8 @@ if __package__:
     )
 else:
     from skill_eval_core import (  # type: ignore[no-redef]
+        EVAL_USER_EMAIL,
+        EVAL_USER_NAME,
         EvalCase,
         build_prompt,
         collect_evidence,
@@ -334,6 +338,8 @@ def container_command(
         f"--mount=type=bind,src={workspace.resolve()},dst=/workspace",
         f"--mount=type=bind,src={state.resolve()},dst=/state",
         "--env=HOME=/state",
+        f"--env=JJ_USER={EVAL_USER_NAME}",
+        f"--env=JJ_EMAIL={EVAL_USER_EMAIL}",
         "--workdir=/workspace",
         IMAGE,
         "timeout",

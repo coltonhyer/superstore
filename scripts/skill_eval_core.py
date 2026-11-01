@@ -209,6 +209,16 @@ def copy_fixture(case: EvalCase, fixture: Fixture, workspace: Path) -> None:
     shutil.copy2(source, target)
 
 
+# Fixed identity so approval cases record a `verified` line. Git reads it from
+# the workspace's .git/config; the eval container passes it to jj as env vars.
+EVAL_USER_NAME = "Eval Reviewer"
+EVAL_USER_EMAIL = "eval-reviewer@example.invalid"
+JJ_IDENTITY = [
+    "--config", f"user.name={EVAL_USER_NAME}",
+    "--config", f"user.email={EVAL_USER_EMAIL}",
+]
+
+
 def prepare_workspace(
     repo_root: Path,
     plugin_root: Path,
@@ -219,7 +229,9 @@ def prepare_workspace(
     if destination.exists():
         raise ValueError(f"workspace already exists: {destination}")
     destination.mkdir(parents=True)
-    run_text(["jj", "git", "init", "--colocate", "."], destination)
+    run_text(["jj", *JJ_IDENTITY, "git", "init", "--colocate", "."], destination)
+    run_text(["git", "config", "user.name", EVAL_USER_NAME], destination)
+    run_text(["git", "config", "user.email", EVAL_USER_EMAIL], destination)
 
     if host == "agy":
         agent = destination / ".agents/agents/superstore-eval/agent.md"
@@ -241,7 +253,7 @@ def prepare_workspace(
         if fixture.state == "baseline":
             copy_fixture(case, fixture, destination)
 
-    run_text(["jj", "commit", "-m", "eval fixture"], destination)
+    run_text(["jj", *JJ_IDENTITY, "commit", "-m", "eval fixture"], destination)
     baseline = run_text(
         ["jj", "log", "-r", "@-", "--no-graph", "-T", "commit_id"],
         destination,

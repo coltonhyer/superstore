@@ -424,6 +424,58 @@ class WorkspaceTests(unittest.TestCase):
                 (ROOT / "plugins/planning/skills/requirements/SKILL.md").read_text(encoding="utf-8"),
             )
 
+    def test_prepare_workspace_configures_eval_reviewer_identity(self):
+        name, email = "Eval Reviewer", "eval-reviewer@example.invalid"
+        case = planning_case("specs", 7)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            temp = Path(temporary)
+            prepared = runner.prepare_workspace(ROOT, PLANNING, case, temp / "workspace")
+            (temp / "state").mkdir()
+
+            for key, value in (("user.name", name), ("user.email", email)):
+                self.assertEqual(
+                    run_text(["git", "config", key], prepared.workspace).strip(), value
+                )
+
+            for revision in ("@-", "@"):
+                self.assertEqual(
+                    run_text(
+                        ["jj", "log", "-r", revision, "--no-graph", "-T",
+                         'author.name() ++ " " ++ author.email()'],
+                        prepared.workspace,
+                    ).strip(),
+                    f"{name} {email}",
+                )
+
+            argv = runner.container_command(
+                ["true"], prepared.workspace, temp / "state", container_name="x"
+            )
+            self.assertIn(f"--env=JJ_USER={name}", argv)
+            self.assertIn(f"--env=JJ_EMAIL={email}", argv)
+
+            # Mirror the container: a HOME with no jj config plus the env flags.
+            (temp / "home").mkdir()
+            env = {
+                "HOME": str(temp / "home"),
+                "PATH": os.environ["PATH"],
+                **dict(
+                    arg[len("--env=") :].split("=", 1)
+                    for arg in argv
+                    if arg.startswith("--env=JJ_")
+                ),
+            }
+            for key, value in (("user.name", name), ("user.email", email)):
+                result = subprocess.run(
+                    ["jj", "config", "get", key],
+                    cwd=prepared.workspace,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                self.assertEqual(result.stdout.strip(), value)
+
     def test_prepare_workspace_commits_baseline_and_leaves_working_fixtures(self):
         case = planning_case("specs", 7)
 
