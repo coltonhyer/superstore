@@ -1,8 +1,11 @@
 ---
-title: Session rotation
-status: approved
-topics: [auth, session-management]
-supersedes: specs/session-lifetimes.md
+type: spec
+title: "Session rotation"
+description: "Rotate session tokens on privilege change and expire idle sessions."
+status: stable
+verified: { by: human:Sam Kim, at: 2026-11-01T18:30:00Z }
+tags: [auth, session-management]
+supersedes: docs/specs/session-lifetimes.md
 ---
 
 # Session rotation

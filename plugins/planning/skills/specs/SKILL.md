@@ -25,23 +25,34 @@ but do not silently alter an approved requirement. Ask the user when a
 consequential ambiguity requires their intent; resolve reversible internal
 choices yourself.
 
-Write the draft to `.agents/library/specs/<slug>.md` unless the user names
-another location; only an explicit user-supplied path overrides it. Use a
-descriptive slug matching `^[a-z0-9]+(-[a-z0-9]+)*$`. Start the file with this
-frontmatter, followed by one blank line and the body:
+Resolve the folder for the draft in this order:
+
+1. A path the user names for this spec.
+2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
+   specs, in a sentence such as `Specs live in design/specs/.`
+3. `docs/specs/`. Kind folders are flat.
+
+Write the draft to `<folder>/<slug>.md`. Use a descriptive slug matching
+`^[a-z0-9]+(-[a-z0-9]+)*$` that is neither `index` nor `log`. Start the file
+with this frontmatter, followed by one blank line and the body:
 
 ```markdown
 ---
-title: <one-line title>
+type: spec
+title: "<one-line title>"
+description: "<one sentence>"
 status: draft
-topics: [<subject-slug>]
+tags: [<subject-slug>]
 ---
 ```
 
-`topics` lists at least one slug naming the subject. Add `supersedes:
-specs/<other-slug>.md` only when this spec replaces a differently named one.
-A spec written to a user-supplied path outside the library carries the same
-frontmatter without `supersedes`.
+Write one field per line in this order, with no block lists or nesting.
+Write `title` and `description` in double quotes, with `\` and `"` inside them
+escaped as `\\` and `\"`; quote no other field. `tags` lists one or more slugs
+naming the subject. Add `supersedes: <path>` after `tags` only when this spec
+replaces a differently named spec. A repository path is relative to the
+repository root, without a leading slash, and includes `.md`, such as
+`docs/specs/<other-slug>.md`.
 
 Choose the document structure in this order:
 
@@ -141,7 +152,8 @@ After review findings are resolved or adjudicated, ask the user to approve or
 correct the exact spec. Incorporate corrections. Run another review only when
 they materially change scope or design.
 
-Do not commit the spec or set `status: approved` before explicit approval.
+Do not commit the spec, set `status: stable`, write `verified`, or deprecate
+the spec it supersedes before explicit approval.
 A request to preserve, save, record, or commit the spec is not approval, and
 calling it reviewed is not approval; only an explicit statement that the user
 approves it is. When such a request arrives without approval, say that the
@@ -153,40 +165,57 @@ rather than reporting it preserved.
 Explicit approval authorizes the commit; do not ask again or offer another
 preservation choice. When the user explicitly approves a spec they describe
 as reviewed, proceed to the commit: do not run another review, change the
-document's content, or ask for approval again. Any change made after approval
-needs the user's approval of the changed document before it is committed.
+document's content, or ask for approval again. Any change made after approval,
+other than the edits steps 1 and 2 make, needs the user's approval of the
+changed document before it is committed.
 
-1. Set `status: approved` in the spec's frontmatter.
-2. Commit only that file through the repository's active version-control
-   workflow. Leave unrelated working-copy changes out of the commit and
-   untouched.
-3. Verify that the spec entered repository history and is no longer only in
-   the mutable working copy. Describing the working-copy change is not a
-   commit. With Jujutsu, `jj commit -m '<message>' <path>` moves it into a finished revision; confirm
-   that `jj diff -r @ <path>` prints nothing and that `jj log -r @- <path>`
-   shows a revision newer than the one you started from. With Git,
-   `git add <path> && git commit -m '<message>' <path>`; confirm that
-   `git status --porcelain <path>` prints nothing and that
-   `git log -1 -- <path>` shows the new commit. Claim a commit only when both
-   checks hold.
-4. Report the spec's locator with its revision, such as
-   `.agents/library/specs/<slug>.md@<revision>`.
+1. Set `status: stable` in the spec's frontmatter and write its `verified`
+   line, `verified: { by: human:<approver>, at: <approval time> }`, after
+   `status`. The approver is the user name version control is configured with:
+   with Jujutsu, `jj config get user.name`; with Git, `git config user.name`.
+   The approval time is the UTC instant printed by
+   `date -u +%Y-%m-%dT%H:%M:%SZ`. When the name is empty or contains any of
+   `,` `[` `]` `{` `}` `#` `:`, write no `verified` line and say so in the
+   report.
+2. When the spec has `supersedes`, check the named spec first. A target
+   without a `type` line is not yet migrated: leave it unchanged and say so in
+   the report. Otherwise set its `status` to `deprecated` unless it already
+   is, replacing its `status` line or, when it has none, adding one after
+   `description`. A `supersedes` target that does not exist affects nothing.
+3. Commit, through the repository's active version-control workflow, exactly
+   the files steps 1 and 2 changed: the spec and, when step 2 changed it, the
+   replaced spec. Leave unrelated working-copy changes out of the commit and
+   untouched. Describing the working-copy change is not a commit. List each
+   path once per command. With Jujutsu,
+   `jj commit -m '<message>' <path> <path>` moves the files into a finished
+   revision. With Git,
+   `git add <path> <path> && git commit -m '<message>' <path> <path>`.
+4. Verify that every committed path entered repository history and is no
+   longer only in the mutable working copy. With Jujutsu, confirm that
+   `jj diff -r @ <path>` prints nothing and that `jj log -r @- <path>` shows a
+   revision newer than the one you started from, for each path. With Git,
+   confirm that `git status --porcelain <path>` prints nothing and that
+   `git log -1 -- <path>` shows the new commit, for each path. Claim a commit
+   only when both checks hold for every committed path.
+5. Report the spec's locator with its revision, such as
+   `docs/specs/<slug>.md@<revision>`, using the resolved path.
 
-When no supported version control exists or the commit is refused, leave the
-file in place with `status: approved` and report it uncommitted. On any
-failure, report the exact outcome without claiming completion or working
-around it.
+When no supported version control exists or the commit is refused or fails,
+leave every file step 3 would have committed in place with its new status and
+report those files uncommitted. On any failure, report the exact outcome
+without claiming completion or working around it.
 
 ## Revise an approved spec
 
 Revise in place; do not create a new file for a new revision. Set
-`status: draft`, make the change, and review it again when the change is
-material. Obtain explicit approval of the revised spec, then commit it as
-above.
+`status: draft` and remove the `verified` line, make the change, and review it
+again when the change is material. Obtain explicit approval of the revised
+spec, then commit it as above, which sets `status: stable` and writes a new
+`verified` line.
 
 ## Review a preserved spec later
 
 When later work needs review against a preserved spec, the managing agent reads
 the file at its locator, through version control when the locator names a
 revision, and passes that content directly to the reviewer. Do not make the
-reviewer browse the library.
+reviewer browse the repository's documents.

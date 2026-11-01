@@ -22,15 +22,45 @@ not write a requirements file or begin specification or implementation work.
 Historical documentation is relevant when the request cites an earlier design
 or changes established behavior:
 
-- When history is plausibly relevant and `.agents/library/` exists, load the
-  `library` skill if it is in the active skill inventory and read the current
-  documents on the subject by kind and topic. Without the skill, read the
-  library files directly. A document is current when its `status` is not
-  `draft` and no non-draft document names it in `supersedes`. Read only the
-  current documents' bodies; a draft or superseded document is ruled out from
-  its frontmatter and must not shape the questions you ask.
-- Do not search the library for every task. A missing library is not an
-  error.
+- When history is plausibly relevant, resolve the document folders in this
+  order: a path the user names, a folder that `AGENTS.md` or `CLAUDE.md` at the
+  repository root names for that type (such as `Specs live in design/specs/.`),
+  then `docs/<kind>/` (`docs/specs/`, `docs/plans/`, `docs/handoffs/`). When
+  any of those folders exists, load the `library` skill if it is in the active
+  skill inventory and read the current documents on the subject by type and
+  tags. Without the skill, filter the documents' frontmatter lines in those
+  folders directly. The frontmatter is the block between the first two `---`
+  lines at the top of a file; filter on those lines only, with any tool whose
+  output is only that block's lines (a YAML parser is fine when the
+  environment has one), and never decide from a line below the closing `---`,
+  where bodies hold example frontmatter in fenced blocks. For example, this
+  prints only frontmatter, one `FILE: line` per line, on any POSIX `awk`
+  (`find` reports a missing folder and carries on, `-H` follows a folder that
+  is a symbolic link, and `awk` alone stops at the first path it cannot
+  open):
+
+  ```sh
+  find -H docs/specs docs/plans -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
+    -exec awk '{ sub(/\r$/, "") }
+         FNR == 1 { fm = ($0 == "---"); next }
+         fm && /^---$/ { fm = 0 }
+         fm { print FILENAME ": " $0 }' {} + | grep -E ': (status|tags): '
+  ```
+
+  Change the `grep` to `': tags: .*[[, ]<slug>[],]'` to match a whole tag
+  slug.
+
+  `head`, `cat`, and a version-control `show` or `diff` of a document count as
+  reading its body, so do not use them to inspect frontmatter or to discover
+  documents, and do not use version-control history to discover documents.
+  A document is current when its `status` is absent or `stable`. Read only the
+  current documents' bodies; a `draft` or `deprecated` document is ruled out
+  from its frontmatter and must not shape the questions you ask. Read its body
+  only when the user asks for an earlier design or a comparison with it; a
+  request that changes established behavior is not that request.
+- Do not search the document folders for every task. A missing folder is not
+  an error: `find` reports it and carries on, and that folder simply has no
+  hits.
 
 ## Resolve gaps
 

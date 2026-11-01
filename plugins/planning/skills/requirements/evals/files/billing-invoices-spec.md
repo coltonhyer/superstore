@@ -1,7 +1,10 @@
 ---
-title: Billing invoices
-status: approved
-topics: [billing]
+type: spec
+title: "Billing invoices"
+description: "Generate a PDF invoice for each paid subscription period."
+status: stable
+verified: { by: human:Sam Kim, at: 2026-11-01T18:30:00Z }
+tags: [billing]
 ---
 
 # Billing invoices

@@ -4,7 +4,7 @@ Turn rough requests into approved requirements and concise, independently
 reviewed specifications.
 
 Planning contains two Agent Skills. `requirements` discovers and confirms
-what done means. `specs` writes the spec to `.agents/library/specs/`, reviews
+what done means. `specs` writes the spec to `docs/specs/` by default, reviews
 it, and commits it after approval. Library integration is optional.
 
 ## Install
@@ -44,7 +44,7 @@ from that context instead of asking you to repeat it.
 | Skill | What it is for |
 | --- | --- |
 | [`requirements`](skills/requirements/SKILL.md) | Inspect context, resolve gaps one question at a time, and obtain approval of a verifiable requirements summary. |
-| [`specs`](skills/specs/SKILL.md) | Write, independently review, approve, and commit a specification under `.agents/library/specs/`. |
+| [`specs`](skills/specs/SKILL.md) | Write, independently review, approve, and commit a specification, by default under `docs/specs/`. |
 
 ## Workflow
 
@@ -54,16 +54,27 @@ shows each finding as `Addressed`, `Elevated`, or `Dismissed` before
 requesting approval. Without an approved summary, `specs` runs
 `requirements` first.
 
-## Library documents
+## Documents
 
-`specs` writes each spec as a plain Markdown document in the
-`.agents/library/` convention: a frontmatter block with `title`, `status`, and
-`topics`. Approval sets `status: approved` and commits only that file;
-revising an approved spec flips it back to `draft` in place until it is
-approved again. When Library is installed, `requirements` may load its
-`library` skill to find the current documents on a subject; without it,
-`requirements` reads the library files directly. Library is used only for
-discovery, and Planning continues to work when it is absent.
+`specs` writes each spec as an Open Knowledge Format document: a frontmatter
+block with `type: spec`, quoted `title` and `description`, `status`, and
+`tags`, plus `supersedes` only when it replaces a differently named spec. The
+folder is the first of: a path you name, a folder that `AGENTS.md` or
+`CLAUDE.md` at the repository root names for specs (such as `Specs live in
+design/specs/.`), or `docs/specs/`.
+
+Drafts are written with `status: draft`. Explicit approval sets `status:
+stable`, writes `verified: { by: human:<approver>, at: <approval time> }` from
+the user name version control is configured with (no `verified` line when that
+name is empty or has a `,` `[` `]` `{` `}` `#` or `:`), sets a superseded spec
+to `deprecated` unless it already is (a target without a `type` line is not yet
+migrated and stays unchanged, with a note in the report), and commits exactly
+the files that step changed. Revising a stable spec flips it back to `draft`
+and removes `verified` until it is approved again. A document is current when
+its `status` is absent or `stable`. When Library is installed, `requirements` may
+load its `library` skill to find the current documents on a subject; without
+it, `requirements` filters the documents' frontmatter directly. Library is
+used only for discovery, and Planning continues to work when it is absent.
 
 ## Validation
 
@@ -171,7 +182,7 @@ Fixtures use paths relative to the eval directory and repository workspace:
 ```json
 {
   "source": "files/approved-spec.md",
-  "target": ".agents/library/specs/approved-spec.md",
+  "target": "docs/specs/approved-spec.md",
   "state": "working"
 }
 ```

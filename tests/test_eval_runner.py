@@ -442,14 +442,14 @@ class WorkspaceTests(unittest.TestCase):
                 (prepared.workspace / ".eval/skills/specs/evals").exists()
             )
             self.assertTrue(
-                (prepared.workspace / ".agents/library/specs/approved-spec.md").is_file()
+                (prepared.workspace / "docs/specs/approved-spec.md").is_file()
             )
             self.assertTrue((prepared.workspace / "README.md").is_file())
             self.assertTrue(prepared.baseline_commit)
 
             evidence = runner.collect_evidence(prepared)
 
-            self.assertIn(".agents/library/specs/approved-spec.md", evidence["status"])
+            self.assertIn("docs/specs/approved-spec.md", evidence["status"])
             self.assertIn("README.md", evidence["status"])
             self.assertNotIn(".eval/skills", evidence["status"])
 
@@ -464,7 +464,7 @@ class WorkspaceTests(unittest.TestCase):
                 [
                     "jj",
                     "commit",
-                    ".agents/library/specs/approved-spec.md",
+                    "docs/specs/approved-spec.md",
                     "-m",
                     "preserve approved spec",
                 ],
@@ -475,7 +475,7 @@ class WorkspaceTests(unittest.TestCase):
 
             self.assertIn("preserve approved spec", evidence["committed_after_baseline"])
             self.assertIn("README.md", evidence["status"])
-            self.assertNotIn(".agents/library/specs/approved-spec.md", evidence["status"])
+            self.assertNotIn("docs/specs/approved-spec.md", evidence["status"])
 
     def test_agy_workspace_disables_inherited_customizations(self):
         case = planning_case("requirements", 1)

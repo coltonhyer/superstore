@@ -1,7 +1,9 @@
 ---
-title: Session rotation
+type: spec
+title: "Session rotation"
+description: "Rotate session tokens and keep existing sessions valid for 24 hours."
 status: draft
-topics: [auth, session-management]
+tags: [auth, session-management]
 ---
 
 # Session Rotation

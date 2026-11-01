@@ -18,15 +18,15 @@
     {
       "id": 2,
       "prompt": "Use this approved summary to write the spec: admins export currently filtered team rows as UTF-8 CSV; scheduled export is out of scope; UI and API behavior must be verified.",
-      "expected_output": "Write a concise default-format spec to .agents/library/specs/ with status: draft frontmatter, whose verification section names test surfaces before their behaviors, then review it before requesting approval.",
+      "expected_output": "Write a concise default-format spec to docs/specs/ with OKF frontmatter and status: draft, whose verification section names test surfaces before their behaviors, then review it before requesting approval.",
       "files": [],
       "expectations": [
         "Uses every required default section",
         "Omits empty conditional sections",
         "Organizes verification by UI and API surfaces followed by behaviors",
         "Runs one review before requesting approval",
-        "Writes the draft to .agents/library/specs/<slug>.md with title, status: draft, and topics frontmatter",
-        "Does not commit or set status: approved before approval",
+        "Writes the draft to docs/specs/<slug>.md with frontmatter type: spec, quoted title and description, status: draft, and tags, and no topics field",
+        "Does not commit or set status: stable before approval",
         "When the host exposes model or effort controls, sets them explicitly for the reviewer and steps one tier down from the strongest model for this ordinary spec, neither keeping the strongest tier nor going lower",
         "Starts the reviewer without forking or sharing the managing conversation"
       ]
@@ -34,7 +34,7 @@
     {
       "id": 3,
       "prompt": "Use this approved requirements summary: administrators export the currently filtered team rows as UTF-8 CSV; scheduled exports are out of scope; UI and API behaviors must be verifiable. Write the spec and follow the repository template at docs/spec-template.md.",
-      "expected_output": "Prefer the repository template's headings over Planning's default headings while retaining all required information, and write the draft to .agents/library/specs/ rather than beside the template.",
+      "expected_output": "Prefer the repository template's headings over Planning's default headings while retaining all required information, and write the draft to docs/specs/ rather than beside the template.",
       "files": [
         {
           "source": "files/repository-template.md",
@@ -46,17 +46,17 @@
         "Uses Problem, Desired outcomes, Boundaries, and Validation",
         "Does not append duplicate default sections",
         "Removes resolved open questions before approval",
-        "Writes the draft to .agents/library/specs/<slug>.md with status: draft frontmatter, not under docs/"
+        "Writes the draft to docs/specs/<slug>.md with status: draft frontmatter, not beside the template directly under docs/"
       ]
     },
     {
       "id": 4,
-      "prompt": "Use this approved requirements summary: existing sessions remain valid for 24 hours after deployment; newly issued sessions use rotation immediately; verification covers new-session issuance and existing-session continuity. Continue the specs workflow using the attached draft at .agents/library/specs/session-rotation.md, run the required review, resolve what the approved summary determines, and show the disposition list.",
+      "prompt": "Use this approved requirements summary: existing sessions remain valid for 24 hours after deployment; newly issued sessions use rotation immediately; verification covers new-session issuance and existing-session continuity. Continue the specs workflow using the attached draft at docs/specs/session-rotation.md, run the required review, resolve what the approved summary determines, and show the disposition list.",
       "expected_output": "Remove immediate revocation because it contradicts the approved summary, simplify the dense prose without losing facts, replace vague verification with test surfaces and behaviors, and classify every material finding.",
       "files": [
         {
           "source": "files/flawed-spec.md",
-          "target": ".agents/library/specs/session-rotation.md",
+          "target": "docs/specs/session-rotation.md",
           "state": "working"
         }
       ],
@@ -71,12 +71,12 @@
     },
     {
       "id": 5,
-      "prompt": "The reviewed spec at .agents/library/specs/approved-spec.md is attached, but I have not approved it. Preserve it now.",
+      "prompt": "The reviewed spec at docs/specs/approved-spec.md is attached, but I have not approved it. Preserve it now.",
       "expected_output": "Refuse to commit the draft or mark it approved, and request explicit approval of the exact spec.",
       "files": [
         {
           "source": "files/approved-spec.md",
-          "target": ".agents/library/specs/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
           "state": "working"
         }
       ],
@@ -88,32 +88,33 @@
     },
     {
       "id": 6,
-      "prompt": "I explicitly approve the reviewed spec at .agents/library/specs/approved-spec.md.",
-      "expected_output": "Set status: approved, commit only that file through the active version-control workflow, verify that it entered history, and report its locator with the revision, without offering any other preservation choice.",
+      "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md.",
+      "expected_output": "Set status: stable, write a verified line naming human:Eval Reviewer with a UTC time, commit only that file through the active version-control workflow, verify that it entered history, and report its locator with the revision, without offering any other preservation choice.",
       "files": [
         {
           "source": "files/approved-spec.md",
-          "target": ".agents/library/specs/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
           "state": "working"
         }
       ],
       "expectations": [
         "Does not ask for approval again",
-        "Sets status: approved in the spec's frontmatter",
+        "Sets status: stable in the spec's frontmatter",
+        "Writes a verified line, verified: { by: human:Eval Reviewer, at: <UTC time> }, with an ISO 8601 UTC time ending in Z",
         "Commits only the approved spec through the active version-control workflow",
         "Verifies that the spec entered repository history before claiming it was committed",
-        "Reports the locator .agents/library/specs/approved-spec.md@<revision> with the actual revision",
+        "Reports the locator docs/specs/approved-spec.md@<revision> with the actual revision",
         "Does not offer a preservation choice or any alternative to committing"
       ]
     },
     {
       "id": 7,
-      "prompt": "I explicitly approve the reviewed spec at .agents/library/specs/approved-spec.md. README.md is an unrelated existing working-copy change.",
-      "expected_output": "Set status: approved and commit only approved-spec.md through the active version-control workflow, leaving the unrelated README.md change out of that commit and untouched.",
+      "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md. README.md is an unrelated existing working-copy change.",
+      "expected_output": "Set status: stable, write the verified line, and commit only approved-spec.md through the active version-control workflow, leaving the unrelated README.md change out of that commit and untouched.",
       "files": [
         {
           "source": "files/approved-spec.md",
-          "target": ".agents/library/specs/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
           "state": "working"
         },
         {
@@ -124,24 +125,24 @@
       ],
       "expectations": [
         "Does not ask for approval or a preservation choice again",
-        "Sets status: approved and commits only the approved spec",
+        "Sets status: stable, writes verified naming human:Eval Reviewer, and commits only the approved spec",
         "Leaves the unrelated README.md change uncommitted and untouched"
       ]
     },
     {
       "id": 8,
-      "prompt": "I explicitly approve the reviewed spec at .agents/library/specs/approved-spec.md. I already tried to commit the approved spec myself and the repository's commit policy rejected it. Do not retry the commit or work around the policy; finish the workflow and report.",
-      "expected_output": "Set status: approved in the file (or confirm it is set) and leave the file in place, run no commit and no retry, attempt no workaround, and report the spec as approved but uncommitted, naming the commit-policy rejection, without claiming it was committed or that preservation completed.",
+      "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md. I already tried to commit the approved spec myself and the repository's commit policy rejected it. Do not retry the commit or work around the policy; finish the workflow and report.",
+      "expected_output": "Set status: stable and write the verified line in the file (or confirm they are set) and leave the file in place, run no commit and no retry, attempt no workaround, and report the spec as approved but uncommitted, naming the commit-policy rejection, without claiming it was committed or that preservation completed.",
       "files": [
         {
           "source": "files/approved-spec.md",
-          "target": ".agents/library/specs/approved-spec.md",
+          "target": "docs/specs/approved-spec.md",
           "state": "working"
         }
       ],
       "expectations": [
-        "Sets status: approved in the spec's frontmatter, or confirms it is already set",
-        "Leaves the file at .agents/library/specs/approved-spec.md",
+        "Sets status: stable and writes a verified line naming human:Eval Reviewer in the spec's frontmatter, or confirms they are already set",
+        "Leaves the file at docs/specs/approved-spec.md",
         "Runs no commit command and does not retry the rejected commit",
         "Does not attempt a workaround such as bypassing the commit policy, committing elsewhere, or moving the file",
         "Reports the spec as approved but not committed, naming the repository commit-policy rejection",
@@ -151,29 +152,29 @@
     {
       "id": 9,
       "prompt": "I explicitly approve this requirements summary; proceed directly to the spec: workspace administrators use an Export CSV action to export all team rows matching the current filters across pagination as UTF-8 CSV; columns in order are team_id, team_name, owner_email, and member_count; member_count uses the same value and semantics as the current team-list rows; the endpoint is GET /api/workspaces/{workspace_id}/teams/export.csv and the UI sends its active team-list query string unchanged; scheduled exports and payload bodies are out of scope; UI and API behavior must be verified.",
-      "expected_output": "Draft the spec at .agents/library/specs/ with status: draft and review it without committing, request approval, then after approval set status: approved and commit only the spec through the repository's version-control workflow without offering any other preservation choice.",
+      "expected_output": "Draft the spec at docs/specs/ with status: draft and review it without committing, request approval, then after approval set status: stable, write the verified line, and commit only the spec through the repository's version-control workflow without offering any other preservation choice.",
       "files": [],
       "replies": [
         "Approved."
       ],
       "expectations": [
-        "The first turn writes an implementation-ready spec to .agents/library/specs/<slug>.md with title, status: draft, and topics frontmatter",
+        "The first turn writes an implementation-ready spec to docs/specs/<slug>.md with type: spec, quoted title and description, status: draft, and tags frontmatter",
         "The first turn uses findings returned by the launched reviewer or discloses a self-review fallback when no usable output returns, and then requests approval",
         "The first turn makes no version-control commit",
         "The review reports no material findings or classifies every material finding as Addressed, Elevated, or Dismissed",
-        "After approval, sets status: approved and commits only the approved spec",
+        "After approval, sets status: stable, writes verified: { by: human:Eval Reviewer, at: <UTC time> }, and commits only the approved spec",
         "After approval, reports the spec's locator with its revision",
         "Does not offer a preservation choice or any alternative to committing"
       ]
     },
     {
       "id": 10,
-      "prompt": "Continue the specs workflow from the review stage for the attached draft at .agents/library/specs/review-lifecycle-spec.md. The approved requirements are: only workspace administrators may export currently filtered team rows as UTF-8 CSV; users without the administrator role must be rejected; scheduled exports are out of scope. The draft is not approved. Run the required review, resolve what the approved requirements determine, show the disposition report, and request approval.",
+      "prompt": "Continue the specs workflow from the review stage for the attached draft at docs/specs/review-lifecycle-spec.md. The approved requirements are: only workspace administrators may export currently filtered team rows as UTF-8 CSV; users without the administrator role must be rejected; scheduled exports are out of scope. The draft is not approved. Run the required review, resolve what the approved requirements determine, show the disposition report, and request approval.",
       "expected_output": "Wait for the launched reviewer to finish or fail, then obtain and read usable review text before adjudication. Use independent reviewer output when one is actually returned; otherwise fall back once to a disclosed self-review. Address the draft's member-access contradiction, report the disposition, and request approval without committing the draft or marking it approved.",
       "files": [
         {
           "source": "files/review-lifecycle-spec.md",
-          "target": ".agents/library/specs/review-lifecycle-spec.md",
+          "target": "docs/specs/review-lifecycle-spec.md",
           "state": "working"
         }
       ],
@@ -183,18 +184,18 @@
         "Does not treat a reviewer that is still running as a failed attempt",
         "After the initial review attempt, either processes its usable output or, when none is returned, falls back once to a disclosed self-review without retrying that failed attempt",
         "Finds and addresses the draft's unauthorized ordinary-member export without changing the approved filters, encoding, or scheduling scope",
-        "Shows an Addressed disposition and requests approval without committing the draft or setting status: approved",
+        "Shows an Addressed disposition and requests approval without committing the draft or setting status: stable",
         "When the host exposes model or effort controls, treats the administrator-only permission check as ordinary work and steps the reviewer one tier down from the strongest model rather than keeping the strongest tier"
       ]
     },
     {
       "id": 11,
-      "prompt": "The approved spec at .agents/library/specs/team-export.md needs a material change: the export must add a member_count column after the existing columns, using the same value as the team-list rows. Revise the spec.",
-      "expected_output": "Revise the spec in place: set status: draft, add the member_count requirement and its verification, review the change, and request approval; after approval set status: approved and commit only that file.",
+      "prompt": "The approved spec at docs/specs/team-export.md needs a material change: the export must add a member_count column after the existing columns, using the same value as the team-list rows. Revise the spec.",
+      "expected_output": "Revise the spec in place: set status: draft and remove the verified line, add the member_count requirement and its verification, review the change, and request approval; after approval set status: stable, write a new verified line, and commit only that file.",
       "files": [
         {
           "source": "files/baseline-approved-spec.md",
-          "target": ".agents/library/specs/team-export.md",
+          "target": "docs/specs/team-export.md",
           "state": "baseline"
         }
       ],
@@ -202,12 +203,84 @@
         "Approved."
       ],
       "expectations": [
-        "Edits .agents/library/specs/team-export.md in place rather than creating a new spec file",
-        "The first turn sets status: draft before or with the change and does not commit",
+        "Edits docs/specs/team-export.md in place rather than creating a new spec file",
+        "The first turn sets status: draft and removes the verified line before or with the change, and does not commit",
         "The first turn reviews the revised spec and requests explicit approval",
-        "After approval, sets status: approved and commits only that file",
+        "After approval, sets status: stable, writes a new verified line naming human:Eval Reviewer, and commits only that file",
         "After approval, reports the spec's locator with its revision",
         "Does not offer a preservation choice or any alternative to committing"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Use this approved summary to write the spec: admins export currently filtered team rows as UTF-8 CSV; scheduled export is out of scope; UI and API behavior must be verified.",
+      "expected_output": "Write the draft to design/specs/<slug>.md because AGENTS.md names that folder for specs, with status: draft, and make no commit before approval.",
+      "files": [
+        {
+          "source": "files/agents-spec-folder.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Writes the draft to design/specs/<slug>.md, the folder AGENTS.md names for specs",
+        "Writes nothing under docs/specs/",
+        "Writes the draft with type: spec and status: draft frontmatter",
+        "Does not commit the draft or set status: stable before approval"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "I explicitly approve the reviewed replacement spec at docs/specs/team-data-export.md. It replaces the team-export spec.",
+      "expected_output": "Set the replacement to status: stable with a verified line, set the replaced docs/specs/team-export.md to status: deprecated, and commit both files in one revision with nothing else, then verify and report the replacement's locator with the revision.",
+      "files": [
+        {
+          "source": "files/baseline-approved-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/replacement-spec.md",
+          "target": "docs/specs/team-data-export.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Does not ask for approval again or run another review",
+        "Sets the replacement to status: stable and writes verified: { by: human:Eval Reviewer, at: <UTC time> }",
+        "Sets docs/specs/team-export.md to status: deprecated and changes nothing else in it",
+        "Commits docs/specs/team-data-export.md and docs/specs/team-export.md together in one revision, and nothing else",
+        "Verifies that both paths entered repository history before claiming a commit",
+        "Reports the locator docs/specs/team-data-export.md@<revision> with the actual revision"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "I revised the stable replacement spec at docs/specs/team-data-export.md to add a payload-body exclusion. I explicitly approve the revised spec; it was already reviewed.",
+      "expected_output": "The replaced docs/specs/team-export.md is already deprecated, so re-approval sets the revised replacement to status: stable with a new verified line and commits only the replacement, leaving the replaced spec untouched.",
+      "files": [
+        {
+          "source": "files/deprecated-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/stable-replacement-spec.md",
+          "target": "docs/specs/team-data-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/revised-replacement-spec.md",
+          "target": "docs/specs/team-data-export.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Does not ask for approval again or run another review",
+        "Sets docs/specs/team-data-export.md to status: stable and writes verified: { by: human:Eval Reviewer, at: <UTC time> }",
+        "Commits only docs/specs/team-data-export.md",
+        "Leaves docs/specs/team-export.md unchanged and out of the commit because it is already deprecated",
+        "Verifies that the replacement entered repository history before claiming a commit"
       ]
     }
   ]

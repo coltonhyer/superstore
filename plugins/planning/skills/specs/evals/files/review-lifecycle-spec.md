@@ -1,7 +1,9 @@
 ---
-title: Team CSV export
+type: spec
+title: "Team CSV export"
+description: "Allow workspace users to export the currently filtered team rows as UTF-8 CSV."
 status: draft
-topics: [team-export]
+tags: [team-export]
 ---
 
 # Team CSV Export

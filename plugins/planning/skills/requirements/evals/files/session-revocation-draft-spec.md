@@ -1,8 +1,10 @@
 ---
-title: Session revocation
+type: spec
+title: "Session revocation"
+description: "Revoke every session for a user when that user changes their password."
 status: draft
-topics: [auth, session-management]
-supersedes: specs/session-rotation.md
+tags: [auth, session-management]
+supersedes: docs/specs/session-rotation.md
 ---
 
 # Session revocation

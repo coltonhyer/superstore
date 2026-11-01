@@ -1,7 +1,10 @@
 ---
-title: Team CSV export
-status: approved
-topics: [team-export]
+type: spec
+title: "Team CSV export"
+description: "Allow administrators to export the currently filtered team rows as UTF-8 CSV."
+status: stable
+verified: { by: human:Sam Kim, at: 2026-11-01T18:30:00Z }
+tags: [team-export]
 ---
 
 # Team CSV Export
