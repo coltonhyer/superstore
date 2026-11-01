@@ -42,22 +42,43 @@ diagnostic reports, and evidence paths while the execution is incomplete.
 ## Handoff note
 
 At successful whole-plan handoff, after whole-change checks pass, the primary
-writes `.agents/library/notes/<execution-id>.md`, using this execution's id.
-Its frontmatter holds `title` (the plan's subject followed by ` execution`,
-such as `Authentication sessions execution` for a plan titled
-`Authentication sessions plan`), `topics` copied from the plan, and
-`implements: plans/<slug>.md` only when the plan is a library document; a note
-for a plan at a user-supplied path outside the library omits `implements`. The
+writes the note to `<handoffs folder>/<execution-id>.md`, using this
+execution's id. The execution id must match `^[a-z0-9]+(-[a-z0-9]+)*$` and be
+neither `index` nor `log`, which OKF reserves. Resolve the handoffs folder in
+this order:
+
+1. A path the user names for this note.
+2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
+   handoffs, in a sentence such as `Handoffs live in design/handoffs/.`
+3. `docs/handoffs/`. Kind folders are flat.
+
+The note's frontmatter holds these fields, one per line, in this order:
+
+- `type: handoff`.
+- `title`: the plan's title without its trailing word `plan`, matched in any
+  letter case (`plan`, `Plan`), followed by ` execution`, such as
+  `Authentication sessions execution` for the plan titled
+  `Authentication sessions plan`.
+- `description`: one sentence saying what the execution delivered.
+- `tags`: copied from the plan.
+- `implements`: the plan's repository path, only when the plan is a repository
+  file.
+
+Write `title` and `description` in double quotes, with `\` and `"` inside them
+escaped as `\\` and `\"`; quote no other field. A repository path is relative
+to the repository root, without a leading slash, and includes `.md`. The
 headings are fixed so notes stay uniform:
 
 ```markdown
 ---
-title: <plan subject> execution
-topics: [<plan topics>]
-implements: plans/<slug>.md
+type: handoff
+title: "<plan title without trailing plan> execution"
+description: "<one sentence on what the execution delivered>"
+tags: [<plan tags>]
+implements: <plan path>
 ---
 
-# <plan subject> execution
+# <plan title without trailing plan> execution
 
 - **Plan:** `<plan path>@<revision>`
 - **Spec:** `<spec path>@<revision>`

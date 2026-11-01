@@ -54,17 +54,23 @@ disposition, then the next task. When delegation is unavailable or inline work
 is explicitly requested, `implementing-plans` follows the same gates inline.
 
 Planning and execution each need explicit approval. `plans` reviews and
-obtains approval before it sets `status: approved` and commits a plan;
-`implementing-plans` requires a plan with `status: approved`, its authoritative
-specification, and execution authorization. Existing unrelated changes stay
-outside implementation recordings.
+obtains approval before it sets `status: stable`, writes the `verified` line,
+and commits a plan; it requires a `type: spec` document with
+`status: stable`; a spec without that frontmatter, or a `type: spec` file
+without a status line, needs the user's explicit approval. `implementing-plans`
+and `subagent-execution` require a plan with a `status: stable` line, its
+authoritative specification, and execution authorization. A plan that is
+`draft` or `deprecated`, or has no status line, goes back through `plans`.
+Existing unrelated changes stay outside implementation recordings.
 
-Plans and handoff notes are written to `.agents/library/`: plans to
-`.agents/library/plans/<slug>.md` and, at successful whole-plan handoff, a note
-to `.agents/library/notes/<execution-id>.md`. The Library plugin's `library`
-skill is optional and only helps discover documents. Debugging is optional
-during evidence-based recovery. Detailed procedures and contracts stay
-with their owning skills and private references.
+Plans and handoff notes are OKF documents with `type: plan` and
+`type: handoff` frontmatter. Plans are written to `docs/plans/<slug>.md` and,
+at successful whole-plan handoff, a note to
+`docs/handoffs/<execution-id>.md`, unless the user names a path or `AGENTS.md`
+or `CLAUDE.md` at the repository root names another folder for the type. The
+Library plugin's `library` skill is optional and only helps discover documents.
+Debugging is optional during evidence-based recovery. Detailed procedures and
+contracts stay with their owning skills and private references.
 
 The endpoint is local: the workflow records verified changes and reports the
 result. It does not push, create a pull or merge request, merge, deploy, or

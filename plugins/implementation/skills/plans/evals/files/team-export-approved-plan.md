@@ -1,15 +1,18 @@
 ---
-title: Team export implementation plan
-status: approved
-topics: [team-export]
-implements: specs/team-export.md
+type: plan
+title: "Team export implementation plan"
+description: "Tasks that implement the team-export specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [team-export]
+implements: docs/specs/team-export.md
 ---
 
 # Team export implementation plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/team-export.md`
+- **Locator:** `docs/specs/team-export.md`
 
 ## Approach
 

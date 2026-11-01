@@ -5,12 +5,13 @@ description: Use when an approved, preserved implementation plan is authorized f
 
 # Implementing Plans
 
-Execution needs the plan at its locator with `status: approved`, the spec it
-implements, and execution authorization. A plan alone is not authorization. A
-plan whose `status` is `draft` is not approved: route it back through `plans`
-for review and approval. If those inputs are missing, route an approved spec
-through `plans` or request the missing context; do not begin implementation.
-The spec remains authoritative when it conflicts with a plan.
+Execution needs the plan at its locator with a `status: stable` line, the spec
+it implements, and execution authorization. A plan alone is not authorization.
+A plan whose `status` is `draft` or `deprecated`, or that has no `status`
+line, is not approved: route it back through `plans` for review and approval.
+If those inputs are missing, route an approved spec through `plans` or request
+the missing context; do not begin implementation. The spec remains
+authoritative when it conflicts with a plan.
 
 Choose the entry context before acting.
 
@@ -63,12 +64,15 @@ was explicitly requested.
 
 Before creating plan-associated scratch, add its exact execution directory to
 the active VCS's local exclusion mechanism. Use one directory per workspace and
-exact plan version, normally `.agents/execution/<execution-id>/`.
+exact plan version, normally `.agents/execution/<execution-id>/`. Choose an
+execution id that satisfies the file-name rule in
+[execution state](references/execution-state.md), because the handoff note is
+named after it.
 
 Initialize or restore execution state from the exact approved plan/spec content
 and locators. When a locator pins a revision, read that content through the
 active version control at that revision, not from the working copy; do not send
-workers broad library exploration. On resumption, reconcile recorded task
+workers broad exploration of the repository's documents. On resumption, reconcile recorded task
 revisions, evidence, and findings with repository state before repeating or
 dispatching work. A status checkbox without a matching revision/evidence is not
 proof of completion.
@@ -95,7 +99,7 @@ limitations. Do not claim readiness if required checks remain unavailable,
 stale, or failed. Do not push, create a PR/MR, merge, or deploy.
 
 After whole-change checks pass, write the handoff note at
-`.agents/library/notes/<execution-id>.md` in the shape
+`<handoffs folder>/<execution-id>.md` in the shape
 [execution state](references/execution-state.md) gives, and record it as its
 own revision through the active VCS workflow, and apply the recording check
 to the note's path. If recording the note fails, leave the note in place,

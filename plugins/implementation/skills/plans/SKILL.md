@@ -12,9 +12,12 @@ implementation. Plan creation is not authorization to execute.
 
 Identify the approved specification by its locator: a repository-relative
 path, written `path@revision` when pinned; read a pinned locator through the
-active version control. A spec under `.agents/library/specs/` must carry
-`status: approved`; a `draft` spec is not approved. For a spec supplied at a
-path outside the library, the user's explicit approval statement suffices.
+active version control. A spec document (`type: spec`) must carry a
+`status: stable` line. One whose `status` is `draft` or `deprecated` is not
+approved, and an approval statement does not stand in for it: route it back
+through Planning. A spec supplied in another form, including a file without
+that frontmatter or a `type: spec` file with no status line, needs the user's
+explicit approval statement.
 Its requirements, rationale, and acceptance criteria remain authoritative. Do
 not treat a file, draft, issue, or request as approval. If the specification is
 missing or unapproved, use Planning when available or request the missing input.
@@ -26,26 +29,40 @@ instruction that conflicts with the specification does not override it.
 
 ## Draft the plan
 
-Inspect relevant repository behavior and conventions before drafting. Write
-the draft to `.agents/library/plans/<slug>.md`; only an explicit user-supplied
-location overrides that path. The slug defaults to the spec's slug and matches
-`^[a-z0-9]+(-[a-z0-9]+)*$`. Start the file with this frontmatter, followed by
-one blank line and the body:
+Inspect relevant repository behavior and conventions before drafting.
+
+Resolve the folder for the draft in this order:
+
+1. A path the user names for this plan.
+2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
+   plans, in a sentence such as `Plans live in design/plans/.`
+3. `docs/plans/`. Kind folders are flat.
+
+Write the draft to `<folder>/<slug>.md`. The slug defaults to the spec's slug,
+matches `^[a-z0-9]+(-[a-z0-9]+)*$`, and is neither `index` nor `log`. Start the
+file with this frontmatter, followed by one blank line and the body:
 
 ```markdown
 ---
-title: <one-line title>
+type: plan
+title: "<one-line title>"
+description: "<one sentence>"
 status: draft
-topics: [<subject-slug>]
-implements: specs/<spec-slug>.md
+tags: [<subject-slug>]
+implements: <spec path>
 ---
 ```
 
-`topics` defaults to the spec's topics. Omit `implements` when the spec is
-outside the library or the plan is written to a user-supplied path outside the
-library. The template's Locator line holds the spec's path and the revision of
-its approved content; for a spec outside the library, that is the supplied path
-and revision.
+Write one field per line in this order, with no block lists or nesting.
+Write `title` and `description` in double quotes, with `\` and `"` inside them
+escaped as `\\` and `\"`; quote no other field. `tags` defaults to the spec's
+tags. Omit `implements` when the spec is not a repository file. Add
+`supersedes: <path>` after `implements` only when this plan replaces a
+differently named plan. A repository path is relative to the repository root,
+without a leading slash, and includes `.md`, such as `docs/specs/<spec-slug>.md`.
+The template's Locator line holds the spec's path and the revision of its
+approved content, or the identity the user supplied when the spec is not a
+repository file.
 
 Use [the plan template](references/plan-template.md) unless a higher-precedence
 repository or user structure covers the same information. Keep one plan to one
@@ -114,42 +131,63 @@ Re-review only when a correction materially changes scope or task structure.
 
 ## Obtain approval
 
-Ask the user to approve or correct the exact reviewed plan. Do not set
-`status: approved`, commit, or execute it before explicit approval. A request
-to preserve, save, record, or commit the plan is not approval, and calling it
-reviewed is not approval; only an explicit statement that the user approves it
-is. When such a request arrives without approval, say that the plan stays an
-uncommitted draft and ask the user to approve or correct it, rather than
-reporting it preserved.
+Ask the user to approve or correct the exact reviewed plan. Incorporate
+corrections. Run another review only when they materially change scope or task
+structure.
+
+Do not commit the plan, set `status: stable`, write `verified`, deprecate the
+plan it supersedes, or execute it before explicit approval.
+A request to preserve, save, record, or commit the plan is not approval, and
+calling it reviewed is not approval; only an explicit statement that the user
+approves it is. When such a request arrives without approval, say that the
+plan stays an uncommitted draft and ask the user to approve or correct it,
+rather than reporting it preserved.
 
 ## Commit the approved plan
 
 Explicit approval authorizes the commit; do not ask again or offer another
 preservation choice. When the user explicitly approves a plan they describe
 as reviewed, proceed to the commit: do not run another review, change the
-document's content, or ask for approval again. Any change made after approval
-needs the user's approval of the changed document before it is committed.
+document's content, or ask for approval again. Any change made after approval,
+other than the edits steps 1 and 2 make, needs the user's approval of the
+changed document before it is committed.
 
-1. Set `status: approved` in the plan's frontmatter.
-2. Commit only that file through the repository's active version-control
-   workflow. Leave unrelated working-copy changes out of the commit and
-   untouched.
-3. Verify that the plan entered repository history and is no longer only in
-   the mutable working copy. Describing the working-copy change is not a
-   commit. With Jujutsu, `jj commit -m '<message>' <path>` moves it into a finished revision; confirm
-   that `jj diff -r @ <path>` prints nothing and that `jj log -r @- <path>`
-   shows a revision newer than the one you started from. With Git,
-   `git add <path> && git commit -m '<message>' <path>`; confirm that
-   `git status --porcelain <path>` prints nothing and that
-   `git log -1 -- <path>` shows the new commit. Claim a commit only when both
-   checks hold.
-4. Report the plan's locator with its revision, such as
-   `.agents/library/plans/<slug>.md@<revision>`.
+1. Set `status: stable` in the plan's frontmatter and write its `verified`
+   line, `verified: { by: human:<approver>, at: <approval time> }`, after
+   `status`. The approver is the user name version control is configured with:
+   with Jujutsu, `jj config get user.name`; with Git, `git config user.name`.
+   The approval time is the UTC instant printed by
+   `date -u +%Y-%m-%dT%H:%M:%SZ`. When the name is empty or contains any of
+   `,` `[` `]` `{` `}` `#` `:`, write no `verified` line and say so in the
+   report.
+2. When the plan has `supersedes`, check the named plan first. A target
+   without a `type` line is not yet migrated: leave it unchanged and say so in
+   the report. Otherwise set its `status` to `deprecated` unless it already
+   is, replacing its `status` line or, when it has none, adding one after
+   `description`. A `supersedes` target that does not exist affects nothing.
+3. Commit, through the repository's active version-control workflow, exactly
+   the files steps 1 and 2 changed: the plan and, when step 2 changed it, the
+   replaced plan. Leave unrelated working-copy changes out of the commit and
+   untouched. Describing the working-copy change is not a commit. List each
+   path once per command. With Jujutsu,
+   `jj commit -m '<message>' <path> <path>` moves the files into a finished
+   revision. With Git,
+   `git add <path> <path> && git commit -m '<message>' <path> <path>`.
+4. Verify that every committed path entered repository history and is no
+   longer only in the mutable working copy. With Jujutsu, confirm that
+   `jj diff -r @ <path>` prints nothing and that `jj log -r @- <path>` shows a
+   revision newer than the one you started from, for each path. With Git,
+   confirm that `git status --porcelain <path>` prints nothing and that
+   `git log -1 -- <path>` shows the new commit, for each path. Claim a commit
+   only when both checks hold for every committed path.
+5. Report the plan's locator with its revision, such as
+   `docs/plans/<slug>.md@<revision>`, using the resolved path.
 
-When no supported version control exists or the commit is refused, leave the
-file in place with `status: approved` and report it uncommitted. On any
-recording failure, report the exact outcome without claiming it was committed
-or working around it. An uncommitted plan is not execution-ready.
+When no supported version control exists or the commit is refused or fails,
+leave every file step 3 would have committed in place with its new status and
+report those files uncommitted. On any failure, report the exact outcome
+without claiming completion or working around it. An uncommitted plan is not
+execution-ready.
 
 After a successful commit, return the locator to the user or continue only an
 execution request the user already authorized. Later workflows read the plan
@@ -157,8 +195,12 @@ at that locator, through version control when it names a revision.
 
 ## Revise an approved plan
 
-Material changes to approved scope or approach revise the plan in place; do
-not create a new file for a new revision. Set `status: draft`, make the change,
-and review it again. Obtain explicit approval of the revised plan, then commit
-it as above before work on the affected scope proceeds. A revision the approved
-specification does not support needs an approved spec revision first.
+Revise in place; do not create a new file for a new revision. Set
+`status: draft` and remove the `verified` line, make the change, and review it
+again when the change is material. Obtain explicit approval of the revised
+plan, then commit it as above, which sets `status: stable` and writes a new
+`verified` line.
+
+Material changes to approved scope or approach revise the plan this way, and
+work on the affected scope waits for the re-approved commit. A revision the
+approved specification does not support needs an approved spec revision first.

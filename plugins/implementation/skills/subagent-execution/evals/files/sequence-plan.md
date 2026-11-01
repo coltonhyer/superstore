@@ -1,15 +1,18 @@
 ---
-title: Sequence plan
-status: approved
-topics: [sequence]
-implements: specs/sequence.md
+type: plan
+title: "Sequence plan"
+description: "Tasks that implement the sequence specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [sequence]
+implements: docs/specs/sequence.md
 ---
 
 # Sequence plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/sequence.md`
+- **Locator:** `docs/specs/sequence.md`
 
 ## Approach
 

@@ -1,7 +1,10 @@
 ---
-title: Resume spec
-status: approved
-topics: [resume]
+type: spec
+title: "Resume spec"
+description: "`RESUME-1` returns `one` from `resume_one.value()`."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [resume]
 ---
 
 # Resume spec

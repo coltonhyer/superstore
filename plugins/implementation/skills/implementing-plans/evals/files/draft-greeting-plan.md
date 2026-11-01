@@ -1,15 +1,17 @@
 ---
-title: Greeting plan
+type: plan
+title: "Greeting plan"
+description: "Tasks that implement the greeting specification."
 status: draft
-topics: [greeting]
-implements: specs/greeting.md
+tags: [greeting]
+implements: docs/specs/greeting.md
 ---
 
 # Greeting plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/greeting.md`
+- **Locator:** `docs/specs/greeting.md`
 
 ## Approach
 

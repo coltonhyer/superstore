@@ -1,8 +1,8 @@
 # Execution finish-run
 
-- **Approved plan:** `.agents/library/plans/finish.md` at the revision described
+- **Approved plan:** `docs/plans/finish.md` at the revision described
   `eval fixture`.
-- **Approved spec:** `.agents/library/specs/finish.md` at the same revision.
+- **Approved spec:** `docs/specs/finish.md` at the same revision.
 - **Workspace and start:** Jujutsu workspace; the synthetic fixture co-records
   FINISH-1's `finish.py` and `test_finish.py` in the bootstrap revision
   described `eval fixture`, resolved to its immutable ID before use.
@@ -17,4 +17,4 @@
   `python3 test_finish.py` exits 0.
 - **Tactical decisions:** none.
 - **Next action:** record the handoff note at
-  `.agents/library/notes/finish-run.md`, then remove this scratch.
+  `docs/handoffs/finish-run.md`, then remove this scratch.

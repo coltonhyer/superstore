@@ -1,15 +1,17 @@
 ---
-title: Team export implementation plan
+type: plan
+title: "Team export implementation plan"
+description: "Tasks that implement the team-export specification."
 status: draft
-topics: [team-export]
-implements: specs/team-export.md
+tags: [team-export]
+implements: docs/specs/team-export.md
 ---
 
 # Team export implementation plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/team-export.md`
+- **Locator:** `docs/specs/team-export.md`
 
 ## Approach
 

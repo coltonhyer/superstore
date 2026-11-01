@@ -1,15 +1,18 @@
 ---
-title: Text plan
-status: approved
-topics: [text]
-implements: specs/text.md
+type: plan
+title: "Text plan"
+description: "Tasks that implement the text specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [text]
+implements: docs/specs/text.md
 ---
 
 # Text plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/text.md`
+- **Locator:** `docs/specs/text.md`
 
 ## Approach
 

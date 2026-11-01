@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Supervise the approved two-task plan at .agents/library/plans/sequence.md against .agents/library/specs/sequence.md. Delegation is available and inline work was not requested. notes.md is unrelated working-copy work. Use .agents/execution/sequence-run/ after confirming its local exclusion. Dispatch one fresh implementer at a time with only its task context; read each report and the complete recorded range; arrange task review; send any material finding back for a verified fix; then arrange whole-change review and verification. Finish with the final handoff and remove only successful sequence-run scratch. Do not implement, publish, merge, or use a worker worktree unless repository instructions require one.",
+      "prompt": "Supervise the approved two-task plan at docs/plans/sequence.md against docs/specs/sequence.md. Delegation is available and inline work was not requested. notes.md is unrelated working-copy work. Use .agents/execution/sequence-run/ after confirming its local exclusion. Dispatch one fresh implementer at a time with only its task context; read each report and the complete recorded range; arrange task review; send any material finding back for a verified fix; then arrange whole-change review and verification. Finish with the final handoff and remove only successful sequence-run scratch. Do not implement, publish, merge, or use a worker worktree unless repository instructions require one.",
       "expected_output": "Sequentially delegates isolated tasks, bases task completion on actual reports, complete ranges, review and verification evidence, preserves unrelated work, performs whole-change checks, and writes and records the handoff note before removing scratch.",
       "skills": [
         "implementing-plans",
@@ -13,12 +13,12 @@
       "files": [
         {
           "source": "files/sequence-spec.md",
-          "target": ".agents/library/specs/sequence.md",
+          "target": "docs/specs/sequence.md",
           "state": "baseline"
         },
         {
           "source": "files/sequence-plan.md",
-          "target": ".agents/library/plans/sequence.md",
+          "target": "docs/plans/sequence.md",
           "state": "baseline"
         },
         {
@@ -57,13 +57,13 @@
         "Reads returned reports and actual full task ranges before arranging review and adjudicating evidence",
         "Returns task findings for verified implementation fixes before advancing",
         "Performs whole-change review and verification, leaves notes.md unrecorded and untouched, and does not publish or merge",
-        "After whole-change checks pass, writes .agents/library/notes/sequence-run.md with title, topics copied from the plan, and implements: plans/sequence.md frontmatter, Plan, Spec, Start, and Result lines, and the headings Whole-change checks, Review outcomes and dispositions, Limitations, and Tactical decisions, and records it as its own revision before removing sequence-run scratch",
+        "After whole-change checks pass, writes docs/handoffs/sequence-run.md, with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/sequence.md frontmatter, Plan, Spec, Start, and Result lines, and the headings Whole-change checks, Review outcomes and dispositions, Limitations, and Tactical decisions, and records it as its own revision before removing sequence-run scratch",
         "When the host exposes model or effort controls, sets them explicitly on every dispatch: the smallest model for the one-line implementation tasks, each task reviewer one tier above its implementer rather than a stronger tier, and the strongest tier for whole-change review"
       ]
     },
     {
       "id": 2,
-      "prompt": "Resume delegated execution using .agents/library/plans/resume.md, .agents/library/specs/resume.md, and the excluded .agents/execution/resume-run/execution-state.md. Reconcile it with actual Jujutsu state before dispatching. The state identifies the real bootstrap revision by its unique `eval fixture` description rather than a supplied hash: resolve its immutable ID from this workspace before trusting its file-scoped evidence. This synthetic recovery fixture co-records RESUME-1 and RESUME-2 paths in that one real bootstrap revision; it does not claim separate historical task commits. RESUME-1 is complete and reviewed; RESUME-2 is reported but awaiting review. Do not redo RESUME-1. Retain scratch until the pending review and any findings are resolved.",
+      "prompt": "Resume delegated execution using docs/plans/resume.md, docs/specs/resume.md, and the excluded .agents/execution/resume-run/execution-state.md. Reconcile it with actual Jujutsu state before dispatching. The state identifies the real bootstrap revision by its unique `eval fixture` description rather than a supplied hash: resolve its immutable ID from this workspace before trusting its file-scoped evidence. This synthetic recovery fixture co-records RESUME-1 and RESUME-2 paths in that one real bootstrap revision; it does not claim separate historical task commits. RESUME-1 is complete and reviewed; RESUME-2 is reported but awaiting review. Do not redo RESUME-1. Retain scratch until the pending review and any findings are resolved.",
       "expected_output": "Uses current Jujutsu evidence to retain a completed task without repeating it, distinguishes reported/awaiting-review from complete, and resumes at the pending review.",
       "skills": [
         "implementing-plans",
@@ -73,12 +73,12 @@
       "files": [
         {
           "source": "files/resume-spec.md",
-          "target": ".agents/library/specs/resume.md",
+          "target": "docs/specs/resume.md",
           "state": "baseline"
         },
         {
           "source": "files/resume-plan.md",
-          "target": ".agents/library/plans/resume.md",
+          "target": "docs/plans/resume.md",
           "state": "baseline"
         },
         {
@@ -145,12 +145,12 @@
       "files": [
         {
           "source": "files/resume-spec.md",
-          "target": ".agents/library/specs/resume.md",
+          "target": "docs/specs/resume.md",
           "state": "baseline"
         },
         {
           "source": "files/resume-plan.md",
-          "target": ".agents/library/plans/resume.md",
+          "target": "docs/plans/resume.md",
           "state": "baseline"
         },
         {
@@ -172,7 +172,7 @@
     },
     {
       "id": 4,
-      "prompt": "A delegated implementer reports it lacks the exact interface requirement for task CONTEXT-1. The approved task excerpt is now supplied in .agents/library/plans/context.md and the relevant spec is .agents/library/specs/context.md. Give the missing context directly in a bounded implementer brief and continue only after it can be verified and reviewed. Do not diagnose a missing brief, send the worker to browse the library, or make the implementation yourself.",
+      "prompt": "A delegated implementer reports it lacks the exact interface requirement for task CONTEXT-1. The approved task excerpt is now supplied in docs/plans/context.md and the relevant spec is docs/specs/context.md. Give the missing context directly in a bounded implementer brief and continue only after it can be verified and reviewed. Do not diagnose a missing brief, send the worker to browse the repository's documents, or make the implementation yourself.",
       "expected_output": "Supplies the exact missing task context directly and preserves the delegation, verification, and review boundaries without inventing diagnostic procedure.",
       "skills": [
         "implementing-plans",
@@ -182,12 +182,12 @@
       "files": [
         {
           "source": "files/context-spec.md",
-          "target": ".agents/library/specs/context.md",
+          "target": "docs/specs/context.md",
           "state": "baseline"
         },
         {
           "source": "files/context-plan.md",
-          "target": ".agents/library/plans/context.md",
+          "target": "docs/plans/context.md",
           "state": "baseline"
         },
         {
@@ -203,7 +203,7 @@
       ],
       "expectations": [
         "Supplies the relevant approved task and interface context rather than diagnosing it",
-        "Keeps the worker brief bounded, does not send the worker to browse the library, and does not implement or broaden scope",
+        "Keeps the worker brief bounded, does not send the worker to browse the repository's documents, and does not implement or broaden scope",
         "Retains verification and independent-review gates"
       ]
     },
@@ -288,7 +288,7 @@
     },
     {
       "id": 7,
-      "prompt": "During delegated task CONFLICT-1, .agents/library/plans/conflict.md says preserve the existing compact record, while the current repository code requires a new persisted audit field to meet .agents/library/specs/conflict.md. This changes approved approach and data behavior materially. Keep .agents/execution/conflict-run/, do not let a diagnostic or implementer choose the scope, and return the evidence-backed escalation required before affected work proceeds.",
+      "prompt": "During delegated task CONFLICT-1, docs/plans/conflict.md says preserve the existing compact record, while the current repository code requires a new persisted audit field to meet docs/specs/conflict.md. This changes approved approach and data behavior materially. Keep .agents/execution/conflict-run/, do not let a diagnostic or implementer choose the scope, and return the evidence-backed escalation required before affected work proceeds.",
       "expected_output": "Recognizes a material plan/code conflict, preserves scratch, avoids unauthorized implementation, and requests an approved revision and explicit decision.",
       "skills": [
         "implementing-plans",
@@ -298,12 +298,12 @@
       "files": [
         {
           "source": "files/conflict-spec.md",
-          "target": ".agents/library/specs/conflict.md",
+          "target": "docs/specs/conflict.md",
           "state": "baseline"
         },
         {
           "source": "files/conflict-plan.md",
-          "target": ".agents/library/plans/conflict.md",
+          "target": "docs/plans/conflict.md",
           "state": "baseline"
         },
         {
@@ -357,7 +357,7 @@
     },
     {
       "id": 9,
-      "prompt": "Finish the delegated execution described by the excluded .agents/execution/finish-run/execution-state.md. Every task is complete and reviewed, whole-change review and verification passed, and the handoff note is already written at .agents/library/notes/finish-run.md. I already attempted to record the note and the repository's commit policy rejected it. Do not retry the commit or work around the policy; complete the Finish stage and report.",
+      "prompt": "Finish the delegated execution described by the excluded .agents/execution/finish-run/execution-state.md. Every task is complete and reviewed, whole-change review and verification passed, and the handoff note is already written at docs/handoffs/finish-run.md. I already attempted to record the note and the repository's commit policy rejected it. Do not retry the commit or work around the policy; complete the Finish stage and report.",
       "expected_output": "Leave the handoff note in place, run no commit or retry, report the commit-policy rejection, retain finish-run scratch, and make no completion claim.",
       "skills": [
         "implementing-plans",
@@ -367,12 +367,12 @@
       "files": [
         {
           "source": "files/finish-spec.md",
-          "target": ".agents/library/specs/finish.md",
+          "target": "docs/specs/finish.md",
           "state": "baseline"
         },
         {
           "source": "files/finish-plan.md",
-          "target": ".agents/library/plans/finish.md",
+          "target": "docs/plans/finish.md",
           "state": "baseline"
         },
         {
@@ -397,16 +397,53 @@
         },
         {
           "source": "files/finish-note.md",
-          "target": ".agents/library/notes/finish-run.md",
+          "target": "docs/handoffs/finish-run.md",
           "state": "working"
         }
       ],
       "expectations": [
-        "Leaves .agents/library/notes/finish-run.md in place",
+        "Leaves docs/handoffs/finish-run.md in place",
         "Runs no commit command and does not retry the rejected recording or work around the commit policy",
         "Reports that the handoff note could not be recorded, naming the commit-policy rejection",
         "Retains .agents/execution/finish-run/ scratch",
         "Does not claim the execution is complete or the note recorded"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "I authorize execution of the plan at docs/plans/sequence.md against the spec at docs/specs/sequence.md. Delegation is available. Supervise it.",
+      "expected_output": "Refuse to coordinate because the plan carries status: deprecated and so lacks status: stable, route it back through plans for review and approval, and dispatch no worker, record no revision, and create no execution scratch.",
+      "skills": [
+        "implementing-plans",
+        "reviewing-implementation",
+        "verifying-changes"
+      ],
+      "files": [
+        {
+          "source": "files/sequence-spec.md",
+          "target": "docs/specs/sequence.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/deprecated-sequence-plan.md",
+          "target": "docs/plans/sequence.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/one.py",
+          "target": "one.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/test_one.py",
+          "target": "test_one.py",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Identifies that the plan's status is deprecated rather than stable and that execution authorization does not substitute for plan approval",
+        "Dispatches no worker, changes no implementation file, records no revision, and creates no execution scratch",
+        "Routes the plan back through plans for review and explicit approval"
       ]
     }
   ]

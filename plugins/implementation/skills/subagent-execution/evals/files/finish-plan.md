@@ -1,15 +1,18 @@
 ---
-title: Finish plan
-status: approved
-topics: [finish]
-implements: specs/finish.md
+type: plan
+title: "Finish plan"
+description: "Tasks that implement the finish specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [finish]
+implements: docs/specs/finish.md
 ---
 
 # Finish plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/finish.md`
+- **Locator:** `docs/specs/finish.md`
 
 ## Tasks
 

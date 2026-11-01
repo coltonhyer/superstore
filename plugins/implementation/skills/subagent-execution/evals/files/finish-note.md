@@ -1,13 +1,15 @@
 ---
-title: Finish plan execution
-topics: [finish]
-implements: plans/finish.md
+type: handoff
+title: "Finish execution"
+description: "FINISH-1 returns done and passed whole-change checks."
+tags: [finish]
+implements: docs/plans/finish.md
 ---
 
-# Finish plan execution
+# Finish execution
 
-- **Plan:** `.agents/library/plans/finish.md@<revision described "eval fixture">`
-- **Spec:** `.agents/library/specs/finish.md@<revision described "eval fixture">`
+- **Plan:** `docs/plans/finish.md@<revision described "eval fixture">`
+- **Spec:** `docs/specs/finish.md@<revision described "eval fixture">`
 - **Start:** `<revision described "eval fixture">-` **Result:** `<revision described "eval fixture">-..<revision described "eval fixture">`
 
 ## Whole-change checks

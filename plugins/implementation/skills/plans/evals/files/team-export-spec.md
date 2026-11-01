@@ -1,7 +1,10 @@
 ---
-title: Team export specification
-status: approved
-topics: [team-export]
+type: spec
+title: "Team export specification"
+description: "Workspace administrators can export the currently filtered team rows as UTF-8 CSV."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [team-export]
 ---
 
 # Team export specification

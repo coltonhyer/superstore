@@ -1,15 +1,18 @@
 ---
-title: Pin plan
-status: approved
-topics: [pin]
-implements: specs/pin.md
+type: plan
+title: "Pin plan"
+description: "Tasks that implement the pin specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [pin]
+implements: docs/specs/pin.md
 ---
 
 # Pin plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/pin.md`
+- **Locator:** `docs/specs/pin.md`
 
 ## Approach
 

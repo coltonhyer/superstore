@@ -1,15 +1,17 @@
 ---
-title: Pin plan
+type: plan
+title: "Pin plan"
+description: "Unreviewed draft edit that switches labels to upper case."
 status: draft
-topics: [pin]
-implements: specs/pin.md
+tags: [pin]
+implements: docs/specs/pin.md
 ---
 
 # Pin plan
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/pin.md`
+- **Locator:** `docs/specs/pin.md`
 
 ## Approach
 

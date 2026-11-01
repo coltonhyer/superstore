@@ -8,8 +8,11 @@ description: Use when a primary agent is executing an approved implementation pl
 The supervisor coordinates one approved task at a time. It does not implement,
 review its own task work, publish, merge, or turn a report into completion.
 
-Before coordination, confirm the plan at its locator with `status: approved`,
-the authoritative spec, and execution authorization. Read [the execution state](../implementing-plans/references/execution-state.md),
+Before coordination, confirm the plan at its locator with a `status: stable`
+line, the authoritative spec, and execution authorization. A plan whose
+`status` is `draft` or `deprecated`, or that has no `status` line, is not
+approved: route it back through `plans` for review and approval. Read
+[the execution state](../implementing-plans/references/execution-state.md),
 [implementation report contract](../implementing-plans/references/implementation-report.md),
 [implementer brief](references/implementer-brief.md), and, when diagnosis is
 justified, [diagnostic assignment](references/diagnostic-assignment.md). At
@@ -84,7 +87,7 @@ lasting diagnostic or report outside scratch, for example in the handoff
 note's Limitations or Tactical decisions sections. Hand off the
 plan/spec, start and resulting ranges, evidence, review outcomes and
 dispositions, and limitations. After whole-change checks pass, write the
-handoff note at `.agents/library/notes/<execution-id>.md` in the shape the
+handoff note at `<handoffs folder>/<execution-id>.md` in the shape the
 execution state gives and record it as its own revision through the active VCS
 workflow, applying implementing-plans' recording check to the note's path.
 Remove only this execution's scratch after the note is recorded. If

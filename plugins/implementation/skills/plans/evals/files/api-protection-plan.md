@@ -1,15 +1,17 @@
 ---
-title: API protection plan
+type: plan
+title: "API protection plan"
+description: "Tasks that implement the api-protection specification."
 status: draft
-topics: [api-protection]
-implements: specs/api-protection.md
+tags: [api-protection]
+implements: docs/specs/api-protection.md
 ---
 
 # API protection
 
 ## Approved specification
 
-- **Locator:** `.agents/library/specs/api-protection.md`
+- **Locator:** `docs/specs/api-protection.md`
 
 ## Approach
 

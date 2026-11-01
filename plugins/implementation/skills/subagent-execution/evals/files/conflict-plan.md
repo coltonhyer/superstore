@@ -1,8 +1,11 @@
 ---
-title: Conflict plan
-status: approved
-topics: [conflict]
-implements: specs/conflict.md
+type: plan
+title: "Conflict plan"
+description: "Tasks that implement the conflict specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [conflict]
+implements: docs/specs/conflict.md
 ---
 
 # Conflict plan

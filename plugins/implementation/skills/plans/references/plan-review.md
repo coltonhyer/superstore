@@ -29,5 +29,5 @@ the smallest adequate correction. The managing agent, not the reviewer,
 assigns `Addressed`, `Elevated`, or `Dismissed` dispositions.
 
 Do not edit, approve, commit, or execute the plan, and do not browse the
-library beyond the supplied documents. Do not make implementation choices
-beyond the evidence supplied for review.
+repository's documents beyond the supplied plan and spec. Do not make
+implementation choices beyond the evidence supplied for review.

@@ -1,8 +1,11 @@
 ---
-title: Context plan
-status: approved
-topics: [context]
-implements: specs/context.md
+type: plan
+title: "Context plan"
+description: "Tasks that implement the context specification."
+status: stable
+verified: { by: human:Eval Reviewer, at: 2026-10-01T12:00:00Z }
+tags: [context]
+implements: docs/specs/context.md
 ---
 
 # Context plan
