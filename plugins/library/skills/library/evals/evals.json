@@ -3,52 +3,52 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Which spec in this repository's library is the current one on auth? Tell me its path and the idle session timeout it requires.",
-      "expected_output": "Filters the specs by frontmatter, excludes the draft and the superseded spec, selects specs/session-tokens.md, and reports its 30-minute idle timeout with its path.",
+      "prompt": "Which spec in this repository's documents is the current one on auth? Tell me its path and the idle session timeout it requires.",
+      "expected_output": "Filters the specs by frontmatter, excludes the deprecated spec and the draft, selects docs/specs/session-tokens.md, and reports its 30-minute idle timeout with its path.",
       "files": [
         {
           "source": "files/auth-sessions-spec.md",
-          "target": ".agents/library/specs/auth-sessions.md",
+          "target": "docs/specs/auth-sessions.md",
           "state": "baseline"
         },
         {
           "source": "files/session-tokens-spec.md",
-          "target": ".agents/library/specs/session-tokens.md",
+          "target": "docs/specs/session-tokens.md",
           "state": "baseline"
         },
         {
           "source": "files/session-revocation-draft-spec.md",
-          "target": ".agents/library/specs/session-revocation.md",
+          "target": "docs/specs/session-revocation.md",
           "state": "baseline"
         },
         {
           "source": "files/billing-invoices-spec.md",
-          "target": ".agents/library/specs/billing-invoices.md",
+          "target": "docs/specs/billing-invoices.md",
           "state": "baseline"
         }
       ],
       "expectations": [
-        "Selects .agents/library/specs/session-tokens.md as the current auth spec and reports the 30-minute idle timeout",
-        "Excludes specs/auth-sessions.md because an approved spec supersedes it",
-        "Excludes the draft specs/session-revocation.md and does not treat its supersedes line as retiring specs/session-tokens.md",
+        "Selects docs/specs/session-tokens.md as the current auth spec and reports the 30-minute idle timeout",
+        "Excludes docs/specs/auth-sessions.md because its status is deprecated, without reading its body",
+        "Excludes the draft docs/specs/session-revocation.md without reading its body, and does not treat its supersedes line as retiring docs/specs/session-tokens.md",
         "Cites the selected document's path",
         "Does not write a script, index, or document",
-        "Does not read the body of specs/billing-invoices.md"
+        "Does not read the body of docs/specs/billing-invoices.md"
       ]
     },
     {
       "id": 2,
-      "prompt": "What per-export row limit did .agents/library/specs/export-limits.md set at the revision described `eval fixture`? Resolve that revision from this workspace's version control and cite the document as you read it.",
+      "prompt": "What per-export row limit did docs/specs/export-limits.md set at the revision described `eval fixture`? Resolve that revision from this workspace's version control and cite the document as you read it.",
       "expected_output": "Resolves the `eval fixture` revision through version control, reads the spec at that revision rather than the working copy, reports the 10,000-row limit, and cites path@revision.",
       "files": [
         {
           "source": "files/export-limits-v1.md",
-          "target": ".agents/library/specs/export-limits.md",
+          "target": "docs/specs/export-limits.md",
           "state": "baseline"
         },
         {
           "source": "files/export-limits-v2.md",
-          "target": ".agents/library/specs/export-limits.md",
+          "target": "docs/specs/export-limits.md",
           "state": "working"
         }
       ],
@@ -56,72 +56,220 @@
         "Resolves the `eval fixture` revision with the workspace's version control",
         "Reads the spec at that revision through version control rather than from the working copy",
         "Reports the 10,000-row limit, not the working copy's 100,000",
-        "Cites the document as .agents/library/specs/export-limits.md@<revision> with the resolved revision",
+        "Cites the document as docs/specs/export-limits.md@<revision> with the resolved revision",
         "Does not edit the spec or write a script or index"
       ]
     },
     {
       "id": 3,
-      "prompt": "We want to start keeping architecture decision records in the library. Where should a new decision record go, and what frontmatter does it need? Just tell me; don't create anything yet.",
-      "expected_output": "Explains that a new kind gets its own plural-slug folder such as .agents/library/decisions/<slug>.md and lists the frontmatter fields in order, with title and topics required, no status for a non-spec, non-plan kind, and optional implements, supersedes, and references.",
+      "prompt": "We want to start keeping architecture decision records in this repository. Where should a new decision record go, and what frontmatter does it need? Just tell me; don't create anything yet.",
+      "expected_output": "Explains that a new type gets a flat folder under docs/ named with the type's plural (docs/decisions/<slug>.md for type decision) unless AGENTS.md, CLAUDE.md, or the user names one, and lists the OKF frontmatter fields in order: type, quoted title, quoted description, and tags required, no status or verified for a type no workflow owns, and optional implements, supersedes, and references as repository paths.",
       "files": [
         {
           "source": "files/team-export-spec.md",
-          "target": ".agents/library/specs/team-export.md",
+          "target": "docs/specs/team-export.md",
           "state": "baseline"
         }
       ],
       "expectations": [
-        "Places decision records in a new plural lowercase kind folder such as .agents/library/decisions/",
-        "Names the file <slug>.md with a lowercase hyphenated slug and no id or kind field",
-        "Requires title and topics, with topics as an inline list of slugs",
-        "States that decision records omit status because only specs and plans carry it",
-        "Mentions the optional implements, supersedes, and references fields as library-relative paths",
+        "Places decision records in a flat folder under docs/ named with the plural of the chosen type, such as docs/decisions/, unless AGENTS.md, CLAUDE.md, or the user names another folder",
+        "Names the file <slug>.md with a lowercase hyphenated slug",
+        "Requires type (a lowercase slug such as decision), title, description, and tags, in that order, with tags as an inline list of slugs",
+        "States that title and description are written in double quotes",
+        "States that decision records omit status, because only specs and plans carry it, and verified",
+        "Mentions the optional implements, supersedes, and references fields as repository paths relative to the repository root without a leading slash",
         "Writes no script, index, or document and does not change any ignore file"
       ]
     },
     {
       "id": 4,
-      "prompt": "How do team exports handle pagination, according to the library? Cite the documents you relied on.",
+      "prompt": "How do team exports handle pagination, according to the repository's documents? Cite the documents you relied on.",
       "expected_output": "Filters by frontmatter to the export documents, reads the team export plan and the spec it implements, explains that every matching row is exported by keyset pagination over all pages, and cites both paths without reading unrelated documents.",
       "files": [
         {
           "source": "files/team-export-spec.md",
-          "target": ".agents/library/specs/team-export.md",
+          "target": "docs/specs/team-export.md",
           "state": "baseline"
         },
         {
           "source": "files/team-export-plan.md",
-          "target": ".agents/library/plans/team-export.md",
+          "target": "docs/plans/team-export.md",
           "state": "baseline"
         },
         {
           "source": "files/auth-sessions-spec.md",
-          "target": ".agents/library/specs/auth-sessions.md",
+          "target": "docs/specs/auth-sessions.md",
           "state": "baseline"
         },
         {
           "source": "files/auth-sessions-plan.md",
-          "target": ".agents/library/plans/auth-sessions.md",
+          "target": "docs/plans/auth-sessions.md",
           "state": "baseline"
         },
         {
           "source": "files/ci-runners-note.md",
-          "target": ".agents/library/notes/ci-runners.md",
+          "target": "docs/notes/ci-runners.md",
           "state": "baseline"
         },
         {
           "source": "files/onboarding-note.md",
-          "target": ".agents/library/notes/onboarding.md",
+          "target": "docs/notes/onboarding.md",
           "state": "baseline"
         }
       ],
       "expectations": [
-        "Selects documents by frontmatter lines such as topics or titles rather than reading every file",
-        "Reads plans/team-export.md and the specs/team-export.md it implements",
+        "Selects documents by frontmatter lines such as tags or titles rather than reading every file",
+        "Reads docs/plans/team-export.md and the docs/specs/team-export.md it implements",
         "Explains that the export covers every matching row across all pages using keyset pagination on team_id",
-        "Cites .agents/library/plans/team-export.md and .agents/library/specs/team-export.md",
-        "Does not read the bodies of the auth or notes documents",
+        "Cites docs/plans/team-export.md and docs/specs/team-export.md",
+        "Does not read the bodies of the auth documents or of the type: note documents in docs/notes/",
+        "Does not write a script, index, or document"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "How long does the audit log retention spec say entries are kept? Give me the spec's path.",
+      "expected_output": "Resolves the spec folder from AGENTS.md as design/specs/, filters by frontmatter, excludes the deprecated first version, and reports the 365-day retention of design/specs/audit-retention.md with its path.",
+      "files": [
+        {
+          "source": "files/agents-md-design-specs.md",
+          "target": "AGENTS.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/audit-retention-spec.md",
+          "target": "design/specs/audit-retention.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/audit-retention-old-spec.md",
+          "target": "design/specs/audit-retention-old.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Uses the folder AGENTS.md names, design/specs/, rather than only the default docs/specs/",
+        "Selects design/specs/audit-retention.md as the current spec and reports the 365-day retention",
+        "Excludes design/specs/audit-retention-old.md because its status is deprecated, without reading its body",
+        "Cites design/specs/audit-retention.md",
+        "Does not write a script, index, or document"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Add a note to the repository recording that the nightly build now runs at 02:00 UTC so it no longer overlaps the 01:30 database backup.",
+      "expected_output": "Writes docs/notes/<slug>.md with valid OKF frontmatter for type note, and leaves it uncommitted in the working copy.",
+      "files": [
+        {
+          "source": "files/onboarding-note.md",
+          "target": "docs/notes/onboarding.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Writes one new file docs/notes/<slug>.md whose slug is lowercase and hyphenated, and does not edit docs/notes/onboarding.md",
+        "The new file starts with a frontmatter block with fields in this order: type: note, title, description, tags",
+        "title and description are each one line in double quotes; tags is an inline list of one or more slugs",
+        "The frontmatter has no status line and no verified line",
+        "The body records the 02:00 UTC move and the overlap with the 01:30 backup",
+        "Leaves the note uncommitted: jj status shows the new file as a working-copy change and no revision was committed after the baseline",
+        "Does not create index.md, log.md, an index, a cache, a script, or an ignore-file entry"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "We are thinking of adding an index.md to docs/specs/. What must the file contain, and can it carry frontmatter?",
+      "expected_output": "Opens references/okf-spec.md, reports from its section 8 that an index.md has no frontmatter except an okf_version key in a bundle-root index.md, and that its body is headings grouping bulleted links with short descriptions, and writes nothing.",
+      "files": [
+        {
+          "source": "files/team-export-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Opens the skill's references/okf-spec.md to answer, rather than answering from memory",
+        "States that an index.md contains no frontmatter, except that a bundle-root index.md may carry an okf_version key",
+        "States that its body groups links to concepts under headings, each entry a link with a short description",
+        "Writes no index.md or any other file"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Which spec in this repository is current on exports? Give me its path and the per-export row limit it sets.",
+      "expected_output": "Selects docs/specs/export-limits.md and reports its 10,000-row limit, and reports docs/specs/legacy-export.md, which has no type line, to the user as not yet migrated.",
+      "files": [
+        {
+          "source": "files/export-limits-v1.md",
+          "target": "docs/specs/export-limits.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/legacy-export-spec.md",
+          "target": "docs/specs/legacy-export.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Selects docs/specs/export-limits.md as the current export spec and reports the 10,000-row limit",
+        "Reports docs/specs/legacy-export.md to the user as not yet migrated because it has no type line, naming it in the answer rather than skipping it silently",
+        "Never selects docs/specs/legacy-export.md as a current spec, and does not report its 1,000,000-row limit as current",
+        "Does not edit or migrate docs/specs/legacy-export.md",
+        "Does not write a script, index, or document"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "We want to start keeping reviews in this repository as documents of type `review`. Write the first one, a review of our CI setup: the runners are shared across all projects and the queue backs up every morning.",
+      "expected_output": "Finds that docs/reviews/ already holds Markdown reports without OKF frontmatter, asks the user where the review documents should go, and writes nothing in docs/reviews/.",
+      "files": [
+        {
+          "source": "files/security-scan-report.md",
+          "target": "docs/reviews/security-scan.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/license-scan-report.md",
+          "target": "docs/reviews/license-scan.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Checks the default folder for type review, docs/reviews/, before writing and finds Markdown files there without OKF frontmatter",
+        "Asks the user where the review documents should go, noting that docs/reviews/ holds another tool's files without OKF frontmatter",
+        "Writes no file in docs/reviews/ and edits neither existing report",
+        "Writes no document anywhere before the user answers",
+        "Commits nothing"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Which spec in this repository's documents is the current one on auth? Tell me its path and the lockout rule it sets. Also tell me whether anything in docs/specs/ is not yet migrated.",
+      "expected_output": "Filters the specs by their frontmatter only, selects docs/specs/login-lockout.md as the current auth spec and reports its 15-minute lockout after five failed sign-ins, excludes the deprecated legacy spec and the release notes spec, and reports nothing as not yet migrated.",
+      "files": [
+        {
+          "source": "files/login-lockout-spec.md",
+          "target": "docs/specs/login-lockout.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/legacy-login-spec.md",
+          "target": "docs/specs/legacy-login.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/release-notes-spec.md",
+          "target": "docs/specs/release-notes.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Selects docs/specs/login-lockout.md as the current auth spec and reports the 15-minute lockout after five failed sign-ins",
+        "Does not select docs/specs/legacy-login.md, whose frontmatter status is deprecated even though its body shows an example with status: stable",
+        "Does not treat docs/specs/release-notes.md as an auth document, even though its body shows an example with tags: [auth]",
+        "Reports nothing in docs/specs/ as not yet migrated, and does not call a file not migrated because of example frontmatter in its body",
+        "Reads only frontmatter lines to decide, and reads no body it did not need: not docs/specs/legacy-login.md or docs/specs/release-notes.md",
+        "Cites the selected document's path",
         "Does not write a script, index, or document"
       ]
     }

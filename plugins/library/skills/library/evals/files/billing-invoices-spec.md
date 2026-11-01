@@ -1,7 +1,10 @@
 ---
-title: Billing invoices
-status: approved
-topics: [billing, invoices]
+type: spec
+title: "Billing invoices"
+description: "Issue invoices monthly and retain invoice PDFs for seven years."
+status: stable
+verified: { by: human:Sam Kim, at: 2026-11-01T18:30:00Z }
+tags: [billing, invoices]
 ---
 
 # Billing invoices

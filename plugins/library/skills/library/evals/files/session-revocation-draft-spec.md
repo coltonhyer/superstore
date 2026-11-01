@@ -1,8 +1,10 @@
 ---
-title: Session revocation
+type: spec
+title: "Session revocation"
+description: "Let administrators revoke sessions and shorten the idle timeout to 5 minutes."
 status: draft
-topics: [auth, session-management]
-supersedes: specs/session-tokens.md
+tags: [auth, session-management]
+supersedes: docs/specs/session-tokens.md
 ---
 
 # Session revocation

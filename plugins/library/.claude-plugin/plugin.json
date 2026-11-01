@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "description": "Find, read, pin, and compare plaintext Markdown documents under .agents/library/.",
+  "description": "Find, read, pin, and compare Open Knowledge Format documents in docs/, and write notes and other types no workflow owns.",
   "version": "0.2.0",
   "author": {
     "name": "Superstore contributors"

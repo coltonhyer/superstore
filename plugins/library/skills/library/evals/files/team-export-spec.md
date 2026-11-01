@@ -1,7 +1,10 @@
 ---
-title: Team export
-status: approved
-topics: [export, teams]
+type: spec
+title: "Team export"
+description: "Export the filtered team rows as UTF-8 CSV across all pages."
+status: stable
+verified: { by: human:Sam Kim, at: 2026-11-01T18:30:00Z }
+tags: [export, teams]
 ---
 
 # Team export

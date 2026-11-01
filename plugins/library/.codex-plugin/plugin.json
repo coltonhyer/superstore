@@ -1,12 +1,13 @@
 {
   "name": "library",
   "version": "0.2.0",
-  "description": "Find, read, pin, and compare plaintext Markdown documents under .agents/library/.",
+  "description": "Find, read, pin, and compare Open Knowledge Format documents in docs/, and write notes and other types no workflow owns.",
   "author": {
     "name": "Superstore contributors"
   },
   "keywords": [
     "documentation",
+    "okf",
     "markdown",
     "version-control",
     "agent-skills"
@@ -14,17 +15,18 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Library",
-    "shortDescription": "Read the repository's plaintext document library",
-    "longDescription": "Keep specs, plans, and notes as committed Markdown under .agents/library/ and find, read, pin, and compare them with ordinary file tools and Jujutsu or Git.",
+    "shortDescription": "Find, read, and compare OKF documents; write notes",
+    "longDescription": "Find, read, pin, and compare Open Knowledge Format documents in docs/ (specs, plans, handoff notes, and others) with ordinary file tools and Jujutsu or Git, and write notes and other types no workflow owns.",
     "developerName": "Superstore contributors",
     "category": "Productivity",
     "capabilities": [
-      "Read"
+      "Read",
+      "Write"
     ],
     "defaultPrompt": [
       "Find the current spec on a topic.",
       "Read a library document at an earlier revision.",
-      "Explain the library's document convention."
+      "Write a note with valid OKF frontmatter."
     ]
   }
 }

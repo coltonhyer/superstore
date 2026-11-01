@@ -1,5 +1,5 @@
 {
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "library",
-  "description": "Find, read, pin, and compare plaintext Markdown documents under .agents/library/."
+  "description": "Find, read, pin, and compare Open Knowledge Format documents in docs/, and write notes and other types no workflow owns."
 }

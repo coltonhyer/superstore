@@ -1,8 +1,10 @@
 ---
-title: Team export plan
-status: approved
-topics: [export, teams]
-implements: specs/team-export.md
+type: plan
+title: "Team export plan"
+description: "Two tasks that stream every page of the team query and add the Export CSV action."
+status: stable
+tags: [export, teams]
+implements: docs/specs/team-export.md
 ---
 
 # Team export plan

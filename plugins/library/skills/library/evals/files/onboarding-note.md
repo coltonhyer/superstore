@@ -1,6 +1,8 @@
 ---
-title: Contributor onboarding
-topics: [onboarding, documentation]
+type: note
+title: "Contributor onboarding"
+description: "New contributors start with the README and the coding standards."
+tags: [onboarding, documentation]
 ---
 
 # Contributor onboarding
