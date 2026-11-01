@@ -51,7 +51,7 @@ Report at most five Nits per review.
 - An eval case only because its expectations allow more than one defensible
   answer. Expectations are review questions, not ground truth.
 - A contract gap recorded Open in a writeup under `evals/notebook/writeups/`
-  or a handoff note under `.agents/library/notes/`, unless the change touches
+  or a handoff note under `docs/handoffs/`, unless the change touches
   that passage.
 
 ## Evidence
@@ -83,10 +83,11 @@ a skill description is not evidence. For a claim about history, paste the
   approval, commit, and revise sections of `planning/specs` and
   `implementation/plans`; the recording check in `implementing-plans`, its
   `execution-state.md`, and the Finish section of `subagent-execution`; the
-  plan template's locator and the plans skill; the Library skill's
-  frontmatter table and the frontmatter that `specs`, `plans`, and
-  `execution-state.md` write; the README tier lists and defaults and the
-  skills and runner they describe. Name both passages.
+  execution gate in `implementing-plans` and `subagent-execution`; the plan
+  template's locator and the plans skill; the Library skill's frontmatter
+  table and the frontmatter that `specs`, `plans`, and `execution-state.md`
+  write; the README tier lists and defaults and the skills and runner they
+  describe. Name both passages.
 - For each removed sentence that told the agent to do or not do something,
   name where that rule now lives or what retired it.
 - When a change removes or renames a skill, field, path, or term, search
@@ -115,7 +116,7 @@ a skill description is not evidence. For a claim about history, paste the
   range, a file the case expects to be changed exists at baseline, and no
   shared fixture already performs the behavior under test.
 
-### Library documents and records (`.agents/library/`, `evals/notebook/`)
+### Documents and records (`docs/specs/`, `docs/plans/`, `docs/handoffs/`, `docs/notes/`, `evals/notebook/`)
 
 - Frontmatter follows the Library skill, and every link path resolves except
   a `supersedes` target.
