@@ -1,8 +1,10 @@
 ---
-title: Repository coding standards review implementation plan
-status: approved
-topics: [coding-standards, maintenance-plugin, implementation-planning, verification]
-implements: specs/reviewing-coding-standards.md
+type: plan
+title: "Repository coding standards review implementation plan"
+description: "Plans reconciling the existing audit skill with the approved reviewing-coding-standards specification in three ordered Maintenance tasks with a shared-fixture evaluation suite."
+status: stable
+tags: [coding-standards, maintenance-plugin, implementation-planning, verification]
+implements: docs/specs/reviewing-coding-standards.md
 ---
 
 # Implement repository coding standards review

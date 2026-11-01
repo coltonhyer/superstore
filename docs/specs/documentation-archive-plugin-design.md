@@ -1,7 +1,9 @@
 ---
-title: Superstore Documentation Archive Plugin Design
-status: approved
-topics: [documentation-archive, sqlite-ledger, codex-plugin, agent-skills, markdown]
+type: spec
+title: "Superstore Documentation Archive Plugin Design"
+description: "Designs the Superstore Codex plugin whose two Agent Skills archive Markdown documentation into a lossless SQLite ledger and restore exact content from it."
+status: deprecated
+tags: [documentation-archive, sqlite-ledger, codex-plugin, agent-skills, markdown]
 ---
 
 # Superstore Documentation Archive Plugin Design

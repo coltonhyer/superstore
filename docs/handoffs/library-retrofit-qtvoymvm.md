@@ -1,7 +1,9 @@
 ---
-title: Library retrofit execution
-topics: [library, documentation-archive, agent-skills, planning-plugin, implementation-planning]
-implements: plans/library-retrofit.md
+type: handoff
+title: "Library retrofit execution"
+description: "Records the library retrofit execution, its whole-change checks, review outcomes, and the resulting revision range xooqszys..rsuwympq."
+tags: [library, documentation-archive, agent-skills, planning-plugin, implementation-planning]
+implements: docs/plans/library-retrofit.md
 ---
 
 # Library retrofit execution

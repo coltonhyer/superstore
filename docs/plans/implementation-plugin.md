@@ -1,8 +1,10 @@
 ---
-title: Implementation Plugin Plan
-status: approved
-topics: [agent-skills, marketplace, implementation-planning, code-review, verification]
-implements: specs/spec-to-integration-plugin.md
+type: plan
+title: "Implementation Plugin Plan"
+description: "Plans the implementation plugin as one integrable change set of five sequential tasks, taking an approved spec through reviewed planning to verified, recorded changes."
+status: stable
+tags: [agent-skills, marketplace, implementation-planning, code-review, verification]
+implements: docs/specs/spec-to-integration-plugin.md
 ---
 
 # Implementation Plugin Plan

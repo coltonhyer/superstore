@@ -1,7 +1,9 @@
 ---
-title: Planning Plugin Design
-status: approved
-topics: [agent-skills, marketplace, planning-plugin, requirements, specifications]
+type: spec
+title: "Planning Plugin Design"
+description: "Designs the planning marketplace plugin, whose requirements and specs skills gather approved requirements and turn them into reviewed specifications."
+status: stable
+tags: [agent-skills, marketplace, planning-plugin, requirements, specifications]
 ---
 
 # Planning Plugin Design

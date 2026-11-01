@@ -1,8 +1,10 @@
 ---
-title: Maintenance coding-standards setup implementation plan
-status: approved
-topics: [maintenance-plugin, coding-standards, implementation-planning, agent-skills, verification]
-implements: specs/maintenance-coding-standards.md
+type: plan
+title: "Maintenance coding-standards setup implementation plan"
+description: "Plans delivery of the self-contained maintenance plugin and its setting-up-coding-standards skill as one change set with its tests and evals."
+status: stable
+tags: [maintenance-plugin, coding-standards, implementation-planning, agent-skills, verification]
+implements: docs/specs/maintenance-coding-standards.md
 ---
 
 # Maintenance coding-standards setup implementation plan

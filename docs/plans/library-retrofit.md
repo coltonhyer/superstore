@@ -1,8 +1,10 @@
 ---
-title: Library retrofit plan
-status: approved
-topics: [library, documentation-archive, agent-skills, planning-plugin, implementation-planning]
-implements: specs/library-retrofit.md
+type: plan
+title: "Library retrofit plan"
+description: "Plans the library retrofit by migrating this repository's ledger first, replacing the Library plugin, and switching Planning and Implementation onto the library."
+status: stable
+tags: [library, documentation-archive, agent-skills, planning-plugin, implementation-planning]
+implements: docs/specs/library-retrofit.md
 ---
 
 # Library retrofit plan

@@ -1,8 +1,10 @@
 ---
-title: OKF documents plan
-status: approved
-topics: [library, open-knowledge-format, agent-skills, planning-plugin, implementation-planning]
-implements: specs/okf-documents.md
+type: plan
+title: "OKF documents plan"
+description: "Plans the move to OKF documents by copying the OKF spec into the library skill, rewriting the Library, Planning, and Implementation plugins, and migrating this repository's documents."
+status: stable
+tags: [library, open-knowledge-format, agent-skills, planning-plugin, implementation-planning]
+implements: docs/specs/okf-documents.md
 ---
 
 # OKF documents plan

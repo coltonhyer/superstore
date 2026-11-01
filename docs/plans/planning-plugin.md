@@ -1,8 +1,10 @@
 ---
-title: Planning Plugin Implementation Plan
-status: approved
-topics: [agent-skills, marketplace, planning-plugin, requirements, specifications]
-implements: specs/planning-plugin.md
+type: plan
+title: "Planning Plugin Implementation Plan"
+description: "Plans the documentation-only Planning marketplace plugin, with two public Agent Skills, private reference files, and declarative JSON evals."
+status: stable
+tags: [agent-skills, marketplace, planning-plugin, requirements, specifications]
+implements: docs/specs/planning-plugin.md
 ---
 
 # Planning Plugin Implementation Plan

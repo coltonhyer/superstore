@@ -1,8 +1,10 @@
 ---
-title: Superstore Documentation Archive Plugin Implementation Plan
-status: approved
-topics: [documentation-archive, sqlite-ledger, codex-plugin, agent-skills, markdown]
-implements: specs/documentation-archive-plugin-design.md
+type: plan
+title: "Superstore Documentation Archive Plugin Implementation Plan"
+description: "Plans the two-skill Codex plugin that archives explicitly selected Markdown files into a lossless SQLite ledger and retrieves their exact contents."
+status: stable
+tags: [documentation-archive, sqlite-ledger, codex-plugin, agent-skills, markdown]
+implements: docs/specs/documentation-archive-plugin-design.md
 ---
 
 # Superstore Documentation Archive Plugin Implementation Plan

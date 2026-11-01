@@ -1,7 +1,9 @@
 ---
-title: Spec-to-Integration Plugin
-status: approved
-topics: [agent-skills, marketplace, implementation-planning, code-review, verification]
+type: spec
+title: "Spec-to-Integration Plugin"
+description: "Designs a five-skill marketplace plugin that takes an approved specification through planning, implementation, review, and verification to recorded local changes."
+status: stable
+tags: [agent-skills, marketplace, implementation-planning, code-review, verification]
 ---
 
 # Spec-to-Integration Plugin

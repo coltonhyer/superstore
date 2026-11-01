@@ -1,7 +1,9 @@
 ---
-title: Maintenance: coding-standards setup
-status: approved
-topics: [maintenance-plugin, coding-standards, agent-skills, specifications]
+type: spec
+title: "Maintenance: coding-standards setup"
+description: "Adds the maintenance plugin and its setting-up-coding-standards skill, which establishes a repository's coding standards with the user and writes them under docs/standards/."
+status: stable
+tags: [maintenance-plugin, coding-standards, agent-skills, specifications]
 ---
 
 # Maintenance: coding-standards setup

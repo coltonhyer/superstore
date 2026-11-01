@@ -1,8 +1,10 @@
 ---
-title: Library retrofit
-status: approved
-topics: [library, documentation-archive, agent-skills, planning-plugin, implementation-planning]
-supersedes: specs/documentation-archive-plugin-design.md
+type: spec
+title: "Library retrofit"
+description: "Replaces the SQLite ledger with a plaintext library of Markdown specs, plans, and notes under .agents/library/ and shrinks the Library plugin to one discovery skill."
+status: deprecated
+tags: [library, documentation-archive, agent-skills, planning-plugin, implementation-planning]
+supersedes: docs/specs/documentation-archive-plugin-design.md
 ---
 
 # Library retrofit

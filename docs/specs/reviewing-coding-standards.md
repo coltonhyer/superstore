@@ -1,7 +1,9 @@
 ---
-title: Repository coding standards review specification
-status: approved
-topics: [coding-standards, maintenance-plugin, specifications, verification]
+type: spec
+title: "Repository coding standards review specification"
+description: "Adds the reviewing-coding-standards skill to Maintenance, which audits a repository against its documented standards and reports findings without remediation advice."
+status: stable
+tags: [coding-standards, maintenance-plugin, specifications, verification]
 ---
 
 # Repository coding standards review
