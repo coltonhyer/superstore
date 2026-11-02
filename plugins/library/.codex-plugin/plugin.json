@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Find, read, pin, and compare Open Knowledge Format documents in docs/, and write notes and other types no workflow owns.",
   "author": {
     "name": "Superstore contributors"
