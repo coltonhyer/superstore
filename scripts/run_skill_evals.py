@@ -4,15 +4,19 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+import base64
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import uuid
 
@@ -59,9 +63,50 @@ AUTH_FILES = {
     "agy": Path(".gemini/antigravity-cli/antigravity-oauth-token"),
 }
 
+# Hosts run side by side; one host runs at most this many cases at once.
+MAX_SESSIONS_PER_HOST = 4
+# A case's window ends this long after its worst end (start + turns x
+# (timeout + TURN_OVERHEAD_SECONDS)); the login must stay valid until then
+# for the case to run alongside other cases of its host.
+WINDOW_MARGIN_SECONDS = 600
+TURN_OVERHEAD_SECONDS = 30
+
+# Login refresh rules of the CLIs pinned in evals/Dockerfile, confirmed by
+# reading each CLI. A host runs cases side by side only when its rule here
+# is time-based on the expiry the runner reads; every other host runs one
+# case at a time. Each rule refreshes well inside WINDOW_MARGIN_SECONDS.
+#
+# host    version  rule                                    source
+# claude  2.1.251  refresh when Date.now() + 300000 >=     the native `claude` binary of the npm
+#                  claudeAiOauth.expiresAt (within 5 min   package in the image (2.1.251 ships no
+#                  of expiry, or past it)                  cli.js); its embedded JS: the predicate
+#                                                          behind checkAndRefreshOAuthTokenIfNeeded
+# codex   0.155.0  refresh when the access_token JWT exp   openai/codex tag rust-v0.155.0,
+#                  <= now + 5 min; with no exp claim, when codex-rs/login/src/auth/manager.rs,
+#                  last_refresh is older than 8 days       should_refresh_proactively and the
+#                  (TOKEN_REFRESH_INTERVAL)                constants above it
+# agy     1.4.0    refresh when token.expiry is within     /usr/local/bin/agy in the image links
+#                  5 min (ReuseTokenSourceWithExpiry with  google3/third_party/golang/oauth2, the
+#                  a 300 s delta) when saving the stored   vendored golang.org/x/oauth2; its
+#                  token, and within 10 s (the default     function table and disassembly of
+#                  expiryDelta) when validating it         codeassistclient.RefreshingTokenSource,
+#                                                          auth.ValidateStoredToken, Token.expired
+REFRESH_RULE_CONFIRMED = frozenset({"claude", "codex", "agy"})
+CODEX_REFRESH_INTERVAL = timedelta(days=8)
+
+PRINT_LOCK = threading.Lock()
+WRITE_LOCKS = {host: threading.Lock() for host in AUTH_FILES}
+TRACKED_CONTAINERS: set[str] = set()
+STOP = threading.Event()  # set on interrupt: no further turn or case starts
+
 
 def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2), encoding="utf-8")
+
+
+def say(message: str, file=None) -> None:
+    with PRINT_LOCK:
+        print(message, file=file or sys.stdout, flush=True)
 
 
 def terminate_on_signal(signum: int, _frame: object) -> None:
@@ -208,17 +253,71 @@ def persist_auth(host: str, state: Path, home: Path | None = None) -> None:
     if not source.is_file():
         raise ValueError(f"subject credential disappeared during the eval: {source}")
     destination = (home or Path.home()).expanduser().resolve() / relative
-    if not destination.is_file():
-        raise ValueError(f"existing {host} CLI credential disappeared: {destination}")
-    if source.stat().st_mtime_ns <= destination.stat().st_mtime_ns:
-        return
-    temporary = destination.with_name(f".{destination.name}.{uuid.uuid4().hex}.tmp")
+    with WRITE_LOCKS[host]:
+        if not destination.is_file():
+            raise ValueError(f"existing {host} CLI credential disappeared: {destination}")
+        if source.stat().st_mtime_ns <= destination.stat().st_mtime_ns:
+            return
+        temporary = destination.with_name(f".{destination.name}.{uuid.uuid4().hex}.tmp")
+        try:
+            shutil.copy2(source, temporary)
+            temporary.chmod(0o600)
+            os.replace(temporary, destination)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+
+def parse_rfc3339(value: str) -> datetime:
+    """Parse an RFC 3339 time, trimming fractional seconds beyond microseconds."""
+    value = re.sub(r"\.(\d{6})\d+", r".\1", value.strip())
+    if value.endswith(("Z", "z")):
+        value = value[:-1] + "+00:00"
+    parsed = datetime.fromisoformat(value)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def jwt_expiry(token: str) -> datetime | None:
+    """Return a JWT's `exp` claim, decoded locally without verification."""
+    parts = token.split(".")
+    if len(parts) != 3:
+        return None
+    payload = parts[1] + "=" * (-len(parts[1]) % 4)
+    claims = json.loads(base64.urlsafe_b64decode(payload))
+    exp = claims.get("exp") if isinstance(claims, dict) else None
+    if isinstance(exp, bool) or not isinstance(exp, (int, float)):
+        return None
+    return datetime.fromtimestamp(exp, timezone.utc)
+
+
+def login_expiry(host: str, home: Path | None = None) -> datetime | None:
+    """Return when the host's login in the home directory expires, if readable.
+
+    Only the expiry fields are read; token values never leave this function.
+    """
+    path = (home or Path.home()).expanduser().resolve() / AUTH_FILES[host]
     try:
-        shutil.copy2(source, temporary)
-        temporary.chmod(0o600)
-        os.replace(temporary, destination)
-    finally:
-        temporary.unlink(missing_ok=True)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if host == "claude":
+            expires_at = data["claudeAiOauth"]["expiresAt"]
+            if isinstance(expires_at, bool) or not isinstance(expires_at, (int, float)):
+                return None
+            return datetime.fromtimestamp(expires_at / 1000, timezone.utc)
+        if host == "codex":
+            candidates = []
+            access_token = data.get("tokens", {}).get("access_token")
+            if isinstance(access_token, str):
+                exp = jwt_expiry(access_token)
+                if exp:
+                    candidates.append(exp)
+            last_refresh = data.get("last_refresh")
+            if isinstance(last_refresh, str):
+                candidates.append(parse_rfc3339(last_refresh) + CODEX_REFRESH_INTERVAL)
+            return min(candidates) if candidates else None
+        if host == "agy":
+            return parse_rfc3339(data["token"]["expiry"])
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+    return None
 
 
 def credential_values(path: Path) -> set[str]:
@@ -394,6 +493,11 @@ def remove_container(container_name: str) -> None:
         pass
 
 
+def remove_tracked_containers() -> None:
+    for container_name in sorted(TRACKED_CONTAINERS):
+        remove_container(container_name)
+
+
 def run_turn(
     command: list[str],
     workspace: Path,
@@ -454,15 +558,20 @@ def run_case(
     agy_trace_seen: set[str] = set()
     credentials: set[str] = set()
     discard_workspace = False
+    refreshed_login = False
     with tempfile.TemporaryDirectory(prefix="superstore-eval-state-") as temporary:
         state = Path(temporary)
         seed_auth(host, state, home)
         auth_path = state / AUTH_FILES[host]
+        seeded_mtime_ns = auth_path.stat().st_mtime_ns
         credentials.update(credential_values(auth_path))
         try:
             for index, user_message in enumerate(
                 (case.prompt, *case.replies), start=1
             ):
+                if STOP.is_set():
+                    status = "error"
+                    break
                 if index == 1:
                     command = build_command(
                         host,
@@ -490,18 +599,22 @@ def run_case(
                     break
 
                 container_name = f"superstore-eval-{uuid.uuid4().hex}"
-                code, raw_stdout, raw_stderr, duration = run_turn(
-                    container_command(
-                        command,
+                TRACKED_CONTAINERS.add(container_name)
+                try:
+                    code, raw_stdout, raw_stderr, duration = run_turn(
+                        container_command(
+                            command,
+                            prepared.workspace,
+                            state,
+                            container_name=container_name,
+                            timeout=timeout,
+                        ),
                         prepared.workspace,
-                        state,
+                        timeout + TURN_OVERHEAD_SECONDS,
                         container_name=container_name,
-                        timeout=timeout,
-                    ),
-                    prepared.workspace,
-                    timeout + 30,
-                    container_name=container_name,
-                )
+                    )
+                finally:
+                    TRACKED_CONTAINERS.discard(container_name)
                 credentials.update(credential_values(auth_path))
                 persist_auth(host, state, home)
                 parsed = None
@@ -588,6 +701,10 @@ def run_case(
         finally:
             credentials.update(credential_values(auth_path))
             try:
+                refreshed_login = (
+                    auth_path.is_file()
+                    and auth_path.stat().st_mtime_ns > seeded_mtime_ns
+                )
                 persist_auth(host, state, home)
             finally:
                 if find_credential_files(prepared.workspace, credentials):
@@ -603,19 +720,229 @@ def run_case(
         "effort": effort or HOSTS[host].effort,
         "status": status,
         "session_id": session_id,
+        "refreshed_login": refreshed_login,
         "turns": [public_turn(turn) for turn in turns],
     }
     write_json(result_dir / "result.json", result)
     return result
 
 
+def plugin_root_of(case: EvalCase) -> Path:
+    """Return the plugin a case belongs to: `<plugin>/skills/<skill>/evals`."""
+    return case.definition_dir.parents[2]
+
+
+def load_plugin_cases(plugin_roots: list[Path]) -> list[EvalCase]:
+    """Load every plugin's cases, refusing a skill name two plugins share."""
+    cases: list[EvalCase] = []
+    owners: dict[str, Path] = {}
+    for plugin_root in dict.fromkeys(plugin_roots):
+        for case in load_cases(plugin_root):
+            owner = owners.setdefault(case.skill, plugin_root)
+            if owner != plugin_root:
+                raise SystemExit(
+                    f"skill {case.skill} is in both {owner} and {plugin_root}; "
+                    "their result folders would collide"
+                )
+            cases.append(case)
+    return sorted(cases, key=lambda case: (case.skill, case.identifier))
+
+
+@dataclass
+class Lane:
+    """One host's scheduling state."""
+
+    host: str
+    serial: bool = False
+    condition: threading.Condition = field(default_factory=threading.Condition)
+    running: int = 0
+    alone: bool = False
+
+
+def window_holds(case: EvalCase, timeout: int, expiry: datetime | None) -> bool:
+    if expiry is None:
+        return False
+    turns = 1 + len(case.replies)
+    worst_end = datetime.now(timezone.utc) + timedelta(
+        seconds=turns * (timeout + TURN_OVERHEAD_SECONDS)
+    )
+    return expiry >= worst_end + timedelta(seconds=WINDOW_MARGIN_SECONDS)
+
+
+def run_one(
+    lane: Lane,
+    case: EvalCase,
+    alone: bool,
+    args: argparse.Namespace,
+    output: Path,
+    home: Path | None,
+    slot: list,
+) -> None:
+    host = lane.host
+    model = getattr(args, f"{host}_model")
+    effort = getattr(args, f"{host}_effort")
+    started = datetime.now(timezone.utc)
+    clock = time.monotonic()
+    result = None
+    try:
+        say(f"Running {case.key} on {host} ({model}, {effort})...")
+        try:
+            result = run_case(
+                ROOT,
+                plugin_root_of(case),
+                case,
+                host,
+                output,
+                args.timeout,
+                model,
+                effort,
+                home,
+            )
+        except (OSError, RuntimeError, ValueError) as error:
+            say(f"ERROR {case.key} on {host}: {error}", file=sys.stderr)
+        else:
+            say(f"{result['status'].upper()} {case.key} on {host}")
+            slot[0] = {
+                "case": case.key,
+                "host": host,
+                "status": result["status"],
+                "started_at": started.isoformat(),
+                "wall_seconds": round(time.monotonic() - clock, 3),
+                "refreshed_login": bool(result.get("refreshed_login")),
+            }
+    finally:
+        with lane.condition:
+            lane.running -= 1
+            if alone:
+                lane.alone = False
+            if result and result.get("refreshed_login") and not alone and not lane.serial:
+                lane.serial = True
+                say(
+                    f"WARNING {host} refreshed its login during a parallel case; "
+                    "it now runs one case at a time",
+                    file=sys.stderr,
+                )
+            lane.condition.notify_all()
+
+
+def run_host(
+    lane: Lane,
+    cases: list[EvalCase],
+    args: argparse.Namespace,
+    output: Path,
+    home: Path | None,
+    stop: threading.Event,
+    results: list,
+) -> None:
+    workers = []
+    for index, case in enumerate(cases):
+        with lane.condition:
+            while True:
+                if stop.is_set():
+                    break
+                alone = (
+                    index == 0
+                    or lane.serial
+                    or not window_holds(case, args.timeout, login_expiry(lane.host, home))
+                )
+                if alone and lane.running == 0:
+                    break
+                if not alone and not lane.alone and lane.running < MAX_SESSIONS_PER_HOST:
+                    break
+                lane.condition.wait()
+            if stop.is_set():
+                break
+            lane.running += 1
+            lane.alone = alone
+        worker = threading.Thread(
+            target=run_one,
+            args=(lane, case, alone, args, output, home, results[index]),
+            name=f"{lane.host}-{case.key}",
+        )
+        worker.start()
+        workers.append(worker)
+    for worker in workers:
+        worker.join()
+
+
+def run_all(
+    args: argparse.Namespace,
+    cases: list[EvalCase],
+    output: Path,
+    home: Path | None = None,
+) -> list[dict]:
+    """Run every case on every host; return results by host, then case order."""
+    stop = STOP
+    stop.clear()
+    lanes, slots = [], {}
+    # Each host thread sets its own `done` event when it ends. The main thread
+    # only reads these, so a signal landing anywhere costs at most one wait
+    # interval, never a count. Thread.is_alive() is not usable here: on
+    # CPython 3.12 a signal that interrupts a timed join leaves the thread
+    # marked stopped while it still runs.
+    hosts: list[tuple[threading.Thread, threading.Event]] = []
+
+    def host_thread(done: threading.Event, *host_args) -> None:
+        try:
+            run_host(*host_args)
+        finally:
+            done.set()
+
+    try:
+        for host in dict.fromkeys(args.host):
+            lane = Lane(host)
+            if host not in REFRESH_RULE_CONFIRMED:
+                lane.serial = True
+                say(f"{host} runs one case at a time: its login refresh rule is not confirmed")
+            elif login_expiry(host, home) is None:
+                lane.serial = True
+                say(f"{host} runs one case at a time: its login expiry cannot be read")
+            lanes.append(lane)
+            slots[host] = [[None] for _ in cases]
+            done = threading.Event()
+            thread = threading.Thread(
+                target=host_thread,
+                args=(done, lane, cases, args, output, home, stop, slots[host]),
+                name=host,
+            )
+            hosts.append((thread, done))  # recorded before it can start
+            thread.start()
+        for _thread, done in hosts:
+            while not done.wait(0.2):  # a timed wait lets the main thread handle signals
+                pass
+    except BaseException:
+        # An interrupt, or any failure while starting hosts. Finish cleanup
+        # even if another signal arrives: stop new cases and turns, keep
+        # dropping containers until every host thread has ended, which is
+        # after its cases wrote back and discarded their workspaces.
+        # A recorded thread that never started (ident None) has nothing to
+        # clean up; one that starts later sees `stop` and runs no case.
+        for signum in (signal.SIGTERM, signal.SIGINT):
+            signal.signal(signum, signal.SIG_IGN)
+        stop.set()
+        for lane in lanes:
+            with lane.condition:
+                lane.condition.notify_all()
+        while True:
+            remove_tracked_containers()
+            pending = [
+                done for thread, done in hosts
+                if thread.ident is not None and not done.is_set()
+            ]
+            if not pending:
+                break
+            pending[0].wait(0.5)
+        raise
+    return [slot[0] for host in slots for slot in slots[host] if slot[0]]
+
+
 def parse_args(arguments: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--plugin",
+        action="append",
         type=Path,
-        default=ROOT / "plugins/planning",
-        help="plugin directory containing skill evals",
+        help="plugin directory containing skill evals (repeatable; default plugins/planning)",
     )
     parser.add_argument("--host", action="append", choices=sorted(HOSTS))
     parser.add_argument("--skill", action="append")
@@ -631,9 +958,12 @@ def parse_args(arguments: list[str]) -> argparse.Namespace:
 
 def main(arguments: list[str] | None = None) -> int:
     signal.signal(signal.SIGTERM, terminate_on_signal)
+    signal.signal(signal.SIGINT, terminate_on_signal)
     args = parse_args(arguments or sys.argv[1:])
-    plugin_root = args.plugin.resolve()
-    cases = load_cases(plugin_root)
+    plugin_roots = [
+        plugin.resolve() for plugin in (args.plugin or [ROOT / "plugins/planning"])
+    ]
+    cases = load_plugin_cases(plugin_roots)
     if args.skill:
         cases = [case for case in cases if case.skill in args.skill]
     if args.case_ids:
@@ -663,43 +993,22 @@ def main(arguments: list[str] | None = None) -> int:
         args.output or Path(tempfile.mkdtemp(prefix="superstore-evals-"))
     ).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    print(f"Results: {output}")
+    print(f"Results: {output}", flush=True)
 
-    errors, results = 0, []
-    for host in dict.fromkeys(args.host):
-        model = getattr(args, f"{host}_model")
-        effort = getattr(args, f"{host}_effort")
-        for case in cases:
-            print(f"Running {case.key} on {host} ({model}, {effort})...", flush=True)
-            try:
-                result = run_case(
-                    ROOT,
-                    plugin_root,
-                    case,
-                    host,
-                    output,
-                    args.timeout,
-                    model,
-                    effort,
-                )
-            except (OSError, RuntimeError, ValueError) as error:
-                errors += 1
-                print(f"ERROR {case.key} on {host}: {error}", file=sys.stderr)
-                continue
-            print(f"{result['status'].upper()} {case.key} on {host}")
-            errors += result["status"] == "error"
-            results.append(
-                {
-                    "case": case.key,
-                    "host": host,
-                    "status": result["status"],
-                }
-            )
+    started = datetime.now(timezone.utc)
+    clock = time.monotonic()
+    results = run_all(args, cases, output)
+    wall = round(time.monotonic() - clock, 3)
+    captured = sum(result["status"] == "captured" for result in results)
+    errors = len(cases) * len(dict.fromkeys(args.host)) - captured
+    say(f"Captured {captured}, errors {errors}, wall {wall:.0f}s")
 
     write_json(
         output / "summary.json",
         {
+            "started_at": started.isoformat(),
             "completed_at": datetime.now(timezone.utc).isoformat(),
+            "wall_seconds": wall,
             "errors": errors,
             "results": results,
         },
