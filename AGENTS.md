@@ -12,6 +12,21 @@ a bump may never reach installed copies. While the plugins are in v0, use a
 minor bump for changed behavior and a patch bump for fixes. Changes limited to
 a README or eval cases need no bump.
 
+## Checks
+
+Run both before publishing a change; CI runs them on every pull request to
+`main`, on Ubuntu and macOS:
+
+```sh
+python3 -m unittest discover -s tests
+uvx rumdl@0.3.2 check --no-cache .
+```
+
+A skill change merges on these checks and a review against REVIEW.md's skill
+checklist, without an eval run. The eval suites run after a heavy rewrite of a
+skill, or after a batch of changes before installed plugins are updated, and
+the eval notebook records which changes each run covered.
+
 ## Reviews
 
 When reviewing a change to this repository, read `REVIEW.md` first and follow

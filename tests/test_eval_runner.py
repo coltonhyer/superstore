@@ -1263,8 +1263,9 @@ class HostCommandTests(unittest.TestCase):
         self.assertIn("--security-opt=no-new-privileges", command)
         self.assertIn("--name=superstore-eval-test", command)
         self.assertIn(f"--user={os.getuid()}:{os.getgid()}", command)
-        self.assertIn(f"--mount=type=bind,src={workspace},dst=/workspace", command)
-        self.assertIn(f"--mount=type=bind,src={state},dst=/state", command)
+        # container_command resolves both paths; on macOS /tmp is /private/tmp.
+        self.assertIn(f"--mount=type=bind,src={workspace.resolve()},dst=/workspace", command)
+        self.assertIn(f"--mount=type=bind,src={state.resolve()},dst=/state", command)
         self.assertEqual(
             command[-8:],
             [
