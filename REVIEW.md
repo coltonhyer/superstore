@@ -95,7 +95,10 @@ a skill description is not evidence. For a claim about history, paste the
   `plugin.json` for the old name.
 - A rule that restricts reading names what counts as a read (`head`, `cat`,
   `show`, `diff`) and gives the filter command that replaces it.
-- Run every changed shell snippet in a scratch repository with
+- Run every changed shell snippet that `tests/test_skill_commands.py` does not
+  run (it runs each fenced `sh`, `bash`, or `shell` block in a skill, and the
+  inline `grep` patterns it asserts verbatim in the library and requirements
+  skills) in a scratch repository with
   `JJ_CONFIG=/dev/null JJ_EDITOR=false GIT_EDITOR=false` and stdin from
   `/dev/null`. A snippet that opens an editor, matches hyphenated slugs with
   `\b`, or needs GNU-only syntax without saying so is a finding.
