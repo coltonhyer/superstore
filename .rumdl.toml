@@ -1,0 +1,14 @@
+[global]
+include = ["plugins/**/*.md", "./*.md"]
+exclude = [
+  "plugins/*/skills/*/evals/**", # eval fixtures
+  "**/okf-spec.md",              # vendored
+  "**/okf-LICENSE.md",           # vendored
+  "CLAUDE.md",                   # a one-line import
+]
+disable = [
+  "MD013", # line length
+  "MD038", # spaces in code spans: skills quote grep patterns that start or end with a space
+  "MD048", # fence style: the requirements skill wraps its Markdown template in ~~~
+  "MD076", # blank lines between list items
+]
