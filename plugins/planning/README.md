@@ -95,6 +95,16 @@ python3 scripts/run_skill_evals.py \
   --output /tmp/planning-evals
 ```
 
+`--plugin` selects the plugin whose cases run (default `plugins/planning`) and
+may repeat to run several plugins in one run, as long as no skill name is
+shared between them. Hosts run side by side, and each host runs up to four of
+its cases at once, starting them in case order. A host's first case runs
+alone; a later case joins the others only while the host's login stays valid
+until ten minutes past the case's worst end, so a token refresh never races
+between sessions. A host whose login expiry cannot be read, whose refresh rule
+is not confirmed, or that refreshes during a parallel case, falls back to one
+case at a time and the run says so.
+
 Live evals are manual release checks, not CI tests. They require Docker and an
 active subscription login for each selected provider. Runs use your existing
 CLI logins; a refreshed token is written back only if newer. The runner builds

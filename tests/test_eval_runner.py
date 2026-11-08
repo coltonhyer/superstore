@@ -1,3 +1,8 @@
+import base64
+from collections import Counter
+import contextlib
+from datetime import datetime, timedelta, timezone
+import io
 import json
 import os
 from pathlib import Path
@@ -6,6 +11,8 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import threading
+import time
 import unittest
 from unittest import mock
 
@@ -706,6 +713,532 @@ class WorkspaceTests(unittest.TestCase):
                 ),
                 second_trace,
             )
+
+
+def fake_jwt(exp: datetime) -> str:
+    """A syntactically valid JWT carrying only an `exp` claim; not a token."""
+    def segment(value: dict) -> str:
+        raw = json.dumps(value).encode()
+        return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+    return f"{segment({'alg': 'none'})}.{segment({'exp': int(exp.timestamp())})}.sig"
+
+
+def write_expiry(host: str, home: Path, expiry: datetime, last_refresh: datetime | None = None) -> None:
+    """Write a fake credential holding only the expiry fields the runner reads."""
+    if host == "claude":
+        data = {"claudeAiOauth": {"expiresAt": int(expiry.timestamp() * 1000)}}
+    elif host == "codex":
+        data = {"tokens": {"access_token": fake_jwt(expiry)}}
+        if last_refresh:
+            data["last_refresh"] = last_refresh.isoformat().replace("+00:00", "Z")
+    else:
+        data = {"token": {"expiry": expiry.strftime("%Y-%m-%dT%H:%M:%S.%f000Z")}}
+    path = home / runner.AUTH_FILES[host]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+
+def scheduling_cases(count: int) -> list[EvalCase]:
+    return [
+        eval_case(identifier=index, definition_dir=PLANNING / "skills/specs/evals")
+        for index in range(1, count + 1)
+    ]
+
+
+class FakeRuns:
+    """A `run_case` stand-in that records how cases overlapped."""
+
+    def __init__(self, duration=0.05, refresh=None):
+        self.duration = duration
+        self.refresh = refresh or (lambda case, host: False)
+        self.lock = threading.Lock()
+        self.running: Counter = Counter()
+        self.peak: Counter = Counter()
+        self.others_at_start: dict[tuple[str, int], int] = {}
+        self.hosts_overlapped = False
+        self.calls: list[tuple[str, str, Path]] = []
+
+    def __call__(self, repo_root, plugin_root, case, host, output, timeout,
+                 model=None, effort=None, home=None):
+        with self.lock:
+            self.running[host] += 1
+            self.peak[host] = max(self.peak[host], self.running[host])
+            self.others_at_start[(host, case.identifier)] = self.running[host] - 1
+            self.hosts_overlapped |= sum(1 for count in self.running.values() if count) > 1
+            self.calls.append((host, case.key, plugin_root))
+        duration = self.duration(case) if callable(self.duration) else self.duration
+        time.sleep(duration)
+        with self.lock:
+            self.running[host] -= 1
+        return {"status": "captured", "refreshed_login": self.refresh(case, host)}
+
+
+class ParallelRunnerTests(unittest.TestCase):
+    FAR = datetime.now(timezone.utc) + timedelta(hours=2)
+
+    def run_all(self, hosts, cases, runs, home, timeout=60, **patches):
+        args = runner.parse_args([flag for host in hosts for flag in ("--host", host)] + ["--timeout", str(timeout)])
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            mock.patch.object(runner, "run_case", side_effect=runs),
+            mock.patch.object(runner, "seed_auth", side_effect=AssertionError("real run_case reached")),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+            contextlib.ExitStack() as stack,
+        ):
+            for name, value in patches.items():
+                stack.enter_context(mock.patch.object(runner, name, value))
+            results = runner.run_all(args, cases, Path(temporary), home)
+        return results, stdout.getvalue(), stderr.getvalue()
+
+    def test_hosts_overlap_and_no_host_exceeds_the_session_cap(self):
+        cases = scheduling_cases(8)
+        runs = FakeRuns(duration=0.05)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            for host in ("codex", "claude"):
+                write_expiry(host, home, self.FAR)
+
+            results, stdout, _ = self.run_all(["codex", "claude"], cases, runs, home)
+
+        for host in ("codex", "claude"):
+            self.assertLessEqual(runs.peak[host], runner.MAX_SESSIONS_PER_HOST)
+            self.assertGreaterEqual(runs.peak[host], 2, host)
+            self.assertEqual(runs.others_at_start[(host, 1)], 0, "first case runs alone")
+        self.assertTrue(runs.hosts_overlapped)
+        self.assertEqual(
+            sorted(Counter((host, key) for host, key, _ in runs.calls).values()),
+            [1] * 16,
+        )
+        self.assertTrue(all(plugin_root == PLANNING for _, _, plugin_root in runs.calls))
+        self.assertEqual(
+            [(result["host"], result["case"]) for result in results],
+            [(host, case.key) for host in ("codex", "claude") for case in cases],
+        )
+        self.assertEqual(stdout.count("Running specs/"), 16)
+
+    def test_load_plugin_cases_refuses_a_skill_two_plugins_share(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            roots = []
+            for name in ("first", "second"):
+                evals = Path(temporary) / name / "skills/specs/evals"
+                evals.mkdir(parents=True)
+                (evals / "evals.json").write_text(
+                    json.dumps({"skill_name": "specs", "evals": [EvalCaseTests.case(1)]}),
+                    encoding="utf-8",
+                )
+                roots.append(Path(temporary) / name)
+
+            with self.assertRaisesRegex(SystemExit, "skill specs is in both"):
+                runner.load_plugin_cases(roots)
+            self.assertEqual(len(runner.load_plugin_cases([roots[0], roots[0]])), 1)
+
+    def test_short_lived_login_runs_its_cases_alone(self):
+        runs = FakeRuns(duration=0.03)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            write_expiry("claude", home, datetime.now(timezone.utc) + timedelta(minutes=5))
+
+            results, stdout, _ = self.run_all(["claude"], scheduling_cases(4), runs, home)
+
+        self.assertEqual(runs.peak["claude"], 1)
+        self.assertEqual(len(results), 4)
+        self.assertNotIn("one case at a time", stdout)
+
+    def test_unreadable_login_expiry_runs_one_case_at_a_time(self):
+        runs = FakeRuns(duration=0.03)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            path = home / runner.AUTH_FILES["codex"]
+            path.parent.mkdir(parents=True)
+            path.write_text('{"tokens": {}}', encoding="utf-8")
+
+            _, stdout, _ = self.run_all(["codex"], scheduling_cases(4), runs, home)
+
+        self.assertEqual(runs.peak["codex"], 1)
+        self.assertIn("codex runs one case at a time: its login expiry cannot be read", stdout)
+
+    def test_unconfirmed_refresh_rule_runs_one_case_at_a_time(self):
+        runs = FakeRuns(duration=0.03)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            write_expiry("agy", home, self.FAR)
+
+            _, stdout, _ = self.run_all(
+                ["agy"], scheduling_cases(4), runs, home,
+                REFRESH_RULE_CONFIRMED=frozenset({"claude", "codex"}),
+            )
+
+        self.assertEqual(runs.peak["agy"], 1)
+        self.assertIn("agy runs one case at a time: its login refresh rule is not confirmed", stdout)
+
+    def test_refresh_during_a_parallel_case_drops_the_host_to_one_at_a_time(self):
+        runs = FakeRuns(
+            duration=lambda case: 0.01 if case.identifier == 2 else 0.1,
+            refresh=lambda case, host: case.identifier == 2,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            write_expiry("claude", home, self.FAR)
+
+            results, _, stderr = self.run_all(["claude"], scheduling_cases(7), runs, home)
+
+        self.assertGreater(runs.peak["claude"], 1)
+        self.assertGreaterEqual(runs.others_at_start[("claude", 2)], 0)
+        for identifier in (6, 7):
+            self.assertEqual(runs.others_at_start[("claude", identifier)], 0, identifier)
+        self.assertIn("WARNING claude refreshed its login during a parallel case", stderr)
+        self.assertEqual([result["refreshed_login"] for result in results][1], True)
+
+    @unittest.skipUnless(shutil.which("jj"), "Jujutsu is required")
+    def test_run_case_records_whether_the_login_was_refreshed(self):
+        case = eval_case(skill="requirements", skills=("requirements",))
+
+        def fake_seed(host, state, home):
+            write_test_auth(host, state, "test-token")
+            os.utime(state / runner.AUTH_FILES[host], ns=(1_000_000_000, 1_000_000_000))
+            write_test_auth(host, home, "test-token")
+
+        def fake_turn(bump):
+            def turn(command, workspace, timeout, *, container_name=None):
+                if bump:
+                    mount = next(item for item in command if item.endswith(",dst=/state"))
+                    state = Path(mount.removeprefix("--mount=type=bind,src=").removesuffix(",dst=/state"))
+                    os.utime(state / runner.AUTH_FILES["codex"], ns=(2_000_000_000, 2_000_000_000))
+                stdout = "\n".join((
+                    '{"type":"thread.started","thread_id":"thread-1"}',
+                    '{"type":"item.completed","item":{"type":"agent_message","text":"Done"}}',
+                ))
+                return 0, stdout, "", 0.1
+            return turn
+
+        for bump in (True, False):
+            with tempfile.TemporaryDirectory() as temporary, self.subTest(bump=bump):
+                with (
+                    mock.patch.object(runner, "seed_auth", side_effect=fake_seed),
+                    mock.patch.object(runner, "run_turn", side_effect=fake_turn(bump)),
+                    mock.patch.object(runner, "persist_auth"),
+                ):
+                    result = runner.run_case(
+                        ROOT, PLANNING, case, "codex", Path(temporary) / "results", 60,
+                        home=Path(temporary) / "home",
+                    )
+                self.assertEqual(result["refreshed_login"], bump)
+
+    def test_write_backs_wait_for_the_host_lock_and_keep_the_newest_login(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            existing = home / ".codex/auth.json"
+            existing.parent.mkdir(parents=True)
+            existing.write_text('{"token":"before"}', encoding="utf-8")
+            os.utime(existing, ns=(1_000_000_000, 1_000_000_000))
+            states = []
+            for index in range(1, 4):
+                state = root / f"state-{index}"
+                runner.seed_auth("codex", state, home)
+                refreshed = state / ".codex/auth.json"
+                refreshed.write_text(json.dumps({"token": f"eval-{index}"}), encoding="utf-8")
+                os.utime(refreshed, ns=(index * 1_000_000_000 + 1, index * 1_000_000_000 + 1))
+                states.append(state)
+            threads = [
+                threading.Thread(target=runner.persist_auth, args=("codex", state, home))
+                for state in reversed(states)
+            ]
+
+            with runner.WRITE_LOCKS["codex"]:
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join(0.2)
+                self.assertTrue(all(thread.is_alive() for thread in threads), "write-backs wait for the lock")
+                self.assertEqual(existing.read_text(encoding="utf-8"), '{"token":"before"}')
+            for thread in threads:
+                thread.join(5)
+            self.assertFalse(any(thread.is_alive() for thread in threads))
+
+            self.assertEqual(json.loads(existing.read_text(encoding="utf-8")), {"token": "eval-3"})
+            self.assertEqual(sorted(home.joinpath(".codex").iterdir()), [existing])
+
+    @unittest.skipUnless(shutil.which("jj"), "Jujutsu is required")
+    def test_run_case_starts_no_turn_after_an_interrupt(self):
+        case = eval_case(skill="requirements", skills=("requirements",), replies=("Approved.",))
+        self.addCleanup(runner.STOP.clear)
+
+        def fake_seed(host, state, home):
+            write_test_auth(host, state, "test-token")
+            write_test_auth(host, home, "test-token")
+
+        def fake_turn(command, workspace, timeout, *, container_name=None):
+            runner.STOP.set()  # the interrupt lands while turn 1 runs
+            stdout = "\n".join((
+                '{"type":"thread.started","thread_id":"thread-1"}',
+                '{"type":"item.completed","item":{"type":"agent_message","text":"Done"}}',
+            ))
+            return 0, stdout, "", 0.1
+
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "results"
+            with (
+                mock.patch.object(runner, "seed_auth", side_effect=fake_seed),
+                mock.patch.object(runner, "run_turn", side_effect=fake_turn) as turns,
+                mock.patch.object(runner, "persist_auth") as persisted,
+            ):
+                result = runner.run_case(
+                    ROOT, PLANNING, case, "codex", output, 60, home=Path(temporary) / "home"
+                )
+            self.assertTrue((output / "codex/requirements-1/result.json").is_file())
+
+        self.assertEqual(turns.call_count, 1)
+        self.assertEqual((result["status"], len(result["turns"])), ("error", 1))
+        self.assertTrue(persisted.called, "the login write-back still runs")
+        self.assertEqual(runner.TRACKED_CONTAINERS, set())
+
+    def test_login_expiry_reads_only_the_expiry_fields(self):
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            write_expiry("claude", home, now + timedelta(hours=1))
+            write_expiry("agy", home, now + timedelta(hours=2))
+            write_expiry("codex", home, now + timedelta(hours=3), last_refresh=now - timedelta(days=8, hours=1))
+
+            self.assertEqual(runner.login_expiry("claude", home), now + timedelta(hours=1))
+            self.assertEqual(runner.login_expiry("agy", home), now + timedelta(hours=2))
+            self.assertEqual(runner.login_expiry("codex", home), now - timedelta(hours=1))
+
+            write_expiry("codex", home, now + timedelta(hours=3), last_refresh=now)
+            self.assertEqual(runner.login_expiry("codex", home), now + timedelta(hours=3))
+            (home / runner.AUTH_FILES["agy"]).write_text('{"token": {"expiry": "soon"}}', encoding="utf-8")
+            self.assertIsNone(runner.login_expiry("agy", home))
+            self.assertIsNone(runner.login_expiry("claude", home / "missing"))
+
+    def main_with_fakes(self, arguments, runs, output):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT)}
+        try:
+            with (
+                mock.patch.object(runner, "run_case", side_effect=runs),
+                mock.patch.object(runner, "seed_auth", side_effect=AssertionError("real run_case reached")),
+                mock.patch.object(runner, "build_image"),
+                mock.patch.object(runner.shutil, "which", return_value="/usr/bin/true"),
+                mock.patch.object(runner, "login_expiry", return_value=self.FAR),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = runner.main([*arguments, "--output", str(output)])
+        finally:
+            for sig, handler in handlers.items():
+                signal.signal(sig, handler)
+        return code, stdout.getvalue()
+
+    def test_summary_has_the_new_fields_in_host_then_case_order(self):
+        runs = FakeRuns(duration=lambda case: 0.01 * (4 - case.identifier))
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "results"
+            code, stdout = self.main_with_fakes(
+                ["--skill", "specs", "--case", "1", "--case", "2", "--case", "3",
+                 "--host", "claude", "--host", "codex"],
+                runs, output,
+            )
+            summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            [(result["host"], result["case"]) for result in summary["results"]],
+            [(host, f"specs/{index}") for host in ("claude", "codex") for index in (1, 2, 3)],
+        )
+        for key in ("started_at", "completed_at", "wall_seconds", "errors"):
+            self.assertIn(key, summary)
+        for result in summary["results"]:
+            for key in ("status", "started_at", "wall_seconds", "refreshed_login"):
+                self.assertIn(key, result)
+        self.assertEqual(summary["errors"], 0)
+        self.assertRegex(stdout, r"Captured 6, errors 0, wall \d+s")
+
+    def interrupted_run_all(self, hosts, cases, runs, remove, expect=SystemExit,
+                            login_expiry=None, **patches):
+        """Run `run_all` with an injected failure; return (exception, seconds)."""
+        self.addCleanup(runner.STOP.clear)
+        args = runner.parse_args([flag for host in hosts for flag in ("--host", host)])
+        handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT)}
+        started = time.monotonic()
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            mock.patch.object(runner, "run_case", side_effect=runs),
+            mock.patch.object(runner, "seed_auth", side_effect=AssertionError("real run_case reached")),
+            mock.patch.object(runner, "remove_container", side_effect=remove),
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.ExitStack() as stack,
+        ):
+            stack.enter_context(mock.patch.object(
+                runner, "login_expiry", login_expiry or (lambda host, home=None: None)
+            ))
+            for target, name, value in patches.values():
+                stack.enter_context(mock.patch.object(target, name, value))
+            try:
+                with self.assertRaises(expect) as raised:
+                    runner.run_all(args, cases, Path(temporary))
+            finally:
+                for sig, handler in handlers.items():
+                    signal.signal(sig, handler)
+        seconds = time.monotonic() - started
+        # `done.set()` runs in the thread's finally, just before it leaves the
+        # active list, so give a slow thread a moment to disappear.
+        for thread in threading.enumerate():
+            if thread.name in hosts:
+                thread.join(1)
+        self.assertEqual([t.name for t in threading.enumerate() if t.name in hosts], [],
+                         "every host thread ended before run_all re-raised")
+        return raised.exception, seconds
+
+    def test_interrupt_right_after_a_host_finished_still_ends_cleanup(self):
+        # The signal handler runs after run_all's completion wait (the only
+        # Event.wait with timeout 0.2) returned True, before the main thread
+        # acted on it; the host's completion must not be lost.
+        sites = []
+
+        class LeakyEvent(threading.Event):
+            def wait(self, timeout=None):
+                flag = super().wait(timeout)
+                if flag and timeout == 0.2 and not sites:
+                    sites.append("completion wait")
+                    raise SystemExit(143)
+                return flag
+
+        removed = []
+
+        def tracked_run(*arguments, **keywords):
+            runner.TRACKED_CONTAINERS.add("superstore-eval-finished")
+            try:
+                time.sleep(0.1)
+            finally:
+                runner.TRACKED_CONTAINERS.discard("superstore-eval-finished")
+            return {"status": "captured", "refreshed_login": False}
+
+        error, seconds = self.interrupted_run_all(
+            ["claude"], scheduling_cases(1), tracked_run, removed.append,
+            event=(threading, "Event", LeakyEvent),
+        )
+
+        self.assertEqual(sites, ["completion wait"])
+        self.assertEqual(error.code, 143)
+        self.assertLess(seconds, 3, "cleanup ended promptly instead of waiting forever")
+        self.assertEqual(runner.TRACKED_CONTAINERS, set())
+
+    def test_failure_while_starting_a_host_still_sweeps_the_others(self):
+        # Not a signal: the second host's login read raises once the first
+        # host's case is provably running with a container tracked.
+        removed, released, tracked = [], threading.Event(), threading.Event()
+
+        def tracked_run(*arguments, **keywords):
+            runner.TRACKED_CONTAINERS.add("superstore-eval-started")
+            tracked.set()
+            try:
+                released.wait(5)  # like a container, ends when the run removes it
+            finally:
+                runner.TRACKED_CONTAINERS.discard("superstore-eval-started")
+            return {"status": "captured", "refreshed_login": False}
+
+        def remove(name):
+            removed.append(name)
+            released.set()
+
+        def login_expiry(host, home=None):
+            if host == "codex":
+                self.assertTrue(tracked.wait(5), "claude's case is running before the failure")
+                raise RuntimeError("credential store unavailable")
+            return None
+
+        error, seconds = self.interrupted_run_all(
+            ["claude", "codex"], scheduling_cases(2), tracked_run, remove,
+            expect=RuntimeError, login_expiry=login_expiry,
+        )
+
+        self.assertEqual(str(error), "credential store unavailable")
+        self.assertTrue(runner.STOP.is_set())
+        self.assertEqual(removed, ["superstore-eval-started"])
+        self.assertLess(seconds, 3)
+        self.assertEqual(runner.TRACKED_CONTAINERS, set())
+
+    def test_interrupt_right_after_a_host_thread_started_still_sweeps_it(self):
+        # The signal handler runs after Thread.start() returned but before the
+        # main thread recorded the host; its containers must still be swept.
+        class StartThenInterrupt(threading.Thread):
+            fired = False
+
+            def start(self):
+                super().start()
+                if not StartThenInterrupt.fired:
+                    StartThenInterrupt.fired = True
+                    raise SystemExit(143)
+
+        removed, released = [], threading.Event()
+
+        def tracked_run(*arguments, **keywords):
+            runner.TRACKED_CONTAINERS.add("superstore-eval-unrecorded")
+            try:
+                released.wait(5)  # like a container, ends when the run removes it
+            finally:
+                runner.TRACKED_CONTAINERS.discard("superstore-eval-unrecorded")
+            return {"status": "captured", "refreshed_login": False}
+
+        def remove(name):
+            removed.append(name)
+            released.set()
+
+        error, seconds = self.interrupted_run_all(
+            ["claude"], scheduling_cases(2), tracked_run, remove,
+            thread=(threading, "Thread", StartThenInterrupt),
+        )
+
+        self.assertEqual(error.code, 143)
+        self.assertEqual(removed, ["superstore-eval-unrecorded"])
+        self.assertLess(seconds, 3)
+        self.assertEqual(runner.TRACKED_CONTAINERS, set())
+
+    def test_sigterm_removes_tracked_containers_and_writes_no_summary(self):
+        released = {name: threading.Event() for name in ("superstore-eval-turn-1", "superstore-eval-turn-2")}
+        signalled = threading.Event()
+        removed = []
+        self.addCleanup(runner.STOP.clear)
+
+        def interrupted_run(repo_root, plugin_root, case, host, output, timeout,
+                            model=None, effort=None, home=None):
+            # Two turns: each container ends when the run removes it, and the
+            # second is tracked only after the first is gone.
+            for name, event in released.items():
+                runner.TRACKED_CONTAINERS.add(name)
+                try:
+                    if not signalled.is_set():
+                        signalled.set()
+                        time.sleep(0.05)  # let the main thread reach its join loop
+                        os.kill(os.getpid(), signal.SIGTERM)
+                    event.wait(5)
+                finally:
+                    runner.TRACKED_CONTAINERS.discard(name)
+            return {"status": "captured", "refreshed_login": False}
+
+        def fake_remove(container_name):
+            removed.append(container_name)
+            released[container_name].set()
+
+        runs = mock.Mock(side_effect=interrupted_run)
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "results"
+            with (
+                mock.patch.object(runner, "remove_container", side_effect=fake_remove),
+                self.assertRaises(SystemExit) as raised,
+            ):
+                self.main_with_fakes(["--skill", "specs", "--host", "claude"], runs, output)
+            self.assertFalse((output / "summary.json").exists())
+
+        self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
+        self.assertEqual(set(removed), set(released), "every tracked container is removed")
+        self.assertTrue(all(event.is_set() for event in released.values()))
+        self.assertEqual(runs.call_count, 1, "no new case starts after the signal")
+        self.assertTrue(runner.STOP.is_set())
 
 
 class HostCommandTests(unittest.TestCase):
