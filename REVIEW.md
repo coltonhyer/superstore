@@ -142,6 +142,70 @@ a skill description is not evidence. For a claim about history, paste the
   same change set belongs in the commit that introduced it, not after the
   version bump.
 
+## Skill text quality
+
+For a change to skill text, read each changed skill against this checklist and
+report its findings as Nits, within the cap of five. This section sits outside
+the two sections that `AGENTS.md` ties to recorded failures, because its items
+come from agentskills.io.
+
+The scope is the skill's `SKILL.md` and each file that `SKILL.md` links, except
+`okf-spec.md` and `okf-LICENSE.md`, which are vendored and never edited. Ask
+each item of every passage in scope. Each item cites the agentskills.io page
+and section it comes from.
+
+- **Earns its place.** Would the agent get this wrong without it? If not, cut
+  it; if unsure, mark it "test it". Source: Best practices, "Add what the
+  agent lacks, omit what it knows".
+- **Moderate detail.** Leave edge cases the agent's judgment handles to it.
+  Source: Best practices, "Aim for moderate detail".
+- **Coherent unit.** The skill does one job, needs no other skill for its
+  core task, and covers no second job. Source: Best practices, "Design
+  coherent units".
+- **When to load.** Each reference link says when to read it, and references
+  are one level deep. Source: Best practices, "Structure large skills with
+  progressive disclosure"; Specification, "File references".
+- **Specificity matches fragility.** Give exact commands where an operation is
+  fragile; elsewhere give the reason, not rigid steps. Source: Best
+  practices, "Match specificity to fragility".
+- **Defaults, not menus.** One default, with alternatives named briefly.
+  Source: Best practices, "Provide defaults, not menus".
+- **Procedure, not answer.** Teach a method for the class of task, not one
+  instance's answer. Source: Best practices, "Favor procedures over
+  declarations".
+- **Gotchas up front.** Corrections to mistakes the agent would otherwise make
+  sit in `SKILL.md`, before the step they affect. Source: Best practices,
+  "Gotchas sections".
+- **Template for output.** Output with a required shape has a template, not a
+  prose description. Source: Best practices, "Templates for output format".
+- **Checkable gates.** Multi-step work with gates has a checklist or a
+  validation step. Source: Best practices, "Checklists for multi-step
+  workflows"; "Validation loops"; "Plan-validate-execute".
+- **Script candidate.** Flag a command the agent must rebuild or adapt on
+  every run. Source: Best practices, "Bundling reusable scripts".
+- **Specific, not generic.** No advice every agent already follows, such as
+  "handle errors appropriately". Source: Best practices, "Start from real
+  expertise".
+- **Description.** It says what the skill does and when to use it, in terms of
+  what the user wants, in a few sentences. Source: Specification,
+  "`description` field"; Optimizing skill descriptions, "Writing effective
+  descriptions".
+
+Pages: `https://agentskills.io/skill-creation/best-practices`,
+`https://agentskills.io/specification`,
+`https://agentskills.io/skill-creation/optimizing-descriptions`.
+
+- Leave out what a test or rumdl enforces, such as the 240-line limit
+  (`test_skill_files_fit_one_codex_read`) and links that resolve.
+- Report each finding as one line:
+  `<file>:<line> | <item> | "<quoted text>" | <change>`. Name the change in a
+  few words, such as cut, move to a reference with a when-to-load line, pick a
+  default, or test it.
+- Findings are advisory and block nothing. When the same text is also one of
+  the Important classes above, those rules apply to it.
+- Asked on demand to review a skill against this checklist, list every
+  finding.
+
 ## Summary
 
 Start with the count of Important findings, then the count of Nits. When
