@@ -39,3 +39,4 @@ are called out in the writeup when present.
 | 2026-09-19 | maintenance standards audit (20 guided + 6 native; 22 corrective follow-ups + 6 post-completion samples + 4 surgical validation samples) | codex, claude | 19/6/0 (+1 invalid) | [2026-09-19-reviewing-coding-standards.md](writeups/2026-09-19-reviewing-coding-standards.md) |
 | 2026-10-17 | library retrofit (51 cases × 3 hosts; 22 corrective follow-ups + 5 operational reruns) | codex, claude, agy | 126/26/0 | [2026-10-17-library-retrofit.md](writeups/2026-10-17-library-retrofit.md) |
 | 2026-11-02 | OKF documents (61 cases × 3 hosts, staged; 127 corrective follow-up runs) | claude, codex, agy | 165/16/2 | [2026-11-02-okf-documents.md](writeups/2026-11-02-okf-documents.md) |
+| 2026-11-08 | parallel runner timing run (library 10×3; runner timing, not a skill evaluation) | claude, codex, agy | not graded | [2026-11-08-parallel-runner.md](writeups/2026-11-08-parallel-runner.md) |
