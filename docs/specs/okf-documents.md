@@ -3,9 +3,10 @@ type: spec
 title: "OKF documents in docs"
 description: "Makes Superstore's documents Open Knowledge Format concepts stored under docs/, with the library skill as the OKF encoder and approval recorded as stable with a verified field."
 status: stable
-verified: { by: human:Colton Hyer, at: 2026-11-07T04:26:26Z }
-tags: [library, open-knowledge-format, agent-skills, planning-plugin, implementation-planning]
+verified: { by: human:Colton Hyer, at: 2026-11-20T23:33:47Z }
+tags: [delivery-plugin, library, open-knowledge-format, agent-skills]
 supersedes: docs/specs/library-retrofit.md
+references: [docs/specs/specifications.md, docs/specs/review-loop.md, docs/specs/plan-execution.md, docs/specs/autonomous-execution.md, docs/specs/skill-checks.md]
 ---
 
 # OKF documents in docs
@@ -17,12 +18,16 @@ stored by default in one flat folder per kind under `docs/`. The library skill
 becomes superstore's OKF encoder: it ships an unmodified copy of the OKF spec
 and states only what OKF leaves open, namely document types, locations, extra
 fields, when each status is set, and how to find, write, pin, and compare
-documents. Planning and Implementation write OKF frontmatter to the resolved
-location without depending on the Library plugin. Approval sets OKF's
-`stable` and records the approver in OKF's `verified` field; approving a
-replacement also sets the replaced document to `deprecated` in the same
-commit. This repository moves its documents from `.agents/library/` to
-`docs/`.
+documents. The `delivery` plugin ships eight public skills in one plugin
+(`library`, `requirements`, `specs`, `plans`, `implementing-plans`,
+`subagent-execution`, `reviewing-implementation`, and `verifying-changes`),
+independent of `maintenance`, sharing OKF approval and commit checks through
+plugin-level shared references rather than duplicating them across skills.
+Approval sets OKF's `stable` and records the verifier in OKF's `verified` field
+(`human:<approver>` on explicit human approval, or `process:delivery-autonomous`
+on autonomous clean review per `docs/specs/autonomous-execution.md`); approving a
+replacement also sets each replaced document to `deprecated` in the same commit.
+This repository moves its documents from `.agents/library/` to `docs/`.
 
 ## Context and motivation
 
@@ -55,7 +60,10 @@ Goals:
 - An unmodified, pinned copy of OKF's `SPEC.md` inside the library skill is the
   single source for the format.
 - One field, `status`, decides whether a document is current.
-- Planning and Implementation keep working without the Library plugin.
+- `delivery` ships all eight local workflow and document skills in one plugin
+  (with no dependency on `maintenance`, and `maintenance` with no dependency on
+  `delivery`), keeping shared workflow and OKF commit rules in plugin-level
+  shared references without missing-sibling-plugin hedging.
 - This repository's documents migrate losslessly.
 
 Non-goals:
@@ -68,7 +76,6 @@ Non-goals:
   families (`sources`, `generated`, `stale_after`, and the Attested
   Computation fields). The one exception is the `verified` line approval
   writes.
-- Folding documents into living pages.
 - Migration tooling, third-party OKF skills, validators, or MCP servers, and
   network access while a skill runs.
 - Changes to `.agents/execution/` scratch semantics.
@@ -86,10 +93,10 @@ field per line, in this order when present:
 | `title` | always | one line of text, in double quotes |
 | `description` | always | one sentence, in double quotes |
 | `status` | specs and plans | `draft`, `stable`, or `deprecated` |
-| `verified` | approved specs and plans, when approval can name a person | one line: `{ by: human:<approver>, at: <approval time> }` |
+| `verified` | approved specs and plans, when approval names a human or autonomous verifier | one line: `{ by: human:<approver>, at: <approval time> }` on explicit human approval, or `{ by: process:delivery-autonomous, at: <approval time> }` on autonomous clean review (`docs/specs/autonomous-execution.md`) |
 | `tags` | always | inline list of one or more slugs, such as `[auth, session-management]` |
-| `implements` | optional | one repository path, such as `docs/specs/auth-sessions.md` |
-| `supersedes` | optional | one repository path |
+| `implements` | optional | one repository path (such as `docs/specs/auth-sessions.md`) or an inline list of repository paths (`[path-a, path-b]`) when a plan implements multiple specs |
+| `supersedes` | optional | one repository path or an inline list of repository paths (`[path-a, path-b]`) for merges and splits |
 | `references` | optional | inline list of repository paths |
 
 - Superstore writes no block lists or nesting, so every field stays one
@@ -100,17 +107,24 @@ field per line, in this order when present:
   superstore writes.
 - A repository path is written the way locators are: relative to the
   repository root, without a leading slash, including `.md`.
-- In `verified`, the approver is the user name version control is configured
-  with, read by `jj config get user.name` or `git config user.name`, and the
-  approval time is an ISO 8601 UTC instant such as `2026-11-01T18:30:00Z`.
-  This is OKF's single-verifier form (§5.2), and a `human:` actor marks the
-  document human-reviewed (§5.3, §7). When that name is empty or contains any
-  of `,` `[` `]` `{` `}` `#` `:`, approval writes no `verified` line and the
-  report says so. Those characters would break the one-line form, and the
-  rule also catches bot accounts such as `dependabot[bot]`.
+- In `verified`, explicit human approval sets `by: human:<approver>`, where the
+  approver is the user name version control is configured with, read by
+  `jj config get user.name` or `git config user.name`, and the approval time is
+  an ISO 8601 UTC instant such as `2026-11-01T18:30:00Z`. This is OKF's
+  single-verifier form (§5.2), and a `human:` actor marks the document
+  human-reviewed (§5.3, §7). When that name is empty or contains any of `,` `[`
+  `]` `{` `}` `#` `:`, human approval writes no `verified` line and the report
+  says so. Those characters would break the one-line form, and the rule also
+  catches bot accounts such as `dependabot[bot]`. Explicitly authorized
+  autonomous approval (`docs/specs/autonomous-execution.md`) writes
+  `{ by: process:delivery-autonomous, at: <approval time> }`, marking the
+  document OKF `machine-confirmed` (§5.2–§5.3) and never `human:`.
 - The body is free Markdown after the frontmatter block and one blank line.
 - A file is named `<slug>.md`. The slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and
-  is neither `index` nor `log`, which OKF reserves (§3.1).
+  is neither `index` nor `log`, which OKF reserves (§3.1). Point-in-time
+  standalone notes in the notes folder (default `docs/notes/`) may prefix
+  filenames with `YYYY-MM-DD-` (which satisfies the slug rule); living specs
+  keep undated domain slugs (`docs/specs/specifications.md`).
 - A document without `status` is final when written. OKF reads an absent
   status as `stable` (§5.4).
 - The `references` field is superstore's own and is unrelated to OKF's
@@ -132,27 +146,38 @@ one-off user path is still valid; readers find it when a task names it.
 ### Status and currency
 
 - Specs and plans are written with `status: draft`.
-- Explicit approval sets `status: stable` and writes the `verified` line.
-- When the approved document has `supersedes`, approval also sets the named
-  document's `status` to `deprecated` unless it already is. The commit holds
-  the approved document and every file this step changed, and nothing else.
-  A `supersedes` target that does not exist affects nothing.
+- Explicit human approval sets `status: stable` and writes the `human:` `verified`
+  line (omitting `verified` when the configured VCS user name is empty or invalid);
+  explicitly authorized autonomous clean review sets `status: stable` and writes
+  `process:delivery-autonomous` (`docs/specs/autonomous-execution.md`).
+- When the approved document has `supersedes` (either a single path or an inline
+  list `[path-a, path-b]`), approval iterates over every listed target: it sets
+  each migrated target's `status` to `deprecated` unless it already is, reports
+  unmigrated targets unchanged, and ignores missing targets. For a spec split,
+  deprecate the split spec only once the replacement set is complete and approved.
+  The commit holds the approved document and every file this step changed, and
+  nothing else.
 - When that commit is refused or fails, every file the step changed stays in
-  the working copy with its new status and is reported uncommitted.
+  the working copy with its new status and is reported uncommitted and not
+  downstream-ready.
 - Revising a stable document in place sets `status: draft` and removes its
-  `verified` line, since the approved content is changing; explicit approval
-  sets `stable` and writes a new `verified` line.
+  `verified` line, since the approved content is changing; approval sets `stable`
+  and writes a new `verified` line. A mechanical blob-citation-only refresh on a
+  `stable` plan whose tasks and content are unchanged commits without flipping to
+  `draft` or re-requesting approval (`docs/specs/plan-execution.md`).
 - A document is current when its `status` is absent or `stable`. The body of a
   `draft` or `deprecated` document is read only when a task asks for history
   or a comparison. `verified` records who approved a document and when; it
-  does not decide whether the document is current.
+  does not decide whether the document is current (interactive downstream gates
+  still route non-`human:` verified docs for confirmation per
+  `docs/specs/autonomous-execution.md`).
 - Superstore always writes `status` on specs and plans. A spec or plan without
   one is current to readers, as OKF says, but is not approved for planning or
   execution.
 
 ### Library skill
 
-`plugins/library/skills/library/` holds `SKILL.md` and three references. Two
+`plugins/delivery/skills/library/` holds `SKILL.md` and three references. Two
 are byte-for-byte copies from `GoogleCloudPlatform/open-knowledge-format` at
 commit `ad30107c31c06aec8a7d5636e0d1058118604e6f`:
 
@@ -192,20 +217,28 @@ commands described below.
   and neither is version-control history. Keep only hits whose `status` is
   `stable` or absent; read only the bodies the answer depends on; follow link
   fields only when the task needs their content; cite each document by its
-  path, or by `path@revision` for a pinned read. Tags match as whole slugs, as
-  today. A search for documents naming a path in `supersedes` covers every
-  document folder. A Markdown file in a document folder, other than `index.md`
-  and `log.md`, that has no `type` line or has a `status` outside OKF's three
-  values is reported to the user as not yet migrated, never skipped silently.
-  `.agents/execution/` is execution scratch, not a document folder.
-- **Pin and compare:** `SKILL.md` states the locator rules and says to read
-  `references/pin-and-compare.md` before resolving a revision, reading a
-  document at a revision, comparing revisions, or listing a document's
-  history. The reference reads a pinned locator, compares revisions, and
-  lists history through the active version control, showing both the
-  Jujutsu and the Git form, as today. History from before a document moved
-  stays at its old path: `jj log` on the new path stops at the move, so query
-  the old path too; `git log --follow` follows the move.
+  path, by `<path>`, blob `<12-char hash>` for committed plans and handoffs
+  (`docs/specs/plan-execution.md`), or by `path@revision` for ad-hoc pinned reads. Tags
+  match as whole slugs, as today. A search for documents naming a path in
+  `supersedes` covers every document folder and matches whole paths across both
+  scalar (`supersedes: <path>`) and inline-list (`supersedes: [path-a, path-b]`)
+  forms without prefix or suffix false matches. A Markdown file in a document
+  folder, other than `index.md` and `log.md`, that has no `type` line or has a
+  `status` outside OKF's three values is reported to the user as not yet
+  migrated, never skipped silently. `.agents/execution/` is execution scratch, not
+  a document folder.
+- **Pin and compare:** `SKILL.md` states the locator and blob-pin rules and says
+  to read `references/pin-and-compare.md` before computing or reading a
+  12-character Git blob hash, resolving a revision, reading a document at a
+  revision, comparing revisions, or listing a document's history. The reference
+  documents computing and reading 12-character committed Git blob hashes in both
+  Git and Git-backed Jujutsu repositories (including non-colocated Jujutsu via
+  its Git store, `jj git root`), computed only from post-approval committed
+  blobs rather than dirty working copies, alongside ad-hoc `path@revision` reads,
+  revision comparisons, and history listing in both Jujutsu and Git forms.
+  History from before a document moved stays at its old path: `jj log` on the
+  new path stops at the move, so query the old path too; `git log --follow`
+  follows the move.
 - **Write:** writes documents of types no workflow owns, with the frontmatter
   above and the location order. It leaves the new document in the working
   copy and commits nothing; recording it belongs to the user or the workflow
@@ -222,71 +255,88 @@ commands described below.
   reserved filenames, §4.1 frontmatter, §5.4 status, §6 links and paths, §8
   index files, §9 log files, §11 conformance.
 
-### Planning: specs
+### Delivery: specs
 
 - The draft carries `type: spec`, `title`, `description`, `status: draft`, and
-  `tags`; it adds `supersedes` only when it replaces a differently named spec.
+  `tags`; it adds `supersedes` (scalar or inline list) only when it replaces or
+  splits differently named specs.
 - The draft's location follows the location order, replacing "only an
   explicit user-supplied path overrides it".
-- Approval follows the status rules. The recording check runs on every
+- Approval follows the status rules, shared through plugin-level shared
+  references (`plugins/delivery/references/`). The recording check runs on every
   committed path: with Jujutsu, `jj diff -r @ <path>` prints nothing and
   `jj log -r @- <path>` shows a new revision for each; with Git,
   `git status --porcelain <path>` prints nothing and `git log -1 -- <path>`
   shows the new commit for each.
 - Link fields are repository paths and valid at any location, so the special
   cases for documents outside the library are removed.
-- The reported locator uses the resolved path, such as
-  `docs/specs/<slug>.md@<revision>`.
-- The spec-review contract forbids browsing the repository's documents beyond
-  those supplied, in place of "browse the library".
+- Downstream committed plans and handoffs cite the approved spec by repository
+  path and 12-character committed Git blob hash (`<path>`, blob `<12-char hash>`,
+  per `docs/specs/plan-execution.md`); ad-hoc revision reports may still use
+  `path@revision` when quoting history.
+- Spec Reviewer A (`docs/specs/review-loop.md`) is forbidden from browsing
+  repository code or documents beyond the supplied requirements and draft;
+  Reviewer B reads repository code read-only.
 
-### Planning: requirements
+### Delivery: requirements
 
 When history is plausibly relevant, the requirements skill reads the current
 documents on the subject, by type and tags, in the resolved locations. It
 applies the currency rule above. A missing document folder is not an error,
 and it does not search on every task.
 
-### Implementation: plans
+### Delivery: plans
 
-- A spec document (`type: spec`) must carry a `status: stable` line. A spec
-  supplied in another form, including a file without that frontmatter or a
-  `type: spec` file without a status line, needs the user's explicit approval
-  statement.
+- Every repository spec document (`type: spec`) the plan implements must be
+  committed, clean, and carry a `status: stable` line
+  (`docs/specs/plan-execution.md`); interactive confirmation of non-`human:`
+  verified specs follows `docs/specs/autonomous-execution.md`. A spec supplied
+  in another form, including a file without that frontmatter or a `type: spec`
+  file without a status line, needs the user's explicit approval statement.
 - The draft carries `type: plan`, `title`, `description`, `status: draft`,
-  `tags` defaulting to the spec's, and `implements` naming the spec's
-  repository path when the spec is a repository file. It adds `supersedes`
-  only when it replaces a differently named plan. Its location follows the
-  location order, and its slug defaults to the spec's.
-- Approval, revision, recording, and the reported locator follow the specs
-  rules above. These are twin passages and must agree.
+  `tags` defaulting to the implemented spec(s)' tags, and `implements` naming
+  the spec's repository path (or an inline list `[path-a, path-b]` when one plan
+  implements multiple repository specs; omitted when none are repository files).
+  It adds `supersedes` (scalar or inline list) only when it replaces differently
+  named plans. Its location follows the location order; its slug defaults to the
+  spec's when targeting one living spec with no earlier plan, or uses a
+  change-scoped slug when targeting multiple specs or a living spec that already
+  has an earlier plan (`docs/specs/plan-execution.md`).
+- Approval, revision, recording, and committed blob pinning follow the shared
+  plugin-level reference rules (`plugins/delivery/references/`).
 - The plan-review contract forbids browsing the repository's documents beyond
-  the supplied plan and spec.
+  the supplied plan and spec(s).
 
-### Implementation: execution gate
+### Delivery: execution gate
 
-`implementing-plans` and `subagent-execution` require the plan at its locator
-with a `status: stable` line, in place of `status: approved`. A plan whose
-status is `draft` or `deprecated`, or that has no status line, is not approved
-and routes back through `plans`. The two passages must agree, and the
-Implementation README states the same gate.
+`implementing-plans` and `subagent-execution` require a committed, clean plan
+with a `status: stable` line (and every repository spec named in `implements`
+committed and clean, per `docs/specs/plan-execution.md`). A plan whose status is
+`draft` or `deprecated`, that has no status line, or that is uncommitted or dirty
+is not execution-ready and routes back through `plans`. Interactive runs
+encountering a non-`human:` verified plan follow
+`docs/specs/autonomous-execution.md`. The two passages must agree, and the
+Delivery README states the same gate.
 
-### Implementation: handoff notes
+### Delivery: handoff notes
 
-`implementing-plans`, its `execution-state.md`, and `subagent-execution`
-write the handoff note to `<handoffs folder>/<execution-id>.md`, with
-`docs/handoffs/` as the default. The note carries `type: handoff`, `title`
-(the plan's title without its trailing word `plan`, in any letter case,
-followed by ` execution`), a one-sentence `description` of what the execution
-delivered, `tags` copied from the plan, and `implements` naming the plan's
-repository path when the plan is a repository file. The execution id must
-satisfy the file-name rule above. Its headings, recording rules, and scratch
-handling are unchanged. `type: note` stays free for ordinary notes, which the
-library skill writes.
+`implementing-plans`, its `execution-state.md`, and `subagent-execution` write
+the handoff note to `<handoffs folder>/<plan-slug>.md` (appending `-2`, `-3` on
+collision, per `docs/specs/plan-execution.md`), with `docs/handoffs/` as the
+default. The note carries `type: handoff`, `title` (the plan's title without its
+trailing word `plan`, in any letter case, followed by ` execution`), a
+one-sentence `description` of what the execution delivered, `tags` copied from
+the plan, and `implements` naming the plan's repository path when the plan is a
+repository file. The slug must satisfy the file-name rule above. Its body
+carries blob citations for the plan and every implemented repository spec, a
+`Change` line, and fixed `## Decisions for review` and `## Tactical decisions`
+headings (`docs/specs/plan-execution.md`). Recording rules and scratch handling
+stay unchanged. `type: note` stays free for ordinary notes, which the library
+skill writes.
 
 ### READMEs, manifests, and REVIEW.md
 
-- `plugins/library/README.md` describes the OKF convention, the default
+- `plugins/delivery/README.md` describes the OKF convention, the default
   location and how a repository names its own, and the copied spec and its
   license. It drops the argument for `.agents/` over `docs/`. It carries
   migration notes, each targeting `docs/<kind>/` with OKF frontmatter, for a
@@ -295,16 +345,15 @@ library skill writes.
   frontmatter in place, since their file names already fit the slug rule. It
   lists the steps to upgrade the copied spec: replace the two copied files
   from a newer commit, update SKILL.md's version and commit line and the unit
-  test's checksums, and bump Library's version.
-- The Planning, Implementation, and root READMEs describe the new paths and
-  fields.
-- Library's three manifests and the Claude marketplace entry describe OKF
-  documents in `docs/`. The Codex manifest's interface strings follow, with at
-  most three default prompts.
-- `REVIEW.md` replaces its two `.agents/library/` references with the
-  document locations, and adds the execution gate in `implementing-plans` and
-  `subagent-execution` to its list of twin passages, citing this spec's review
-  finding as the precedent `AGENTS.md` requires.
+  test's checksums, and bump Delivery's version.
+- The Delivery and root READMEs describe the consolidated `delivery` plugin,
+  document paths, and fields.
+- Delivery's manifests and marketplace entries describe the eight local workflow
+  and OKF document skills under `docs/`. The Codex manifest's interface
+  strings follow, with at most three default prompts.
+- `REVIEW.md` references the `delivery` document locations, twin-passage rules
+  (reduced where shared plugin-level references replace duplicated passages),
+  and committed blob-pinned handoff format.
 
 ### Eval runner
 
@@ -335,14 +384,17 @@ record a `verified` line under the rule above.
 
 ### Versions
 
-As the plan's final task, Library moves to 0.3.0, and Planning and
-Implementation to 0.4.0, in each plugin's `.claude-plugin/plugin.json` and
-`.codex-plugin/plugin.json`.
+For any changeset that alters a skill or its references under `plugins/delivery/`,
+bump `delivery`'s version once for the whole changeset in both
+`.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`, keeping the two
+equal.
 
 ### Quality requirements
 
 - No runtime dependency beyond Markdown and the active version control, and
   no network access while a skill runs.
+- `delivery` has no dependency on `maintenance`, and `maintenance` has no
+  dependency on `delivery`.
 - Identical behavior on Claude Code, Codex, and Antigravity.
 - Every plugin `SKILL.md` stays within 240 lines, the most codex reads in one
   pass, and links nothing outside its own plugin.
@@ -406,9 +458,10 @@ Specs and plans always carry `status`, so this lists the current specs; a
 document of another type is current when it has no `status` line or
 `status: stable`. Other filters change the `grep` or the folders:
 `': tags: .*[[, ]auth[],]'` over `docs/specs docs/plans` matches a whole tag
-slug, and
-`': supersedes: docs/specs/auth-sessions.md'` over every document folder finds
-a replaced document. The not-yet-migrated report prints files whose frontmatter
+slug, and a delimiter-safe whole-path match over `: supersedes:` across every
+document folder (matching both scalar `supersedes: <path>` and inline-list
+`supersedes: [path-a, path-b]` without prefix or suffix false matches) finds a
+replaced document. The not-yet-migrated report prints files whose frontmatter
 has no `type` line, including an empty file, or whose `status` is outside the
 three values, except `index.md` and `log.md`:
 
@@ -449,18 +502,23 @@ find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' 
   reader understands. The cost is a second file in a replacement's approval
   commit.
 - **Approval recorded in `verified` over a custom `approved` value.** Every
-  value stays standard OKF, the approval shows as OKF's human-reviewed tier,
-  and the file names who approved it and when. `status` alone still decides
-  currency.
+  value stays standard OKF: human approval shows as OKF's human-reviewed tier
+  (`human:`), autonomous approval shows as OKF's machine-confirmed tier
+  (`process:delivery-autonomous`), and the file names who verified it and when.
+  `status` alone still decides currency.
 - **`docs/` over `.agents/`.** Hidden folders are skipped by indexers and many
   tools. A `deprecated` status, not location, now keeps old documents out of
   current answers.
 - **`handoff` over `note` for handoff notes.** People call any note a note.
   Reserving `note` for one workflow's records would stop the library skill
   from writing ordinary notes.
-- **Writers keep their own templates.** Planning and Implementation keep
-  working without the Library plugin, as in 0.2.0, and a template with a
-  `type` line is already valid OKF.
+- **Shared plugin-level references within `delivery`.** `library`, `requirements`,
+  `specs`, `plans`, `implementing-plans`, `subagent-execution`,
+  `reviewing-implementation`, and `verifying-changes` ship together in
+  `delivery`, sharing OKF approval/commit checks and workflow rules via
+  `plugins/delivery/references/` rather than duplicating twin passages across
+  skills. Single-skill eval cases load one skill alongside plugin-level shared
+  references (`docs/specs/skill-checks.md`).
 - **Repository paths without a leading slash.** Link fields use the same form
   as locators. OKF's `/`-prefixed form means a bundle root, which superstore
   does not declare, and reads as the filesystem root outside OKF.
@@ -475,9 +533,9 @@ find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' 
 
 - Both marketplace indexes agree, and every plugin has a README, a skills
   folder, and parsable manifests with matching names.
-- Library exposes exactly the `library` skill, its README links it, and every
-  relative link in its README and `SKILL.md` resolves, including each
-  reference.
+- `delivery` exposes its eight public skills, its README links them, and every
+  relative link across its README, skills, and plugin-level shared references
+  resolves.
 - Every plugin `SKILL.md` (`plugins/*/skills/*/SKILL.md`) is within 240 lines.
 - The eval-runner fixture assertions use `docs/specs/approved-spec.md`, and a
   prepared eval workspace reports `Eval Reviewer` from both
@@ -498,8 +556,7 @@ find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' 
 - Every changed shell snippet runs in a scratch repository with
   `JJ_CONFIG=/dev/null JJ_EDITOR=false GIT_EDITOR=false` and stdin from
   `/dev/null`.
-- The version fields in each changed plugin's two manifests are equal and at
-  the stated numbers.
+- The version fields in each changed plugin's two manifests are equal.
 
 ### Migration check
 
@@ -545,8 +602,9 @@ paths and OKF frontmatter:
   repository path; approval and replacement commits behave as for specs; a
   recording failure is reported as not execution-ready.
 - `implementing-plans` and `subagent-execution`: refuse a plan that is not
-  `stable`; write and record the handoff note at
-  `docs/handoffs/<execution-id>.md` with `type: handoff` and `implements`
+  committed, clean, and `stable`; write and record the handoff note at
+  `docs/handoffs/<plan-slug>.md` (appending `-2`, `-3` on collision) with
+  `type: handoff`, `implements`, blob citations, and fixed decision headings
   before deleting scratch.
 - `requirements`: reads current documents under `docs/` when history is
   relevant, skips `draft` and `deprecated` ones, and does not search on an
