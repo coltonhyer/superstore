@@ -13,7 +13,10 @@ MANIFESTS = (
     ".claude-plugin/plugin.json",
     "plugin.json",
 )
-IMPLEMENTATION_SKILLS = {
+DELIVERY_SKILLS = {
+    "library",
+    "requirements",
+    "specs",
     "plans",
     "implementing-plans",
     "subagent-execution",
@@ -49,9 +52,7 @@ class MarketplaceLayoutTests(unittest.TestCase):
 
     def test_marketplaces_agree(self):
         self.assertEqual(set(self.codex), set(self.claude))
-        self.assertIn("planning", self.codex)
-        self.assertIn("implementation", self.codex)
-        self.assertIn("maintenance", self.codex)
+        self.assertEqual(set(self.codex), {"delivery", "maintenance"})
 
         for name in self.codex:
             with self.subTest(plugin=name):
@@ -85,28 +86,40 @@ class MarketplaceLayoutTests(unittest.TestCase):
                 with self.subTest(path=path.relative_to(ROOT)):
                     load_json(path)
 
-    def test_implementation_has_the_five_public_skills(self):
-        plugin_root = ROOT / "plugins/implementation"
+    def test_delivery_has_eight_public_skills_and_valid_links(self):
+        plugin_root = ROOT / "plugins/delivery"
         skills = {
             path.name
             for path in (plugin_root / "skills").iterdir()
             if path.is_dir()
         }
-        readme = (plugin_root / "README.md").read_text(encoding="utf-8")
-
-        self.assertEqual(skills, IMPLEMENTATION_SKILLS)
+        self.assertEqual(skills, DELIVERY_SKILLS)
+        expected_skill_files = {
+            plugin_root / "skills" / skill / "SKILL.md"
+            for skill in DELIVERY_SKILLS
+        }
         self.assertEqual(
-            load_json(plugin_root / ".codex-plugin/plugin.json")["skills"],
-            "./skills/",
+            {
+                path
+                for path in (plugin_root / "skills").rglob("SKILL.md")
+                if "evals" not in path.relative_to(plugin_root / "skills").parts
+            },
+            expected_skill_files,
         )
-        self.assertLessEqual(
-            len(load_json(plugin_root / ".codex-plugin/plugin.json")["interface"]["defaultPrompt"]),
-            3,
-        )
-        for skill in IMPLEMENTATION_SKILLS:
+        codex = load_json(plugin_root / ".codex-plugin/plugin.json")
+        self.assertEqual(codex["skills"], "./skills/")
+        self.assertLessEqual(len(codex["interface"]["defaultPrompt"]), 3)
+        readme = plugin_root / "README.md"
+        readme_text = readme.read_text(encoding="utf-8")
+        for skill in DELIVERY_SKILLS:
             with self.subTest(skill=skill):
-                self.assertTrue((plugin_root / "skills" / skill / "SKILL.md").is_file())
-                self.assertIn(f"(skills/{skill}/SKILL.md)", readme)
+                self.assertIn(f"(skills/{skill}/SKILL.md)", readme_text)
+
+        for document in (readme, *sorted(expected_skill_files)):
+            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
+                if "://" not in target and not target.startswith("#"):
+                    with self.subTest(document=document.relative_to(ROOT), target=target):
+                        self.assertTrue((document.parent / target.split("#")[0]).is_file())
 
     def test_maintenance_has_two_public_skills_and_valid_links(self):
         plugin_root = ROOT / "plugins/maintenance"
@@ -136,28 +149,8 @@ class MarketplaceLayoutTests(unittest.TestCase):
                     with self.subTest(document=document.relative_to(ROOT), target=target):
                         self.assertTrue((document.parent / target.split("#")[0]).is_file())
 
-    def test_library_has_one_public_skill_and_valid_links(self):
-        plugin_root = ROOT / "plugins/library"
-        skill = plugin_root / "skills/library/SKILL.md"
-        self.assertEqual(
-            {path for path in (plugin_root / "skills").iterdir() if path.is_dir()},
-            {skill.parent},
-        )
-        self.assertEqual(set((plugin_root / "skills").rglob("SKILL.md")), {skill})
-        codex = load_json(plugin_root / ".codex-plugin/plugin.json")
-        self.assertEqual(codex["skills"], "./skills/")
-        self.assertLessEqual(len(codex["interface"]["defaultPrompt"]), 3)
-        readme = plugin_root / "README.md"
-        self.assertIn("(skills/library/SKILL.md)", readme.read_text(encoding="utf-8"))
-
-        for document in (readme, skill):
-            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
-                if "://" not in target and not target.startswith("#"):
-                    with self.subTest(document=document.relative_to(ROOT), target=target):
-                        self.assertTrue((document.parent / target.split("#")[0]).is_file())
-
     def test_library_okf_references_match_pinned_checksums(self):
-        references = ROOT / "plugins/library/skills/library/references"
+        references = ROOT / "plugins/delivery/skills/library/references"
         expected = {
             "okf-spec.md": "26aa5da029278939f914e578107242d9607d4f2dc5fe153272b82f9ed1030101",
             "okf-LICENSE.md": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",

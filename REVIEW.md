@@ -80,8 +80,8 @@ a skill description is not evidence. For a claim about history, paste the
   failure path says what it leaves behind for everything the success path
   changes.
 - Every passage with a twin still agrees with it on every shared rule: the
-  approval, commit, and revise sections of `planning/specs` and
-  `implementation/plans`; the recording check in `implementing-plans`, its
+  approval, commit, and revise sections of `delivery/specs` and
+  `delivery/plans`; the recording check in `implementing-plans`, its
   `execution-state.md`, and the Finish section of `subagent-execution`; the
   execution gate in `implementing-plans` and `subagent-execution`; the plan
   template's locator and the plans skill; the Library skill's frontmatter

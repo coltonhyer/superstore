@@ -1,5 +1,0 @@
-{
-  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
-  "name": "planning",
-  "description": "Gather requirements and produce concise, reviewed specifications."
-}

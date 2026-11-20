@@ -173,7 +173,7 @@ current working edit; it does **not** mutate files between turns.
 
 Live evaluations are manual release checks. Use the
 [shared runner](../../scripts/run_skill_evals.py) and
-[shared evaluation guidance](../planning/README.md#validation) for authorized
+[shared evaluation guidance](../delivery/README.md#validation) for authorized
 case/host selection, model settings, execution, and evidence handling. The
 [evaluation notebook](../../evals/notebook/BOOK.md) records reviewed outcomes;
 listing and offline preparation alone establish no behavioral result.
