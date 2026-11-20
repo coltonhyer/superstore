@@ -3,8 +3,9 @@ type: spec
 title: "Skill checks"
 description: "Signal on a skill file without an eval run, from a skill review checklist in REVIEW.md, command tests, and rumdl in a required CI check, plus eval runs that go side by side."
 status: stable
-verified: { by: human:Colton Hyer, at: 2026-11-08T05:27:38Z }
+verified: { by: human:Colton Hyer, at: 2026-11-20T23:33:47Z }
 tags: [agent-skills, skill-evals, verification, continuous-integration]
+references: [docs/specs/okf-documents.md]
 ---
 
 # Skill checks
@@ -49,8 +50,8 @@ Non-goals:
 - Vale, until a headache repeats. Baseline runs, until a skill is heavily
   rewritten. Bundled scripts that replace inline commands, since they change
   skill text.
-- `claude plugin validate`: all four plugins pass, and the unit tests already
-  check the manifests.
+- `claude plugin validate`: the marketplace plugins pass, and the unit tests
+  already check the manifests.
 - A token-count check: the 240-line limit keeps every skill near 3,000
   tokens or less.
 - Linting `docs/` or `evals/notebook/`.
@@ -103,13 +104,14 @@ the agentskills.io page and section it comes from:
 `tests/test_skill_commands.py` runs the skills' shell commands.
 
 - **Coverage.** Every fenced block tagged `sh`, `bash`, or `shell` in
-  `plugins/*/skills/*/SKILL.md` and `plugins/*/skills/*/references/*.md` is
-  covered. A fence may be indented, as inside a list item, and the block's
-  lines then lose the fence's indentation. Today that is ten blocks in three
-  files, and the coverage test asserts that count. The inline `grep`
-  patterns that the library and requirements skills pair with their
-  frontmatter extractor also run: the test asserts each appears verbatim in
-  its skill, then pipes the extractor into it.
+  `plugins/*/skills/*/SKILL.md`, `plugins/*/skills/*/references/*.md`, and
+  `plugins/*/references/*.md` is covered. A fence may be indented, as inside a
+  list item, and the block's lines then lose the fence's indentation. The
+  coverage test asserts that every block across those paths has a test and every
+  registered test key still matches a live block. The inline `grep` patterns
+  that the library and requirements skills pair with their frontmatter extractor
+  also run: the test asserts each appears verbatim in its skill, then pipes the
+  extractor into it.
 - **Read from the skill.** Each block is read from its skill file at run time
   and keyed by file and first line. A block with no test, or a key whose
   block is gone, fails the suite.
@@ -127,8 +129,10 @@ the agentskills.io page and section it comes from:
     draft whose body holds a fenced example frontmatter block with
     `type: spec` and `status: stable`; an empty file; a file with no
     frontmatter; a stable document with CRLF line endings; `index.md` and
-    `log.md` with frontmatter; documents tagged `auth` and `auth-sessions`; a
-    `status: approved` document; and a `.txt` file.
+    `log.md` with frontmatter; documents tagged `auth` and `auth-sessions`;
+    documents with scalar and inline-list `supersedes` paths (including
+    prefix/suffix near-matches); a `status: approved` document; and a `.txt`
+    file.
   - `docs/plans/`: a symbolic link to a folder outside `docs/` that holds a
     stable plan, which the expected output includes.
   - `docs/notes/`: absent.
@@ -140,9 +144,11 @@ the agentskills.io page and section it comes from:
 - **Pin and compare.** The commands run line by line in a scratch colocated
   Jujutsu and Git repository whose history adds `docs/specs/auth-sessions.md`
   in a commit described "auth sessions", changes it, and then moves it.
-  `<rev>`, `<old>`, `<new>`, `<old path>`, and `<new path>` are replaced with
-  that history's revisions and paths. Each line exits 0 and prints the
-  expected revision or content.
+  `<rev>`, `<old>`, `<new>`, `<old path>`, `<new path>`, and `<blob>` are
+  replaced with that history's revisions, paths, and committed 12-character Git
+  blob hashes. Each line exits 0 and prints the expected revision, blob hash, or
+  content. The committed blob-hash computation and lookup commands also run in a
+  non-colocated Jujutsu scratch repository (using `jj git root`).
 - **REVIEW.md.** Its "Run every changed shell snippet" bullet narrows to the
   snippets the command tests don't run, and names the test.
 
@@ -192,11 +198,20 @@ the agentskills.io page and section it comes from:
 
 ### Parallel eval runs
 
-- **Plugins.** `--plugin` may repeat; with none given, it stays
-  `plugins/planning`. The run takes the cases of every selected plugin,
+- **Plugins.** `--plugin` may repeat; with none given, it defaults to
+  `plugins/delivery`. The run takes the cases of every selected plugin,
   filtered by `--skill` and `--case` as today. It refuses to start when two
   selected plugins share a skill name, since their result folders would
   collide.
+- **Plugin-level shared references.** When a plugin stores shared workflow rules
+  in `plugins/<plugin>/references/`, the evaluation workspace builder copies
+  that folder into `.eval/references/` alongside `.eval/skills/` so single-skill
+  behavioral eval cases can load one skill standalone (to isolate its behavior
+  or host-capability fallbacks) and resolve relative links
+  (`../../references/<file>.md`) identically to the repository without adding
+  extra skills to the active eval inventory. Repository link tests verify
+  relative links across plugin-level shared references and prepared eval
+  workspaces (skipping vendored `okf-spec.md` and `okf-LICENSE.md`).
 - **At once.** Hosts run side by side, and at most four sessions of one host
   run at once, a constant in the runner rather than a flag. Each host starts
   its cases in case order.
@@ -237,7 +252,7 @@ the agentskills.io page and section it comes from:
   removes every container it started that is still running, lets running
   cases finish their cleanup (login write-back and workspace discard), and
   exits nonzero without writing `summary.json`, as today.
-- **Docs.** The Validation section of `plugins/planning/README.md` documents
+- **Docs.** The Validation section of `plugins/delivery/README.md` documents
   a repeated `--plugin` and that hosts and cases run at once.
 
 ### First pass
@@ -299,9 +314,9 @@ READMEs, `REVIEW.md`, and `AGENTS.md` need no bump.
 
 ### Live run
 
-- `python3 scripts/run_skill_evals.py --plugin plugins/library --host claude
-  --host codex --host agy --output <new root>` finishes with no error
-  results.
+- `python3 scripts/run_skill_evals.py --plugin plugins/delivery --skill library
+  --host claude --host codex --host agy --output <new root>` finishes with no
+  error results.
 - The eval notebook records the command, wall time, and counts, next to the
   latest one-at-a-time library run's time. For each host it also records
   whether its cases ran at once and any drop to one case at a time.
@@ -318,7 +333,7 @@ READMEs, `REVIEW.md`, and `AGENTS.md` need no bump.
 ### Docs
 
 - `AGENTS.md`'s Checks section matches the workflow and states when evals
-  run, and the Planning README's runner section matches the runner.
+  run, and the Delivery README's runner section matches the runner.
 
 ## Alternatives and consequential decisions
 

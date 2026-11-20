@@ -2,7 +2,7 @@
 type: spec
 title: "Planning Plugin Design"
 description: "Designs the planning marketplace plugin, whose requirements and specs skills gather approved requirements and turn them into reviewed specifications."
-status: stable
+status: deprecated
 tags: [agent-skills, marketplace, planning-plugin, requirements, specifications]
 ---
 
