@@ -9,9 +9,9 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-LIBRARY = "plugins/library/skills/library/SKILL.md"
-PIN = "plugins/library/skills/library/references/pin-and-compare.md"
-REQUIREMENTS = "plugins/planning/skills/requirements/SKILL.md"
+LIBRARY = "plugins/delivery/skills/library/SKILL.md"
+PIN = "plugins/delivery/skills/library/references/pin-and-compare.md"
+REQUIREMENTS = "plugins/delivery/skills/requirements/SKILL.md"
 BLOCK_COUNT = 10
 
 OPEN_FENCE = re.compile(r"^(?P<indent>[ \t]*)```(?:sh|bash|shell)[ \t]*$")

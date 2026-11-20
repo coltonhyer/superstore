@@ -22,8 +22,7 @@ from scripts.skill_eval_hosts import TurnResult
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PLANNING = ROOT / "plugins/planning"
-IMPLEMENTATION = ROOT / "plugins/implementation"
+DELIVERY = ROOT / "plugins/delivery"
 MAINTENANCE = ROOT / "plugins/maintenance"
 REVIEW_SESSION_ID = "01a04fb2-ec55-7110-9805-d36e97f4c50d"
 MARKDOWN_LINK = re.compile(r"\]\(([^)]+\.md)\)")
@@ -108,10 +107,10 @@ def eval_case(**overrides) -> EvalCase:
     return EvalCase(**values)
 
 
-def planning_case(skill: str, identifier: int) -> EvalCase:
+def delivery_case(skill: str, identifier: int) -> EvalCase:
     return next(
         case
-        for case in runner.load_cases(PLANNING)
+        for case in runner.load_cases(DELIVERY)
         if (case.skill, case.identifier) == (skill, identifier)
     )
 
@@ -196,10 +195,10 @@ class EvalCaseTests(unittest.TestCase):
 
     def test_additional_skills_are_scoped_to_the_declaring_case(self):
         self.assertEqual(
-            planning_case("specs", 1).skills,
+            delivery_case("specs", 1).skills,
             ("specs", "requirements"),
         )
-        self.assertEqual(planning_case("specs", 2).skills, ("specs",))
+        self.assertEqual(delivery_case("specs", 2).skills, ("specs",))
 
     def test_coding_standards_check_fixture_depends_on_source_content(self):
         fixture = (
@@ -293,14 +292,16 @@ class WorkspaceTests(unittest.TestCase):
                             f"{markdown.relative_to(skills)} -> {target}",
                         )
 
-    def test_implementation_case_skill_links_resolve_in_copied_layout(self):
-        for case in runner.load_cases(IMPLEMENTATION):
+    def test_delivery_case_skill_links_resolve_in_copied_layout(self):
+        for case in runner.load_cases(DELIVERY):
             with tempfile.TemporaryDirectory() as temporary, self.subTest(case=case.key):
                 prepared = runner.prepare_workspace(
-                    ROOT, IMPLEMENTATION, case, Path(temporary) / "workspace"
+                    ROOT, DELIVERY, case, Path(temporary) / "workspace"
                 )
                 skills = prepared.workspace / ".eval/skills"
                 for markdown in skills.rglob("*.md"):
+                    if markdown.name in {"okf-spec.md", "okf-LICENSE.md"}:
+                        continue
                     for target in MARKDOWN_LINK.findall(markdown.read_text(encoding="utf-8")):
                         self.assertTrue(
                             (markdown.parent / target).is_file(),
@@ -336,7 +337,7 @@ class WorkspaceTests(unittest.TestCase):
             case = runner.load_cases(plugin)[0]
 
             prepared = runner.prepare_workspace(
-                ROOT, PLANNING, case, Path(temporary) / "workspace"
+                ROOT, DELIVERY, case, Path(temporary) / "workspace"
             )
 
             self.assertIn("# Fixture", (prepared.workspace / ".eval/skills/debugging/SKILL.md").read_text(encoding="utf-8"))
@@ -354,11 +355,11 @@ class WorkspaceTests(unittest.TestCase):
                 definition_dir=first_definition,
                 skill_fixtures={"debugging": Path("files/debugging")},
             )
-            runner.prepare_workspace(ROOT, PLANNING, first, Path(temporary) / "first-workspace")
+            runner.prepare_workspace(ROOT, DELIVERY, first, Path(temporary) / "first-workspace")
             second = eval_case(skills=("specs",))
 
             prepared = runner.prepare_workspace(
-                ROOT, PLANNING, second, Path(temporary) / "second-workspace"
+                ROOT, DELIVERY, second, Path(temporary) / "second-workspace"
             )
 
             self.assertFalse((prepared.workspace / ".eval/skills/debugging").exists())
@@ -406,38 +407,38 @@ class WorkspaceTests(unittest.TestCase):
             )
             case = runner.load_cases(plugin)[0]
             with self.assertRaisesRegex(ValueError, "escapes the case directory"):
-                runner.prepare_workspace(ROOT, PLANNING, case, Path(temporary) / "workspace")
+                runner.prepare_workspace(ROOT, DELIVERY, case, Path(temporary) / "workspace")
 
             linked.unlink()
             linked.mkdir()
             (linked / "SKILL.md").symlink_to(outside / "SKILL.md")
             with self.assertRaisesRegex(ValueError, "escapes the case directory"):
-                runner.prepare_workspace(ROOT, PLANNING, case, Path(temporary) / "linked-workspace")
+                runner.prepare_workspace(ROOT, DELIVERY, case, Path(temporary) / "linked-workspace")
 
             (linked / "SKILL.md").unlink()
             with self.assertRaisesRegex(ValueError, "missing SKILL.md"):
-                runner.prepare_workspace(ROOT, PLANNING, case, Path(temporary) / "missing-workspace")
+                runner.prepare_workspace(ROOT, DELIVERY, case, Path(temporary) / "missing-workspace")
 
     def test_unmapped_case_skills_keep_production_resolution(self):
         case = eval_case(skills=("specs", "requirements"))
 
         with tempfile.TemporaryDirectory() as temporary:
             prepared = runner.prepare_workspace(
-                ROOT, PLANNING, case, Path(temporary) / "workspace"
+                ROOT, DELIVERY, case, Path(temporary) / "workspace"
             )
 
             self.assertEqual(
                 (prepared.workspace / ".eval/skills/requirements/SKILL.md").read_text(encoding="utf-8"),
-                (ROOT / "plugins/planning/skills/requirements/SKILL.md").read_text(encoding="utf-8"),
+                (DELIVERY / "skills/requirements/SKILL.md").read_text(encoding="utf-8"),
             )
 
     def test_prepare_workspace_configures_eval_reviewer_identity(self):
         name, email = "Eval Reviewer", "eval-reviewer@example.invalid"
-        case = planning_case("specs", 7)
+        case = delivery_case("specs", 7)
 
         with tempfile.TemporaryDirectory() as temporary:
             temp = Path(temporary)
-            prepared = runner.prepare_workspace(ROOT, PLANNING, case, temp / "workspace")
+            prepared = runner.prepare_workspace(ROOT, DELIVERY, case, temp / "workspace")
             (temp / "state").mkdir()
 
             for key, value in (("user.name", name), ("user.email", email)):
@@ -484,11 +485,11 @@ class WorkspaceTests(unittest.TestCase):
                 self.assertEqual(result.stdout.strip(), value)
 
     def test_prepare_workspace_commits_baseline_and_leaves_working_fixtures(self):
-        case = planning_case("specs", 7)
+        case = delivery_case("specs", 7)
 
         with tempfile.TemporaryDirectory() as temporary:
             prepared = runner.prepare_workspace(
-                ROOT, PLANNING, case, Path(temporary) / "workspace"
+                ROOT, DELIVERY, case, Path(temporary) / "workspace"
             )
 
             self.assertTrue(
@@ -513,11 +514,11 @@ class WorkspaceTests(unittest.TestCase):
             self.assertNotIn(".eval/skills", evidence["status"])
 
     def test_evidence_distinguishes_commits_from_remaining_work(self):
-        case = planning_case("specs", 7)
+        case = delivery_case("specs", 7)
 
         with tempfile.TemporaryDirectory() as temporary:
             prepared = runner.prepare_workspace(
-                ROOT, PLANNING, case, Path(temporary) / "workspace"
+                ROOT, DELIVERY, case, Path(temporary) / "workspace"
             )
             run_text(
                 [
@@ -537,12 +538,12 @@ class WorkspaceTests(unittest.TestCase):
             self.assertNotIn("docs/specs/approved-spec.md", evidence["status"])
 
     def test_agy_workspace_disables_inherited_customizations(self):
-        case = planning_case("requirements", 1)
+        case = delivery_case("requirements", 1)
 
         with tempfile.TemporaryDirectory() as temporary:
             prepared = runner.prepare_workspace(
                 ROOT,
-                PLANNING,
+                DELIVERY,
                 case,
                 Path(temporary) / "workspace",
                 "agy",
@@ -556,7 +557,7 @@ class WorkspaceTests(unittest.TestCase):
             self.assertNotIn("superstore-eval", runner.collect_evidence(prepared)["status"])
 
     def test_run_case_redacts_credential_leaks_and_discards_workspace(self):
-        case = planning_case("requirements", 1)
+        case = delivery_case("requirements", 1)
         secret = "subscription-token-123456"
 
         def fake_seed(host, state, home):
@@ -590,7 +591,7 @@ class WorkspaceTests(unittest.TestCase):
             ):
                 result = runner.run_case(
                     ROOT,
-                    PLANNING,
+                    DELIVERY,
                     case,
                     "codex",
                     output,
@@ -677,7 +678,7 @@ class WorkspaceTests(unittest.TestCase):
             ):
                 result = runner.run_case(
                     ROOT,
-                    PLANNING,
+                    DELIVERY,
                     case,
                     "codex",
                     output,
@@ -741,7 +742,7 @@ def write_expiry(host: str, home: Path, expiry: datetime, last_refresh: datetime
 
 def scheduling_cases(count: int) -> list[EvalCase]:
     return [
-        eval_case(identifier=index, definition_dir=PLANNING / "skills/specs/evals")
+        eval_case(identifier=index, definition_dir=DELIVERY / "skills/specs/evals")
         for index in range(1, count + 1)
     ]
 
@@ -812,7 +813,7 @@ class ParallelRunnerTests(unittest.TestCase):
             sorted(Counter((host, key) for host, key, _ in runs.calls).values()),
             [1] * 16,
         )
-        self.assertTrue(all(plugin_root == PLANNING for _, _, plugin_root in runs.calls))
+        self.assertTrue(all(plugin_root == DELIVERY for _, _, plugin_root in runs.calls))
         self.assertEqual(
             [(result["host"], result["case"]) for result in results],
             [(host, case.key) for host in ("codex", "claude") for case in cases],
@@ -922,7 +923,7 @@ class ParallelRunnerTests(unittest.TestCase):
                     mock.patch.object(runner, "persist_auth"),
                 ):
                     result = runner.run_case(
-                        ROOT, PLANNING, case, "codex", Path(temporary) / "results", 60,
+                        ROOT, DELIVERY, case, "codex", Path(temporary) / "results", 60,
                         home=Path(temporary) / "home",
                     )
                 self.assertEqual(result["refreshed_login"], bump)
@@ -987,7 +988,7 @@ class ParallelRunnerTests(unittest.TestCase):
                 mock.patch.object(runner, "persist_auth") as persisted,
             ):
                 result = runner.run_case(
-                    ROOT, PLANNING, case, "codex", output, 60, home=Path(temporary) / "home"
+                    ROOT, DELIVERY, case, "codex", output, 60, home=Path(temporary) / "home"
                 )
             self.assertTrue((output / "codex/requirements-1/result.json").is_file())
 

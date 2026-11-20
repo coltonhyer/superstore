@@ -1,0 +1,37 @@
+{
+  "name": "delivery",
+  "version": "0.1.0",
+  "description": "Gather requirements, produce reviewed specs and plans, execute verified changes locally, and manage Open Knowledge Format documents in docs/.",
+  "author": {
+    "name": "Superstore contributors"
+  },
+  "keywords": [
+    "delivery",
+    "planning",
+    "requirements",
+    "specifications",
+    "implementation",
+    "verification",
+    "review",
+    "documentation",
+    "okf",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Delivery",
+    "shortDescription": "Requirements, specs, plans, execution, and OKF docs",
+    "longDescription": "Take requests from approved requirements and reviewed specifications through implementation plans, verified and reviewed local execution, and Open Knowledge Format document management in docs/.",
+    "developerName": "Superstore contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Gather requirements and write a reviewed specification for this change.",
+      "Plan, execute, verify, and review this approved change locally.",
+      "Find, compare, or write Open Knowledge Format documents in docs/."
+    ]
+  }
+}

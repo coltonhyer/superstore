@@ -26,9 +26,7 @@ Antigravity does not support third-party marketplace installation. Install plugi
 
 | Name | Description | Documentation |
 | --- | --- | --- |
-| `library` | Keep specs, plans, and notes as Open Knowledge Format Markdown in `docs/` and read them at any revision. | [README](plugins/library/README.md) |
-| `planning` | Turn rough requests into approved requirements and concise, reviewed specifications. | [README](plugins/planning/README.md) |
-| `implementation` | Execute approved plans through verification, review, and local recording. | [README](plugins/implementation/README.md) |
+| `delivery` | Gather requirements, produce reviewed specs and plans, execute verified changes locally, and manage Open Knowledge Format documents in `docs/`. | [README](plugins/delivery/README.md) |
 | `maintenance` | Establish approved coding standards and review repositories for violations. | [README](plugins/maintenance/README.md) |
 
 > [!NOTE]
@@ -56,6 +54,6 @@ tests/test_marketplace.py
 python3 -m unittest discover -s tests
 ```
 
-Planning also includes live, cross-host behavioral evals. See
-[Planning validation](plugins/planning/README.md#validation) for the model
+Delivery also includes live, cross-host behavioral evals. See
+[Delivery validation](plugins/delivery/README.md#validation) for the model
 matrix, case format, and runner commands.

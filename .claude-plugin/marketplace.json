@@ -7,21 +7,9 @@
   },
   "plugins": [
     {
-      "name": "library",
-      "source": "./plugins/library",
-      "description": "Find, read, pin, and compare Open Knowledge Format documents in docs/, and write notes and other types no workflow owns.",
-      "category": "productivity"
-    },
-    {
-      "name": "planning",
-      "source": "./plugins/planning",
-      "description": "Gather requirements and produce concise, reviewed specifications.",
-      "category": "productivity"
-    },
-    {
-      "name": "implementation",
-      "source": "./plugins/implementation",
-      "description": "Execute approved implementation plans through verification, review, and local recording.",
+      "name": "delivery",
+      "source": "./plugins/delivery",
+      "description": "Gather requirements, produce reviewed specs and plans, execute verified changes locally, and manage Open Knowledge Format documents in docs/.",
       "category": "productivity"
     },
     {

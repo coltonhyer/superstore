@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "delivery",
+  "description": "Gather requirements, produce reviewed specs and plans, execute verified changes locally, and manage Open Knowledge Format documents in docs/."
+}

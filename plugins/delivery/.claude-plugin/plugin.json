@@ -1,0 +1,8 @@
+{
+  "name": "delivery",
+  "description": "Gather requirements, produce reviewed specs and plans, execute verified changes locally, and manage Open Knowledge Format documents in docs/.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Superstore contributors"
+  }
+}

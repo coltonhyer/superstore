@@ -942,7 +942,7 @@ def parse_args(arguments: list[str]) -> argparse.Namespace:
         "--plugin",
         action="append",
         type=Path,
-        help="plugin directory containing skill evals (repeatable; default plugins/planning)",
+        help="plugin directory containing skill evals (repeatable; default plugins/delivery)",
     )
     parser.add_argument("--host", action="append", choices=sorted(HOSTS))
     parser.add_argument("--skill", action="append")
@@ -961,7 +961,7 @@ def main(arguments: list[str] | None = None) -> int:
     signal.signal(signal.SIGINT, terminate_on_signal)
     args = parse_args(arguments or sys.argv[1:])
     plugin_roots = [
-        plugin.resolve() for plugin in (args.plugin or [ROOT / "plugins/planning"])
+        plugin.resolve() for plugin in (args.plugin or [ROOT / "plugins/delivery"])
     ]
     cases = load_plugin_cases(plugin_roots)
     if args.skill:
