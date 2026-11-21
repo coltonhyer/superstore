@@ -6,13 +6,16 @@ description: Verify an explicit implementation change against its intended behav
 # Verifying Changes
 
 Use this procedure for standalone verification, before an implementer records a
-change, and for the assembled result after review fixes. It returns evidence to
-the caller; it does not fix code, commit, or mark a task complete.
+change under sibling `delivery` execution skills (`implementing-plans` and
+`subagent-execution`), and for the assembled result after review edits —
+including both required fixes and optional `Non-blocking` code edits made while
+addressing review findings. It returns evidence to the caller; it does not fix
+code, record changes, or mark a task complete.
 
 ## Establish the subject
 
 Start with the approved intent and an explicit change scope. Inspect the actual
-diff and repository state, including uncommitted work. State when either input
+diff and repository state, including unrecorded changes. State when either input
 is incomplete and limit the conclusion accordingly.
 
 Compare the intended behavior to the actual change, not merely to the
@@ -23,8 +26,10 @@ does not establish omitted boundary, failure, or integration behavior.
 
 Run existing, focused checks where they answer an open question. Do not rerun
 every prior check by default. Results apply only to the code state they tested:
-after a relevant edit, rerun or report the earlier result as stale. If a
-required tool or check is unavailable, record the gap; it is not success.
+after any relevant edit — including required fixes or optional `Non-blocking`
+review edits before recording — rerun affected checks or report the earlier
+result as stale. If a required tool or check is unavailable, record the gap; it
+is not success.
 
 ## Return evidence
 
@@ -43,4 +48,5 @@ Report:
 Leave the implementation and repository history unchanged. Return control to
 the caller to address failures, decide dispositions, record changes, or declare
 completion. For final verification, retain task evidence that still applies and
-rerun checks invalidated by later changes, unresolved concerns, or review fixes.
+rerun checks invalidated by later changes, unresolved concerns, required review
+fixes, or optional `Non-blocking` code edits.
