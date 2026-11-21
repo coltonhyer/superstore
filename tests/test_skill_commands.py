@@ -37,7 +37,9 @@ REQUIREMENTS_TAIL = "| grep -E ': (status|tags): '"
 # Inline patterns that the skills give in prose; each must appear verbatim.
 TAGS_PATTERN = "grep ': tags: .*[[, ]auth[],]'"
 TITLE_PATTERN = "grep ': title: '"
-SUPERSEDES_PATTERN = "grep ': supersedes: docs/specs/auth-sessions.md'"
+SUPERSEDES_PATTERN = (
+    "grep -E ': supersedes: (.*[, [])?docs/specs/auth-sessions\\.md([],]|$)'"
+)
 SLUG_PATTERN = "': tags: .*[[, ]<slug>[],]'"
 
 PIN_RESOLVE = (
@@ -45,6 +47,11 @@ PIN_RESOLVE = (
     "-T 'change_id.short() ++ \" \" ++ commit_id.short() ++ \"\\n\"'"
 )
 PIN_READ = "jj file show -r <rev> docs/specs/auth-sessions.md"
+PIN_BLOB_HASH = (
+    'git --git-dir="$(jj git root)" rev-parse --short=12 '
+    '"$(jj log -r <rev> --no-graph -T commit_id):docs/specs/auth-sessions.md"'
+)
+PIN_BLOB_READ = 'git --git-dir="$(jj git root)" cat-file -p <blob>'
 PIN_COMPARE = "jj diff --from <old> --to <new> docs/specs/auth-sessions.md"
 PIN_HISTORY = "jj log docs/specs/auth-sessions.md"
 PIN_MOVED = "jj log <old path>"
@@ -215,6 +222,34 @@ SPECS = {
     "approved.md": doc("type: spec", "status: approved", "title: Approved"),
     "bodytype.md": doc("title: Body type", body="type: spec\n"),
     "legacy.md": doc("title: Legacy", "status: wip"),
+    "merge-spec.md": doc(
+        "type: spec",
+        "status: stable",
+        "title: Merge spec",
+        "tags: [billing]",
+        "supersedes: [docs/specs/auth-sessions.md]",
+    ),
+    "split-first.md": doc(
+        "type: spec",
+        "status: draft",
+        "title: Split first",
+        "tags: [billing]",
+        "supersedes: [docs/specs/auth-sessions.md, docs/specs/auth.md]",
+    ),
+    "near-prefix.md": doc(
+        "type: spec",
+        "status: stable",
+        "title: Near prefix",
+        "tags: [billing]",
+        "supersedes: old/docs/specs/auth-sessions.md",
+    ),
+    "near-list-prefix.md": doc(
+        "type: spec",
+        "status: draft",
+        "title: Near list prefix",
+        "tags: [billing]",
+        "supersedes: [old/docs/specs/auth-sessions.md]",
+    ),
     "notes.txt": doc("type: spec", "status: stable"),
 }
 PLANS = {
@@ -224,6 +259,27 @@ PLANS = {
         "title: Plan",
         "tags: [auth]",
         "supersedes: docs/specs/auth-sessions.md",
+    ),
+    "split-last.md": doc(
+        "type: plan",
+        "status: stable",
+        "title: Split last",
+        "tags: [billing]",
+        "supersedes: [docs/specs/auth.md, docs/specs/auth-sessions.md]",
+    ),
+    "near-suffix.md": doc(
+        "type: plan",
+        "status: draft",
+        "title: Near suffix",
+        "tags: [billing]",
+        "supersedes: docs/specs/auth-sessions-v2.md",
+    ),
+    "near-list-suffix.md": doc(
+        "type: plan",
+        "status: draft",
+        "title: Near list suffix",
+        "tags: [billing]",
+        "supersedes: [docs/specs/auth-sessions.md.bak]",
     ),
     "legacy-plan.md": doc("tags: [legacy]"),
 }
@@ -239,15 +295,23 @@ STABLE_SPECS = [
     "docs/specs/auth-sessions.md: status: stable",
     "docs/specs/auth.md: status: stable",
     "docs/specs/crlf.md: status: stable",
+    "docs/specs/merge-spec.md: status: stable",
+    "docs/specs/near-prefix.md: status: stable",
     "docs/specs/stable.md: status: stable",
 ]
-STABLE_PLAN = ["docs/plans/plan.md: status: stable"]
+STABLE_PLAN = [
+    "docs/plans/plan.md: status: stable",
+    "docs/plans/split-last.md: status: stable",
+]
 TAGGED_AUTH = [
     "docs/plans/plan.md: tags: [auth]",
     "docs/specs/auth.md: tags: [auth, login]",
 ]
 TITLES = [
+    "docs/plans/near-list-suffix.md: title: Near list suffix",
+    "docs/plans/near-suffix.md: title: Near suffix",
     "docs/plans/plan.md: title: Plan",
+    "docs/plans/split-last.md: title: Split last",
     "docs/specs/approved.md: title: Approved",
     "docs/specs/auth-sessions.md: title: Auth sessions",
     "docs/specs/auth.md: title: Auth",
@@ -257,9 +321,18 @@ TITLES = [
     "docs/specs/deprecated.md: title: Old",
     "docs/specs/draft.md: title: Draft",
     "docs/specs/legacy.md: title: Legacy",
+    "docs/specs/merge-spec.md: title: Merge spec",
+    "docs/specs/near-list-prefix.md: title: Near list prefix",
+    "docs/specs/near-prefix.md: title: Near prefix",
+    "docs/specs/split-first.md: title: Split first",
     "docs/specs/stable.md: title: Billing",
 ]
-SUPERSEDING = ["docs/plans/plan.md: supersedes: docs/specs/auth-sessions.md"]
+SUPERSEDING = [
+    "docs/plans/plan.md: supersedes: docs/specs/auth-sessions.md",
+    "docs/plans/split-last.md: supersedes: [docs/specs/auth.md, docs/specs/auth-sessions.md]",
+    "docs/specs/merge-spec.md: supersedes: [docs/specs/auth-sessions.md]",
+    "docs/specs/split-first.md: supersedes: [docs/specs/auth-sessions.md, docs/specs/auth.md]",
+]
 UNMIGRATED = [
     "docs/plans/legacy-plan.md",
     "docs/specs/approved.md",
@@ -275,8 +348,14 @@ UNTYPED_REVIEWS = [
 ]
 STATUS_AND_TAGS = [
     "docs/plans/legacy-plan.md: tags: [legacy]",
+    "docs/plans/near-list-suffix.md: status: draft",
+    "docs/plans/near-list-suffix.md: tags: [billing]",
+    "docs/plans/near-suffix.md: status: draft",
+    "docs/plans/near-suffix.md: tags: [billing]",
     "docs/plans/plan.md: status: stable",
     "docs/plans/plan.md: tags: [auth]",
+    "docs/plans/split-last.md: status: stable",
+    "docs/plans/split-last.md: tags: [billing]",
     "docs/specs/approved.md: status: approved",
     "docs/specs/auth-sessions.md: status: stable",
     "docs/specs/auth-sessions.md: tags: [auth-sessions, pre-auth]",
@@ -288,6 +367,14 @@ STATUS_AND_TAGS = [
     "docs/specs/draft.md: status: draft",
     "docs/specs/draft.md: tags: [billing]",
     "docs/specs/legacy.md: status: wip",
+    "docs/specs/merge-spec.md: status: stable",
+    "docs/specs/merge-spec.md: tags: [billing]",
+    "docs/specs/near-list-prefix.md: status: draft",
+    "docs/specs/near-list-prefix.md: tags: [billing]",
+    "docs/specs/near-prefix.md: status: stable",
+    "docs/specs/near-prefix.md: tags: [billing]",
+    "docs/specs/split-first.md: status: draft",
+    "docs/specs/split-first.md: tags: [billing]",
     "docs/specs/stable.md: status: stable",
     "docs/specs/stable.md: tags: [billing]",
 ]
@@ -545,6 +632,10 @@ class PinAndCompareTests(unittest.TestCase):
         cls.short = sh(f"git rev-parse --short {cls.first}", cls.repo, cls.env)[1].strip()
         cls.short2 = sh(f"git rev-parse --short {cls.second}", cls.repo, cls.env)[1].strip()
         cls.short3 = sh(f"git rev-parse --short {cls.third}", cls.repo, cls.env)[1].strip()
+        cls.blob1 = sh(
+            f"git rev-parse --short=12 {cls.first}:{OLD_PATH}", cls.repo, cls.env
+        )[1].strip()
+        assert len(cls.blob1) == 12, cls.blob1
 
     def run_lines(self, text):
         """Run each line with its placeholders filled; return the stdout list."""
@@ -554,6 +645,7 @@ class PinAndCompareTests(unittest.TestCase):
                 ("<old path>", OLD_PATH),
                 ("<new path>", NEW_PATH),
                 ("<rev>", self.first),
+                ("<blob>", self.blob1),
                 ("<old>", self.first),
                 ("<new>", self.second),
             ):
@@ -574,6 +666,49 @@ class PinAndCompareTests(unittest.TestCase):
     def test_read_at_a_revision(self, text):
         jj_out, git_out = self.run_lines(text)
         self.assertEqual((jj_out, git_out), (V1.decode(), V1.decode()))
+
+    @covers(PIN, PIN_BLOB_HASH)
+    def test_compute_blob_hash(self, text):
+        jj_out, git_out = self.run_lines(text)
+        self.assertEqual((jj_out, git_out), (f"{self.blob1}\n", f"{self.blob1}\n"))
+
+    @covers(PIN, PIN_BLOB_READ)
+    def test_read_by_blob_hash(self, text):
+        jj_out, git_out = self.run_lines(text)
+        self.assertEqual((jj_out, git_out), (V1.decode(), V1.decode()))
+
+    def test_blob_hash_and_read_in_non_colocated_jj_repo(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            noncoloc = Path(tmp).resolve() / "repo"
+            noncoloc.mkdir()
+
+            def jj(*args):
+                command = [
+                    "jj", "--config", "user.name=Test",
+                    "--config", "user.email=test@example.com", *args,
+                ]
+                done = subprocess.run(
+                    command, cwd=noncoloc, env=self.env, stdin=subprocess.DEVNULL,
+                    capture_output=True, text=True, timeout=30,
+                )
+                self.assertEqual(done.returncode, 0, done.stderr)
+                return done.stdout
+
+            jj("git", "init", "--no-colocate", ".")
+            self.assertFalse((noncoloc / ".git").exists())
+            spec = noncoloc / OLD_PATH
+            spec.parent.mkdir(parents=True)
+            spec.write_bytes(V1)
+            jj("commit", "-m", "auth sessions")
+            rev = jj(
+                "log", "-r", "@-", "--no-graph", "-T", "commit_id",
+            ).strip()
+            hash_cmd = block(PIN, PIN_BLOB_HASH).splitlines()[0].replace("<rev>", rev)
+            code, out, err = sh(hash_cmd, noncoloc, self.env)
+            self.assertEqual((code, out, err), (0, f"{self.blob1}\n", ""))
+            read_cmd = block(PIN, PIN_BLOB_READ).splitlines()[0].replace("<blob>", out.strip())
+            code, out, err = sh(read_cmd, noncoloc, self.env)
+            self.assertEqual((code, out, err), (0, V1.decode(), ""))
 
     @covers(PIN, PIN_COMPARE)
     def test_compare_revisions(self, text):
