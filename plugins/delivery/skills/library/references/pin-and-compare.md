@@ -1,7 +1,8 @@
 # Pin and compare
 
-The commands for reading, comparing, and following the history of a document
-at a revision, in their Jujutsu and Git forms.
+The commands for computing and reading 12-character committed Git blob hashes,
+reading a document at a revision, comparing revisions, and following history,
+in their Jujutsu and Git forms.
 
 Resolve a revision first when the task names it indirectly, such as by its
 description:
@@ -16,6 +17,22 @@ Read a document at a revision:
 ```sh
 jj file show -r <rev> docs/specs/auth-sessions.md
 git show <rev>:docs/specs/auth-sessions.md
+```
+
+Compute a 12-character committed Git blob hash (always from a committed
+revision, never from a dirty working copy; `jj git root` works in both
+colocated and non-colocated Git-backed Jujutsu repositories):
+
+```sh
+git --git-dir="$(jj git root)" rev-parse --short=12 "$(jj log -r <rev> --no-graph -T commit_id):docs/specs/auth-sessions.md"
+git rev-parse --short=12 <rev>:docs/specs/auth-sessions.md
+```
+
+Read a document by its committed Git blob hash:
+
+```sh
+git --git-dir="$(jj git root)" cat-file -p <blob>
+git cat-file -p <blob>
 ```
 
 Compare a document between revisions, or between a revision and the working

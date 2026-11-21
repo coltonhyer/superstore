@@ -5,13 +5,12 @@ description: Use when a task needs to find, read, write, pin, or compare specs, 
 
 # Library
 
-Every document is an Open Knowledge Format (OKF) concept: Markdown with a
-frontmatter block, committed in the repository. Version control supplies
-history, exact bytes, and pinning. This skill is superstore's OKF encoder: it
-states only what OKF leaves open, namely document types, locations, extra
-fields, when each status is set, and how to find, write, pin, and compare
-documents. It never creates an index, a cache, or a helper script, and never
-adds a document folder to an ignore file.
+Every document is an Open Knowledge Format (OKF) concept: Markdown with
+frontmatter, committed in the repository. Version control supplies history,
+exact bytes, and pinning. This skill is superstore's OKF encoder: it states
+only what OKF leaves open—types, locations, extra fields, status rules, and
+how to find, write, pin, and compare documents. Never create an index, cache,
+or helper script, and never add a document folder to an ignore file.
 
 OKF governs. [`references/okf-spec.md`](references/okf-spec.md) is a
 byte-for-byte copy of OKF v0.2 (`SPEC.md`) from
@@ -36,16 +35,18 @@ A document's folder resolves in this order:
    that type, in a sentence such as `Specs live in design/specs/.`
 3. `docs/<kind>/`. Kind folders are flat.
 
-Reading follows the same order. A document at a one-off user path is still
-valid; it is found when a task names it.
+Reading follows the same order; a document at a one-off user path is valid
+and found when a task names it.
 
 The **document folders** are the resolved folders of `spec`, `plan`,
 `handoff`, and `note`, plus any folder `AGENTS.md` or `CLAUDE.md` names for a
-type. A document of another type is found when a task names that type.
-`.agents/execution/` is execution scratch, not a document folder.
+type; other types are found when named. `.agents/execution/` is execution
+scratch, not a document folder.
 
-A file is named `<slug>.md`. The slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and
-is neither `index` nor `log`, which OKF reserves (§3.1).
+A file is named `<slug>.md`, matching `^[a-z0-9]+(-[a-z0-9]+)*$` and neither
+`index` nor `log`, which OKF reserves (§3.1). Point-in-time standalone notes in
+the notes folder (default `docs/notes/`) may prefix filenames with `YYYY-MM-DD-`
+(which fits the slug rule); living specs keep undated domain slugs.
 
 ## Frontmatter
 
@@ -58,36 +59,41 @@ present:
 | `title` | always | one line of text, in double quotes |
 | `description` | always | one sentence, in double quotes |
 | `status` | specs and plans | `draft`, `stable`, or `deprecated` |
-| `verified` | approved specs and plans, when approval can name a person | one line: `{ by: human:<approver>, at: <approval time> }` |
+| `verified` | approved specs and plans, when approval names a human or autonomous verifier | `{ by: human:<approver>, at: <approval time> }` (explicit human approval) or `{ by: process:delivery-autonomous, at: <approval time> }` (autonomous clean review; OKF `machine-confirmed`, never `human:`) |
 | `tags` | always | inline list of one or more slugs, such as `[auth, session-management]` |
-| `implements` | optional | one repository path, such as `docs/specs/auth-sessions.md` |
-| `supersedes` | optional | one repository path |
+| `implements` | optional | one repository path (such as `docs/specs/auth-sessions.md`) or inline list (`[path-a, path-b]`) for multi-spec plans |
+| `supersedes` | optional | one repository path or inline list (`[path-a, path-b]`) for merges and splits |
 | `references` | optional | inline list of repository paths |
 
-- Every field is one line: no block lists or nesting. `title` and
-  `description` are always in double quotes, with `\` and `"` inside them
-  escaped as `\\` and `\"`; unquoted, a `: ` breaks the line and a ` #` cuts
-  it short. No other field is quoted. OKF allows more; this is the subset
-  written here (§4.1).
-- A repository path is relative to the repository root, without a leading
-  slash, and includes `.md`. `references` is unrelated to OKF's `references/`
-  folder convention (§6.3).
-- `verified` is written by approval, never by this skill. The approver is the
-  user name version control is configured with, and the time is an ISO 8601
-  UTC instant such as `2026-11-01T18:30:00Z`.
-- The body is free Markdown after the frontmatter block and one blank line.
-- A document without `status` is final when written. OKF reads an absent
-  status as `stable` (§5.4).
+- Every field is one line (no block lists or nesting). Quote only `title` and
+  `description` in double quotes (no other field is quoted), escaping `\` and
+  `"` as `\\` and `\"` (unquoted `: ` breaks lines; ` #` cuts them). OKF allows
+  more; this is the subset written here (§4.1).
+- Paths are repo-root relative, without a leading slash, and include `.md`.
+  `references` is unrelated to OKF's `references/` folder convention (§6.3).
+- `verified` is written by approval, never by this skill: `human:<approver>`
+  uses the user name version control is configured with; autonomous clean
+  review uses `process:delivery-autonomous` (never `human:`). The time is an
+  ISO 8601 UTC instant such as `2026-11-01T18:30:00Z`.
+- Body is free Markdown after the frontmatter block and one blank line. A
+  document without `status` is final when written; OKF reads absent status as
+  `stable` (§5.4).
 
 ## Status
 
-- Specs and plans are written with `status: draft`. Explicit approval sets
-  `stable` and writes `verified`. Approving a document that has `supersedes`
-  also sets the named document to `deprecated` unless it already is; a target
-  without a `type` line is not yet migrated, so it stays unchanged and the
-  report says so.
+- Specs and plans are written with `status: draft`. Approval (explicit human or
+  authorized autonomous clean review) sets `stable` and writes `verified`.
+  Approving a document with `supersedes` (scalar or inline list) iterates over
+  every listed target: sets each migrated target to `deprecated` unless it
+  already is, leaves unmigrated targets (no frontmatter or no `type` line)
+  unchanged and reports them, and ignores missing targets. For a spec split,
+  deprecate the split spec only once the replacement set is complete and
+  approved.
 - Revising a stable document in place sets `draft` and removes `verified`;
-  approval sets `stable` and writes a new `verified`.
+  approval sets `stable` and writes a new `verified`. A mechanical
+  blob-citation-only refresh on a `stable` plan whose tasks and content are
+  unchanged commits without flipping `status` to `draft` or re-requesting
+  approval.
 - A document is **current** when its `status` is absent or `stable`. The body
   of a `draft` or `deprecated` document is read only when a task asks for
   history or a comparison. `verified` records who approved a document and
@@ -95,9 +101,8 @@ present:
 - A spec or plan without `status` is current to readers, as OKF says, but is
   not approved for planning or execution.
 - Revisions of the same document are in-place edits; read history through
-  version control, not through new files. `supersedes` is used only when a
-  differently named document replaces another; a `supersedes` target that does
-  not exist affects nothing.
+  version control, not new files. `supersedes` is used only when a differently
+  named document replaces another.
 
 ## Find
 
@@ -110,20 +115,17 @@ present:
    ls docs/specs/
    ```
 
-2. **Filter on frontmatter lines, inside the document folders only.** The
-   frontmatter is the block between the first two `---` lines at the top of a
-   file. Filter on those lines only, with any tool whose output is only that
-   block's lines; a YAML parser is fine when the environment has one. Never
-   decide from a line below the closing `---`: bodies hold example
-   frontmatter in fenced blocks. Never search the whole repository: eval
-   fixtures and other Markdown can carry similar lines. Rule documents out
-   from their frontmatter lines before opening any body, even when the task
-   or the user hands you a list of files. `head`, `cat`, and a version-control `show` or
-   `diff` of a document count as reading its body, so do not use them to
-   inspect frontmatter or to discover documents, and do not use
-   version-control history to discover documents. The extractor below prints
-   only frontmatter, one `FILE: line` per line, so it is allowed even though
-   `awk` scans the whole file; pipe it into `grep`.
+2. **Filter on frontmatter lines, inside the document folders only.**
+   Frontmatter is the block between the first two `---` lines at the top of a
+   file; filter only those lines (a YAML parser is fine if available). Never
+   decide from a line below closing `---` (bodies hold example frontmatter in
+   fenced blocks) or search the whole repo (eval fixtures match). Rule
+   documents out from frontmatter before opening any body, even given a file
+   list. `head`, `cat`, and version-control `show` or `diff` count as reading
+   bodies—never use them or version-control history to inspect frontmatter or
+   discover documents. The extractor below prints only `FILE: line` for
+   frontmatter, so it is allowed even though `awk` scans the whole file; pipe
+   it into `grep`.
 
    ```sh
    find -H docs/specs -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
@@ -133,16 +135,16 @@ present:
           fm { print FILENAME ": " $0 }' {} + | grep ': status: stable$'
    ```
 
-   Specs and plans always carry `status`, so this lists the current specs. A
-   document of another type is current when it has no `status` line or
-   `status: stable`. List other folders after `docs/specs` to search them
-   too, and change the last `grep` to filter on another field.
-   Match whole tag slugs by delimiting on the inline-list syntax, not with
-   `\b`, which treats `-` as a boundary: `grep ': tags: .*[[, ]auth[],]'` for
-   a tag (over `docs/specs docs/plans`), `grep ': title: '` for titles. To
-   find documents naming a path in `supersedes`, search every document folder
-   (`docs/specs docs/plans docs/handoffs docs/notes`) and use
-   `grep ': supersedes: docs/specs/auth-sessions.md'`.
+   Specs and plans always carry `status`, so this lists current specs. Other
+   types are current when `status` is absent or `stable`. Add other folders
+   after `docs/specs`, and change the `grep` to filter other fields. Match
+   whole tag slugs on inline-list delimiters (not `\b`, which breaks on `-`):
+   `grep ': tags: .*[[, ]auth[],]'` (over `docs/specs docs/plans`),
+   `grep ': title: '` for titles. To find documents naming a path in
+   `supersedes`, search every document folder (`docs/specs docs/plans
+   docs/handoffs docs/notes`) with
+   `grep -E ': supersedes: (.*[, [])?docs/specs/auth-sessions\.md([],]|$)'`
+   (matches scalar and inline-list forms without prefix/suffix false matches).
 
 3. **Keep current documents.** Keep hits whose `status` is `stable` or
    absent; drop `draft` and `deprecated`. A `supersedes` line on a draft
@@ -169,23 +171,24 @@ present:
           END { if (f != "" && !t) print f }' {} + \) | sort -u
    ```
 
-7. **Cite** each document by its path, or by `path@revision` for a pinned
-   read.
+7. **Cite** each document by its path, `<path>`, blob `<12-char hash>` for
+   committed plans and handoffs, or `path@revision` for ad-hoc pinned reads.
 
 ## Pin and compare
 
-A locator is a repository-relative path, written `path@revision` when pinned
-to a version-control revision such as a Jujutsu change id or a Git commit. An
-unpinned locator means the working copy.
-Read a pinned locator through the active version control, never from the
-working copy. Use whichever system the repository uses; neither is preferred.
+A locator is a repository-relative path, pinned as `<path>`, blob
+`<12-char hash>` (committed plans and handoffs) or `path@revision` (ad-hoc
+pinned reads via Jujutsu change/commit id or Git commit). An unpinned locator
+means the working copy. Compute blob hashes only from committed revisions,
+never dirty working copies, and read pinned locators through version control,
+never the working copy; neither Jujutsu nor Git is preferred.
 
-Before resolving a revision, reading a document at a revision, comparing
-revisions, or listing a document's history, read
-[`references/pin-and-compare.md`](references/pin-and-compare.md); it gives each
-command in its Jujutsu and Git forms and how to follow history across a move.
-
-Cite the result as `path@revision` with the revision you actually read.
+Before computing or reading a 12-character committed Git blob hash, resolving a
+revision, reading a document at a revision, comparing revisions, or listing a
+document's history, read
+[`references/pin-and-compare.md`](references/pin-and-compare.md) for Jujutsu
+and Git commands and move history. Cite ad-hoc reads as `path@revision` with the
+revision read.
 
 ## Write
 
@@ -196,11 +199,9 @@ recording. Do not edit an existing file unless the task asks to change it.
 
 - Leave the new document in the working copy and commit nothing. Recording it
   belongs to the user or the workflow that asked for it.
-- Before writing the first document of a type to a default folder that
-  already exists, check that the folder holds no Markdown without OKF
-  frontmatter, other than `index.md` and `log.md`, such as another tool's
-  reports. Run this check, with the type's folder in place of
-  `docs/reviews`:
+- Before writing the first document of a type to an existing default folder,
+  check that it holds no Markdown without OKF frontmatter (besides `index.md`
+  and `log.md`, e.g., another tool's reports), replacing `docs/reviews`:
 
   ```sh
   find -H docs/reviews -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
@@ -211,10 +212,9 @@ recording. Do not edit an existing file unless the task asks to change it.
          END { if (f != "" && !t) print f }' {} + \) | sort -u
   ```
 
-  If it lists any file, stop and ask the user where the documents should go.
-  Write nothing in that folder until they answer.
-- Never create `index.md` or `log.md`; the general rule against an index,
-  cache, script, or ignore-file entry applies here too.
+  If it lists any file, stop, ask the user where to put the documents, and
+  write nothing there until they answer.
+- Never create `index.md` or `log.md`, nor an index, cache, script, or ignore entry.
 
 A complete note, `docs/notes/ci-runners.md`:
 
@@ -233,7 +233,6 @@ Paginate long test matrices across two runner pools.
 
 ## When to open the spec
 
-Open [`references/okf-spec.md`](references/okf-spec.md) for a type or case these
-rules do not cover, or for an OKF folder another tool wrote. Sections: §3.1
-reserved filenames, §4.1 frontmatter, §5.4 status, §6 links and paths, §8 index
-files, §9 log files, §11 conformance.
+Open [`references/okf-spec.md`](references/okf-spec.md) for cases these
+rules omit or another tool's OKF folder (§3.1 reserved filenames, §4.1
+frontmatter, §5.4 status, §6 links/paths, §8 index, §9 log, §11 conformance).
