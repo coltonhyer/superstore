@@ -272,6 +272,40 @@
         "Cites the selected document's path",
         "Does not write a script, index, or document"
       ]
+    },
+    {
+      "id": 11,
+      "prompt": "Which current spec supersedes docs/specs/token-policy.md? Cite its path, and report the committed 12-character Git blob hash and the token lifetime recorded in docs/specs/token-policy.md at the committed revision described `eval fixture`, without modifying any file.",
+      "expected_output": "Filters frontmatter across document folders to select docs/specs/credential-lifecycle.md from its inline-list supersedes field, excludes docs/specs/api-tokens.md without reading its body, resolves the committed eval fixture revision, computes the 12-character committed Git blob hash of docs/specs/token-policy.md at that revision, reads its committed content rather than the dirty working copy, reports the 15-minute token lifetime and 12-character hash, and modifies nothing.",
+      "files": [
+        {
+          "source": "files/token-policy-v1.md",
+          "target": "docs/specs/token-policy.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/token-policy-v2.md",
+          "target": "docs/specs/token-policy.md",
+          "state": "working"
+        },
+        {
+          "source": "files/credential-lifecycle-spec.md",
+          "target": "docs/specs/credential-lifecycle.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/api-tokens-spec.md",
+          "target": "docs/specs/api-tokens.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Selects docs/specs/credential-lifecycle.md as the current spec superseding docs/specs/token-policy.md from its inline-list supersedes field, and cites its path",
+        "Excludes docs/specs/api-tokens.md (whose supersedes names only docs/specs/token-policy-v2.md) without reading its body",
+        "Resolves the committed `eval fixture` revision through version control, computes the 12-character committed Git blob hash of docs/specs/token-policy.md at that committed revision (matching the committed v1 content rather than hashing the dirty working copy), and reports that 12-character hash",
+        "Reads the committed content of docs/specs/token-policy.md at that revision rather than the working copy, reporting the 15-minute token lifetime rather than the working copy's 120-minute lifetime",
+        "Modifies no file, commits nothing, and writes no script, index, or document"
+      ]
     }
   ]
 }
