@@ -10,9 +10,9 @@ implements: docs/specs/text.md
 
 # Text plan
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/text.md`
+- docs/specs/text.md, blob 67ab185d74ce
 
 ## Approach
 

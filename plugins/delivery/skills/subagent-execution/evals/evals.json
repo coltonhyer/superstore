@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Supervise the approved two-task plan at docs/plans/sequence.md against docs/specs/sequence.md. Delegation is available and inline work was not requested. notes.md is unrelated working-copy work. Use .agents/execution/sequence-run/ after confirming its local exclusion. Dispatch one fresh implementer at a time with only its task context; read each report and the complete recorded range; arrange task review; send any material finding back for a verified fix; then arrange whole-change review and verification. Finish with the final handoff and remove only successful sequence-run scratch. Do not implement, publish, merge, or use a worker worktree unless repository instructions require one.",
-      "expected_output": "Sequentially delegates isolated tasks, bases task completion on actual reports, complete ranges, review and verification evidence, preserves unrelated work, performs whole-change checks, and writes and records the handoff note before removing scratch.",
+      "expected_output": "Sequentially delegates isolated tasks, bases task completion on actual reports, complete ranges, review and verification evidence, preserves unrelated work, performs whole-change checks, and writes and records the handoff note at docs/handoffs/sequence.md before removing scratch.",
       "skills": [
         "implementing-plans",
         "reviewing-implementation",
@@ -57,7 +57,7 @@
         "Reads returned reports and actual full task ranges before arranging review and adjudicating evidence",
         "Returns task findings for verified implementation fixes before advancing",
         "Performs whole-change review and verification, leaves notes.md unrecorded and untouched, and does not publish or merge",
-        "After whole-change checks pass, writes docs/handoffs/sequence-run.md, with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/sequence.md frontmatter, Plan, Spec, Start, and Result lines, and the headings Whole-change checks, Review outcomes and dispositions, Limitations, and Tactical decisions, and records it as its own revision before removing sequence-run scratch",
+        "After whole-change checks pass, writes docs/handoffs/sequence.md with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/sequence.md frontmatter, Plan (docs/plans/sequence.md, blob 28800df1ca99) and Specs (docs/specs/sequence.md, blob b9d427b7b2f2) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions, and records it as its own revision before removing sequence-run scratch",
         "When the host exposes model or effort controls, sets them explicitly on every dispatch: the smallest model for the one-line implementation tasks, each task reviewer one tier above its implementer rather than a stronger tier, and the strongest tier for whole-change review"
       ]
     },
@@ -357,8 +357,8 @@
     },
     {
       "id": 9,
-      "prompt": "Finish the delegated execution described by the excluded .agents/execution/finish-run/execution-state.md. Every task is complete and reviewed, whole-change review and verification passed, and the handoff note is already written at docs/handoffs/finish-run.md. I already attempted to record the note and the repository's commit policy rejected it. Do not retry the commit or work around the policy; complete the Finish stage and report.",
-      "expected_output": "Leave the handoff note in place, run no commit or retry, report the commit-policy rejection, retain finish-run scratch, and make no completion claim.",
+      "prompt": "Finish the delegated execution described by the excluded .agents/execution/finish-run/execution-state.md. Every task is complete and reviewed, whole-change review and verification passed, and the handoff note is already written at docs/handoffs/finish.md. I already attempted to record the note and the repository's commit policy rejected it. Do not retry the commit or work around the policy; complete the Finish stage and report.",
+      "expected_output": "Leave docs/handoffs/finish.md in place, run no commit or retry, report the commit-policy rejection, retain finish-run scratch, and make no completion claim.",
       "skills": [
         "implementing-plans",
         "reviewing-implementation",
@@ -397,12 +397,12 @@
         },
         {
           "source": "files/finish-note.md",
-          "target": "docs/handoffs/finish-run.md",
+          "target": "docs/handoffs/finish.md",
           "state": "working"
         }
       ],
       "expectations": [
-        "Leaves docs/handoffs/finish-run.md in place",
+        "Leaves docs/handoffs/finish.md in place",
         "Runs no commit command and does not retry the rejected recording or work around the commit policy",
         "Reports that the handoff note could not be recorded, naming the commit-policy rejection",
         "Retains .agents/execution/finish-run/ scratch",
@@ -444,6 +444,98 @@
         "Identifies that the plan's status is deprecated rather than stable and that execution authorization does not substitute for plan approval",
         "Dispatches no worker, changes no implementation file, records no revision, and creates no execution scratch",
         "Routes the plan back through plans for review and explicit approval"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "This is an explicitly authorized unattended autonomous execution of docs/plans/auto.md against docs/specs/auto.md (specs, plans, execution, and handoff approvals are delegated in advance; do not push, create a PR, merge, or publish). Delegation is available and inline work was not requested. Use .agents/execution/auto-run/ after confirming its local exclusion. Carry forward this prior-stage Decisions for review item into execution state and the final handoff note:\n- Question: Should non-boolean truthy inputs coerce via Python truthiness or require strict bool?\n- Options considered: strict isinstance(active, bool) check vs. Python truthiness\n- Chosen option: Python truthiness per spec wording\n- Reason: Most conservative match to `active is truthy` without adding an unstated TypeError\n- Evidence: auto:R1",
+      "expected_output": "Execute AUTO-1 via delegated worker with verification, recording, independent task review, and whole-change checks; carry the Decisions for review item into docs/handoffs/auto.md with Plan and Specs committed blob citations, a Change line, and all six fixed headings; commit docs/handoffs/auto.md as its own separate revision; remove only auto-run scratch; and do not push, create a PR, merge, or publish.",
+      "skills": [
+        "implementing-plans",
+        "reviewing-implementation",
+        "verifying-changes"
+      ],
+      "files": [
+        {
+          "source": "files/auto-spec.md",
+          "target": "docs/specs/auto.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/auto-plan.md",
+          "target": "docs/plans/auto.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/auto.py",
+          "target": "auto.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/test_auto.py",
+          "target": "test_auto.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/local-exclude",
+          "target": ".git/info/exclude",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Dispatches a fresh bounded worker rather than implementing AUTO-1 inline, verifying and recording the task change before independent task review",
+        "Runs whole-change review and verification after task completion",
+        "Writes docs/handoffs/auto.md with type: handoff, quoted title and description, tags copied from the plan, implements: docs/plans/auto.md, Plan (docs/plans/auto.md, blob 904a55bf7cc5) and Specs (docs/specs/auto.md, blob c92fd5463679) lines, a Change line (no commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and all six fixed headings (Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, Tactical decisions)",
+        "Carries the five-field Decisions for review entry (Question, Options considered, Chosen option, Reason, Evidence) into execution state during execution and into ## Decisions for review in docs/handoffs/auto.md",
+        "Commits docs/handoffs/auto.md as its own separate revision before removing auto-run scratch, and does not push, create a PR, merge, or publish"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "This is an explicitly authorized unattended autonomous execution of docs/plans/halt.md against docs/specs/halt.md, continuing from .agents/execution/halt-run/execution-state.md. The completed independent-review attempt for task HALT-1 returned only 'working on it' and no usable review result. Complete the Finish or halt handling for this gate.",
+      "expected_output": "Halt immediately because the independent reviewer returned unusable output in autonomous mode, never fall back to self-review, write no handoff note, retain .agents/execution/halt-run/ scratch, and emit all accumulated Decisions for review in the halt report.",
+      "skills": [
+        "implementing-plans",
+        "reviewing-implementation",
+        "verifying-changes"
+      ],
+      "files": [
+        {
+          "source": "files/halt-spec.md",
+          "target": "docs/specs/halt.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/halt-plan.md",
+          "target": "docs/plans/halt.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/halt.py",
+          "target": "halt.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/test_halt.py",
+          "target": "test_halt.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/local-exclude",
+          "target": ".git/info/exclude",
+          "state": "baseline"
+        },
+        {
+          "source": "files/halt-state.md",
+          "target": ".agents/execution/halt-run/execution-state.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Halts immediately on the unusable independent-review output without falling back to author self-review",
+        "Writes no handoff note under docs/handoffs/",
+        "Retains .agents/execution/halt-run/ scratch",
+        "Emits all accumulated Decisions for review (including all five fields from execution state) in the halt report"
       ]
     }
   ]

@@ -9,9 +9,9 @@ implements: docs/specs/api-protection.md
 
 # API protection
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/api-protection.md`
+- docs/specs/api-protection.md, blob 987102b8f7f0
 
 ## Approach
 

@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Review this task change against the approved intent: accept only a nonempty username of at most 12 characters, rejecting blank and overlong input. The scope is username.py and test_username.py. Return findings and verification gaps; do not edit, commit, complete the task, or assign dispositions.",
-      "expected_output": "Identify that the test merely asserts truthiness and fails to establish blank or overlong rejection, naming the concrete escaping invalid-input behavior without changing code or assigning a disposition.",
+      "expected_output": "Identify that the test merely asserts truthiness and fails to establish blank or overlong rejection, naming the concrete escaping invalid-input behavior without changing code or assigning a disposition (Addressed, Elevated, Dismissed, or Declined).",
       "files": [
         {"source": "files/username.py", "target": "username.py", "state": "working"},
         {"source": "files/test_username.py", "target": "test_username.py", "state": "baseline"}
@@ -12,7 +12,7 @@
       "expectations": [
         "Finds the weak assertion",
         "Names blank or overlong username acceptance as a concrete uncovered defect",
-        "Returns evidence and impact without assigning Addressed, Elevated, or Dismissed",
+        "Returns evidence and impact without assigning Addressed, Elevated, Dismissed, or Declined",
         "Does not edit or commit"
       ]
     },
@@ -60,6 +60,27 @@
         "Finds the zero-input breakage introduced by the correction",
         "Keeps findings tied to the fix range and newly introduced breakage",
         "Does not edit, commit, complete progress, or assign dispositions"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Review the single uncommitted working change (@) against the approved intent: move session token issuance from src/auth/tokens.py to src/auth/session_tokens.py (with no compatibility-shim requirement) and update docs/guides/sessions.md to document the new module path and default TTL. Return findings and evidence only; do not edit, commit, complete progress, or assign dispositions (Addressed, Elevated, Dismissed, or Declined).",
+      "expected_output": "Flag all three defects with file/symbol evidence without editing, committing, or assigning dispositions: (1) the leftover re-export shim in src/auth/tokens.py and stale importer in src/api/routes.py, (2) the inaccurate 15-minute default TTL claim in docs/guides/sessions.md contradicted by DEFAULT_TOKEN_TTL_MINUTES = 60 in src/auth/session_tokens.py, and (3) the unrelated pre-existing format_cents fix in src/util/format.py tangled into the same change rather than separated into its own commit.",
+      "files": [
+        {"source": "files/tokens_baseline.py", "target": "src/auth/tokens.py", "state": "baseline"},
+        {"source": "files/tokens_working.py", "target": "src/auth/tokens.py", "state": "working"},
+        {"source": "files/session_tokens.py", "target": "src/auth/session_tokens.py", "state": "working"},
+        {"source": "files/routes.py", "target": "src/api/routes.py", "state": "baseline"},
+        {"source": "files/sessions_guide_baseline.md", "target": "docs/guides/sessions.md", "state": "baseline"},
+        {"source": "files/sessions_guide_working.md", "target": "docs/guides/sessions.md", "state": "working"},
+        {"source": "files/format_baseline.py", "target": "src/util/format.py", "state": "baseline"},
+        {"source": "files/format_working.py", "target": "src/util/format.py", "state": "working"}
+      ],
+      "expectations": [
+        "Flags the leftover re-export shim in src/auth/tokens.py and the stale old-path importer in src/api/routes.py",
+        "Flags the factual mismatch between docs/guides/sessions.md (15 minutes) and src/auth/session_tokens.py (DEFAULT_TOKEN_TTL_MINUTES = 60)",
+        "Flags the unrelated pre-existing fix in src/util/format.py as tangled into the same change rather than separated into its own commit",
+        "Does not edit files, commit, mark progress complete, or assign dispositions (Addressed, Elevated, Dismissed, or Declined)"
       ]
     }
   ]

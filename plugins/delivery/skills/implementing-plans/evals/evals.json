@@ -47,7 +47,7 @@
     {
       "id": 2,
       "prompt": "Execute this approved multi-task plan inline. The exact spec is docs/specs/text.md; the exact plan is docs/plans/text.md. Task TEXT-1 is to make slug.py normalize outer whitespace and lowercase. Task TEXT-2 is to make summary.py format `count=<number>`. Work in .agents/execution/text-run/, adding it to a local VCS exclusion before creating it. No subagent capability is available, so perform and disclose self-review under the review contract. Verify each task before recording, reconcile and maintain execution state, then perform whole-change verification and final handoff. On success, remove only this execution scratch. notes.md and the existing excluded .agents/execution/unrelated-run/sentinel.md are unrelated work and must remain separate.",
-      "expected_output": "Complete the two tasks through verify-then-record ordering, disclose self-review because subagents are unavailable, perform final assembled-change verification and a handoff with revision ranges, write and record the handoff note at docs/handoffs/text-run.md, preserve unrelated work, and remove only the successful execution scratch after the note is recorded.",
+      "expected_output": "Complete the two tasks through verify-then-record ordering, disclose self-review because subagents are unavailable, perform final assembled-change verification and a handoff, write and record the handoff note at docs/handoffs/text.md, preserve unrelated work, and remove only the successful execution scratch after the note is recorded.",
       "skills": [
         "subagent-execution",
         "reviewing-implementation",
@@ -105,8 +105,8 @@
         "Uses and discloses self-review rather than claiming independent review",
         "Runs a whole-change check after task work and reports final handoff evidence",
         "Keeps notes.md and unrelated-run/sentinel.md outside task revisions and removes only text-run scratch after success",
-        "After whole-change checks pass, writes docs/handoffs/text-run.md, with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/text.md frontmatter, Plan, Spec, Start, and Result lines, and the headings Whole-change checks, Review outcomes and dispositions, Limitations, and Tactical decisions",
-        "Records the note as its own revision before removing text-run scratch"
+        "After whole-change checks pass, writes docs/handoffs/text.md with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/text.md frontmatter, Plan (docs/plans/text.md, blob f770fba88ff4) and Specs (docs/specs/text.md, blob 67ab185d74ce) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions",
+        "Records docs/handoffs/text.md as its own revision before removing text-run scratch"
       ]
     },
     {
@@ -328,7 +328,7 @@
     {
       "id": 8,
       "prompt": "Execute the whole approved plan at docs/plans/greeting.md against docs/specs/greeting.md. Delegation is available and inline work was not requested. Route through subagent-execution: give one fresh implementer only GREET-1's bounded brief, read its report and complete recorded range, arrange independent review and verified fixes if needed, then finish with whole-change review and verification. Do not implement the greeting task yourself, publish, merge, or create a worker worktree unless repository instructions require it.",
-      "expected_output": "Routes default delegated whole-plan execution through sequential supervision, retaining task and whole-change verification/review boundaries without inline implementation, and writes and records the handoff note before scratch cleanup.",
+      "expected_output": "Routes default delegated whole-plan execution through sequential supervision, retaining task and whole-change verification/review boundaries without inline implementation, and writes and records the handoff note at docs/handoffs/greeting.md before scratch cleanup.",
       "skills": [
         "subagent-execution",
         "reviewing-implementation",
@@ -360,19 +360,14 @@
         "Routes the primary agent through subagent-execution when delegation is available by default",
         "Dispatches a fresh bounded worker rather than implementing GREET-1 inline",
         "Requires returned report, complete task-range review, verified fixes when needed, and whole-change review and verification",
-        "After whole-change checks pass, writes docs/handoffs/<execution-id>.md, with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/greeting.md frontmatter and the fixed headings, and records it as its own revision before removing that execution's scratch",
+        "After whole-change checks pass, writes docs/handoffs/greeting.md with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/greeting.md frontmatter, Plan (docs/plans/greeting.md, blob 07df7ff6b927) and Specs (docs/specs/greeting.md, blob be16f04058d4) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the fixed headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions, and records it as its own revision before removing that execution's scratch",
         "Does not publish, merge, or require a worker worktree without repository instruction"
       ]
     },
     {
       "id": 9,
-      "prompt": "Execute the whole approved plan inline. Its locators are pinned: the plan is docs/plans/pin.md@<rev> and the spec is docs/specs/pin.md@<rev>, where <rev> is the revision whose description is `eval fixture`. The working copy holds an unreviewed draft edit of the plan file that is unrelated work; leave it untouched and unrecorded. No subagent capability is available, so perform and disclose self-review under the review contract. Work in .agents/execution/pin-run/, adding it to a local VCS exclusion before creating it, and on success remove only that scratch.",
-      "expected_output": "Resolve the `eval fixture` revision, read the plan and spec at that revision through Jujutsu rather than the working copy, implement the pinned title-case task, verify and record it, run whole-change checks, write and record a handoff note citing the pinned locators, and leave the working-copy plan edit untouched before removing pin-run scratch.",
-      "skills": [
-        "subagent-execution",
-        "reviewing-implementation",
-        "verifying-changes"
-      ],
+      "prompt": "I authorize executing the plan at docs/plans/pin.md against docs/specs/pin.md. Run it inline.",
+      "expected_output": "Refuse to execute because the repository plan at docs/plans/pin.md has uncommitted working-copy changes and is not committed and clean, route it back through plans for review and approval, and modify neither pin.py nor docs/plans/pin.md, record nothing, and create no execution scratch.",
       "files": [
         {
           "source": "files/pin-spec.md",
@@ -401,10 +396,14 @@
         }
       ],
       "expectations": [
-        "Resolves the revision described `eval fixture` and reads the plan and spec at that revision through version control, not from the working copy",
-        "Implements the pinned title-case task rather than the working-copy draft's upper-case change, and verifies it before recording",
-        "Leaves the working-copy plan edit unrecorded and unchanged",
-        "Writes docs/handoffs/pin-run.md with type: handoff and implements: docs/plans/pin.md, whose Plan and Spec lines cite the pinned locators with the resolved revision, and records it as its own revision before removing pin-run scratch"
+        "Identifies that docs/plans/pin.md is dirty or uncommitted in the working copy and therefore not execution-ready",
+        "Routes docs/plans/pin.md back through plans rather than executing either the baseline or working-copy version",
+        "Does not modify pin.py or docs/plans/pin.md, record any revision, or create execution scratch"
+      ],
+      "skills": [
+        "subagent-execution",
+        "reviewing-implementation",
+        "verifying-changes"
       ]
     },
     {
@@ -442,6 +441,38 @@
         "Identifies that the plan's status is draft rather than stable and that execution authorization does not substitute for plan approval",
         "Does not change greeting.py, record a revision, or create execution scratch",
         "Routes the plan back through plans for review and explicit approval"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Take this approved spec at docs/specs/greeting.md to code end-to-end.",
+      "expected_output": "Treat the ordinary multi-stage prompt as interactive mode (not autonomous opt-in), route through plans rather than starting implementation without an approved plan and separate execution authorization, and make no code changes or commits.",
+      "skills": [
+        "subagent-execution",
+        "reviewing-implementation",
+        "verifying-changes"
+      ],
+      "files": [
+        {
+          "source": "files/greeting-spec.md",
+          "target": "docs/specs/greeting.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/greeting.py",
+          "target": "greeting.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/test_greeting.py",
+          "target": "test_greeting.py",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Recognizes that an ordinary multi-stage request does not waive interactive approval or authorize execution",
+        "Routes through plans (stopping at planning or approval rather than executing) because no committed stable plan and separate execution authorization exist",
+        "Leaves greeting.py unchanged and creates no implementation commits or execution scratch"
       ]
     }
   ]
