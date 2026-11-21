@@ -81,7 +81,7 @@ TURN_OVERHEAD_SECONDS = 30
 #                  claudeAiOauth.expiresAt (within 5 min   package in the image (2.1.251 ships no
 #                  of expiry, or past it)                  cli.js); its embedded JS: the predicate
 #                                                          behind checkAndRefreshOAuthTokenIfNeeded
-# codex   0.155.0  refresh when the access_token JWT exp   openai/codex tag rust-v0.155.0,
+# codex   0.167.0  refresh when the access_token JWT exp   openai/codex tag rust-v0.167.0,
 #                  <= now + 5 min; with no exp claim, when codex-rs/login/src/auth/manager.rs,
 #                  last_refresh is older than 8 days       should_refresh_proactively and the
 #                  (TOKEN_REFRESH_INTERVAL)                constants above it

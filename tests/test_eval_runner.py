@@ -1569,7 +1569,7 @@ class HostCommandTests(unittest.TestCase):
         claude = runner.build_command("claude", workspace, "prompt", 300)
         agy = runner.build_command("agy", workspace, "prompt", 300)
 
-        self.assertIn("gpt-5.6-terra", codex)
+        self.assertIn("gpt-6.1-terra", codex)
         self.assertIn('model_reasoning_effort="high"', codex)
         self.assertNotIn("--ephemeral", codex)
         self.assertIn("--enable", codex)

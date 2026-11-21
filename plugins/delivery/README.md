@@ -355,16 +355,16 @@ Live evals are manual release checks, not CI tests. They require Docker and an
 active subscription login for each selected provider. Runs use your existing
 CLI logins; a refreshed token is written back only if newer. The runner builds
 [`evals/Dockerfile`](../../evals/Dockerfile) automatically; the image pins Codex
-`0.155.0`, Claude Code `2.1.251`, Antigravity `1.4.0`, and Jujutsu `0.44.0`.
+`0.167.0`, Claude Code `2.1.251`, Antigravity `1.4.0`, and Jujutsu `0.44.0`.
 
-The default subject matrix is Codex `gpt-5.6-terra`, Claude Code
+The default subject matrix is Codex `gpt-6.1-terra`, Claude Code
 `claude-sonnet-5`, and Antigravity `gemini-3.8-flash-high`, all at high
 effort. Per-host `--<host>-model` and `--<host>-effort` flags override it.
 These defaults are already mid-tier, so cases that expect the managing agent
 to choose a cheaper reviewer or worker only exercise that choice when the
 subject runs on the host's strongest model. Judging those cases needs each
 host's tier order, which the artifacts do not record. Strongest first, it is
-currently `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` on
+currently `gpt-6.2-astra`, `gpt-6.2-sol`, `gpt-6.1-terra`, `gpt-6-luna` on
 Codex and `fable`, `opus`, `sonnet`, `haiku` on Claude Code.
 The runner captures evidence and reports operational errors; it does not turn
 subjective behavior into an automatic pass/fail score.
@@ -389,8 +389,8 @@ subagent's transcript and inter-agent messages from the disposable state into
 the turn's provider trace before that state is deleted. Results default to a
 temporary directory; use `--output` to keep them at a chosen path.
 
-Codex `gpt-5.6-terra` uses the v2 multi-agent interface, which pinned Codex
-`0.155.0` disables by default. The adapter enables v2, keeps its disposable
+Codex `gpt-6.1-terra` uses the v2 multi-agent interface, which pinned Codex
+`0.167.0` disables by default. The adapter enables v2, keeps its disposable
 session state for the case, and leaves reviewer timing to Codex. Codex's JSON
 stream omits v2 reviewer provenance, so the runner adds a sanitized trace from
 that disposable state before deleting it. This lets a reviewer distinguish
