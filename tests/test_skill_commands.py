@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parents[1]
 LIBRARY = "plugins/delivery/skills/library/SKILL.md"
 PIN = "plugins/delivery/skills/library/references/pin-and-compare.md"
 REQUIREMENTS = "plugins/delivery/skills/requirements/SKILL.md"
-BLOCK_COUNT = 10
 
 OPEN_FENCE = re.compile(r"^(?P<indent>[ \t]*)```(?:sh|bash|shell)[ \t]*$")
 CLOSE_FENCE = re.compile(r"^[ \t]*```[ \t]*$")
@@ -51,14 +50,17 @@ PIN_HISTORY = "jj log docs/specs/auth-sessions.md"
 PIN_MOVED = "jj log <old path>"
 
 
-def shell_blocks():
+def shell_blocks(root: Path = ROOT):
     """Return {(file, first line): text} for every fenced shell block."""
-    paths = sorted(ROOT.glob("plugins/*/skills/*/SKILL.md")) + sorted(
-        ROOT.glob("plugins/*/skills/*/references/*.md")
+    patterns = (
+        "plugins/*/skills/*/SKILL.md",
+        "plugins/*/skills/*/references/*.md",
+        "plugins/*/references/*.md",
     )
+    paths = sorted(path for pattern in patterns for path in root.glob(pattern))
     blocks = {}
     for path in paths:
-        name = path.relative_to(ROOT).as_posix()
+        name = path.relative_to(root).as_posix()
         lines = path.read_text(encoding="utf-8").split("\n")
         i = 0
         while i < len(lines):
@@ -351,10 +353,28 @@ class SkillCommandTests(unittest.TestCase):
 
     def test_every_block_has_a_test_and_every_test_a_block(self):
         keys = set(shell_blocks())
-        self.assertEqual(len(keys), BLOCK_COUNT)
+        self.assertTrue(keys)
         self.assertEqual(sorted(keys - set(COVERED)), [], "blocks with no test")
         self.assertEqual(sorted(set(COVERED) - keys), [], "tests with no block")
         self.assertEqual(len(COVERED), len(set(COVERED)))
+
+    def test_shell_blocks_discovers_plugin_references(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            temp_root = Path(tmp)
+            ref = temp_root / "plugins/demo/references/shared.md"
+            ref.parent.mkdir(parents=True)
+            ref.write_text(
+                "# Shared\n\n```sh\necho hello\npwd\n```\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                shell_blocks(root=temp_root),
+                {
+                    ("plugins/demo/references/shared.md", "echo hello"): (
+                        "echo hello\npwd\n"
+                    )
+                },
+            )
 
     @covers(LIBRARY, "ls docs/specs/")
     def test_scope_lists_the_folder(self, text):
