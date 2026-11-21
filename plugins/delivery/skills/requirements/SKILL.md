@@ -26,10 +26,11 @@ or changes established behavior:
   order: a path the user names, a folder that `AGENTS.md` or `CLAUDE.md` at the
   repository root names for that type (such as `Specs live in design/specs/.`),
   then `docs/<kind>/` (`docs/specs/`, `docs/plans/`, `docs/handoffs/`). When
-  any of those folders exists, load the `library` skill if it is in the active
-  skill inventory and read the current documents on the subject by type and
-  tags. Without the skill, filter the documents' frontmatter lines in those
-  folders directly. The frontmatter is the block between the first two `---`
+  any of those folders exists, use the sibling `library` skill in `delivery` to
+  read the current documents on the subject by type and tags, or filter the
+  documents' frontmatter lines in those folders directly (for example with the
+  extractor below) when running standalone (never ask the user to install
+  another plugin). The frontmatter is the block between the first two `---`
   lines at the top of a file; filter on those lines only, with any tool whose
   output is only that block's lines (a YAML parser is fine when the
   environment has one), and never decide from a line below the closing `---`,
@@ -71,15 +72,21 @@ the most uncertainty.
 Use engineering judgment for runtime, architecture, dependencies, feasibility,
 and other technical consequences:
 
-- Adopt an established repository choice or an easily reversible default
-  without burdening the user.
-- Raise a choice when it changes scope, compatibility, security, operations,
-  cost, or another user priority.
+- Adopt an established repository choice or a genuinely internal, easily
+  reversible default without asking only when it does not change observable
+  behavior, skipped or performed work, or caller-visible trade-offs. Record any
+  adopted internal choice and what it traded away under `Constraints,
+  decisions, and assumptions`; never bury it silently.
+- Raise any choice that changes observable behavior, skipped or performed work,
+  caller-visible trade-offs, scope, compatibility, security, operations, cost,
+  or another user priority; never treat it as a silent internal default.
 - When the user must choose, give a recommendation and concise trade-offs.
 
-A workflow question requires user intent or a consequential decision. An
-implementation detail the agent can safely derive is not a requirements
-question.
+A workflow question requires user intent or a consequential decision. Only a
+genuinely internal detail that does not alter observable behavior, skipped or
+performed work, or caller-visible trade-offs may be derived without asking, and
+any adopted choice plus what it traded away must be recorded under
+`Constraints, decisions, and assumptions`.
 
 If the requested work is too broad for one coherent specification, propose a
 decomposition before continuing. If a blocking answer cannot be obtained,
@@ -118,6 +125,8 @@ Then present this complete summary:
 ~~~
 
 Keep the content concise but preserve every approved fact and decision.
-`Definition of done` must be observable or testable. Ask the user to approve
-or correct the summary. Corrections resume the workflow; only explicit approval
-completes it.
+`Definition of done` must state externally observable acceptance criteria that
+carry inline into the spec (under requirements and expected behavior), rather
+than internal test names or internal implementation file paths. Ask the user to
+approve or correct the summary. Corrections resume the workflow; only explicit
+approval completes it.
