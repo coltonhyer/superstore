@@ -10,9 +10,9 @@ supersedes: docs/plans/team-export.md
 
 # Team export split plan
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/team-export.md`
+- docs/specs/team-export.md, blob a19cd83ee5ad
 
 ## Approach
 

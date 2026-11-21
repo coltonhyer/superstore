@@ -65,28 +65,78 @@ from that context instead of asking you to repeat it.
 
 ## Workflow
 
-`requirements` produces an approved summary in the conversation. `specs`
-consumes that summary, writes a draft, runs one material-issues review, and
-shows each finding as `Addressed`, `Elevated`, or `Dismissed` before
-requesting approval. Without an approved summary, `specs` runs `requirements`
-first.
+Interactive human approval and separate execution authorization are strictly
+the default at every gate (`requirements`, `specs`, `plans`, and execution);
+ordinary multi-stage prompts (*"take this spec to code"*, *"preserve"*,
+*"save"*, *"commit"*) never waive them. Explicitly authorized autonomous
+execution (`process:delivery-autonomous`) skips human approval only where
+explicitly opted in, never waives independent agent review, halts immediately
+with zero self-review fallback when a gate does not converge or an independent
+reviewer is unavailable, fails, or returns unusable output, surfaces intent
+and out-of-scope choices under `Decisions for review` (and internal trade-offs
+under `Tactical decisions`), and still ends locally without pushing or
+publishing.
 
-Planning and execution each need explicit approval. `plans` reviews and
-obtains approval before it sets `status: stable`, writes the `verified` line,
-and commits a plan; it requires a `type: spec` document with `status: stable`;
-a spec without that frontmatter, or a `type: spec` file without a status line,
-needs the user's explicit approval. `implementing-plans` and
-`subagent-execution` require a plan with a `status: stable` line, its
-authoritative specification, and execution authorization. A plan that is
-`draft` or `deprecated`, or has no status line, goes back through `plans`.
-Existing unrelated changes stay outside implementation recordings.
+`requirements` inspects repository context, resolves gaps one question at a
+time (recording any internal choice with its trade-off), and produces an
+approved summary in the conversation. `specs` consumes that summary (or runs
+`requirements` first when missing; vetted approved requirements supplied with
+an autonomous opt-in skip elicitation, while contradictory or incomplete
+requirements halt), resolves the living domain spec in place (creating a new
+spec only when no `current` spec covers the capability, or splitting with
+`supersedes`), runs parallel two-reviewer independent review (**Reviewer A**
+against requirements and spec; **Reviewer B** against spec and code) in a
+bounded 3-round loop plus a step-back final round, and assigns each finding one
+of four checkable dispositions (`Addressed`, `Elevated`, `Dismissed` with
+checkable evidence, or `Declined` for `Non-blocking` only) before requesting
+approval (or promoting after a clean independent round in autonomous mode).
+
+`plans` requires committed, clean, `status: stable` repository spec(s) (an
+explicit user approval exception applies to committed and clean `type: spec`
+files without a `status` line, frontmatterless files, or non-repository specs;
+`draft`, `deprecated`, and dirty or uncommitted specs are rejected and routed
+back through `specs`). It uses the spec's slug for one living spec with no
+earlier plan and a change-scoped slug for multi-spec plans or living specs
+with earlier plans, writes scalar or inline-list `implements` and optional
+`supersedes`, pins committed specs in `## Approved specifications` as
+`<path>, blob <12-char hash>` (with a two-step mechanical refresh on `stable`
+plans when only cited spec blob hashes change), runs the bounded review loop
+and four dispositions, and obtains explicit approval before setting
+`status: stable`, writing `verified`, deprecating `supersedes` targets, and
+committing strictly the changed files. Plan creation is not authorization to
+execute.
+
+`implementing-plans` and `subagent-execution` require a committed, clean,
+`status: stable` repository plan (or explicitly approved non-repository plan),
+every implemented repository spec committed and clean (`status: stable`, or
+explicitly approved if without `status` or `type: spec` frontmatter), and
+separate execution authorization. When an interactive gate encounters a
+`status: stable` spec or plan verified only by a non-`human:` actor
+(`machine-confirmed`, such as `process:delivery-autonomous`), it routes
+confirmation through `specs` or `plans` without re-review when content is
+unchanged (a `status: stable` document with no `verified` line is **not**
+machine-confirmed).
 
 The default for an authorized plan is sequential delegation: one scoped worker
-task, verification, local recording, independent review and disposition, then
-the next task. When delegation is unavailable or inline work is explicitly
-requested, `implementing-plans` follows the same gates inline. Debugging is
-optional during evidence-based recovery. Detailed procedures and contracts stay
-with their owning skills and private references.
+task, verification via `verifying-changes` before recording, local recording,
+independent task review via `reviewing-implementation` (with optional
+`Non-blocking` review code edits also freshly verified and recorded) and
+verified fixes before advancing, then whole-change review and verification. When
+delegation is unavailable or inline work is explicitly requested,
+`implementing-plans` follows the same gates inline; debugging is optional
+during evidence-based recovery. `reviewing-implementation` also checks moved
+symbols for leftover shims or stale importers, user-facing documentation claims
+against backing code, and commit separation for incidental pre-existing fixes
+(allowed only when blocking or explicitly authorized, and always landed in
+their own separate commit); unrelated working-copy changes stay outside
+implementation recordings. At successful whole-plan handoff, execution writes
+`docs/handoffs/<plan-slug>.md` (or `-2`, `-3`, ... on collision) with `Plan`
+and `Specs` blob citations, a `Change` line (without commit hashes, Jujutsu
+change IDs, revision ranges, or scratch paths), and the six fixed headings
+(`Whole-change checks`, `Review outcomes and dispositions`,
+`Incidental fixes`, `Limitations`, `Decisions for review`,
+`Tactical decisions`), committing it as its own separate revision before
+cleaning up only that execution's scratch.
 
 The endpoint is local: the workflow records verified changes and reports the
 result. It does not push, create a pull or merge request, merge, deploy, or
@@ -116,7 +166,8 @@ docs/
   another lowercase slug such as `note`. By default it lives in one flat
   folder per kind under `docs/`, named with the type's plural. At successful
   whole-plan handoff, execution writes a `type: handoff` note to
-  `docs/handoffs/<execution-id>.md`.
+  `docs/handoffs/<plan-slug>.md` (appending `-2`, `-3`, and so on if a prior
+  handoff for that slug already exists).
 - A repository names its own folder for a type in `AGENTS.md` or `CLAUDE.md`
   at the repository root, in a sentence such as `Specs live in design/specs/.`
   A path the user names for one document wins over both.

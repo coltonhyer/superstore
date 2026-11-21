@@ -10,9 +10,9 @@ implements: docs/specs/greeting.md
 
 # Greeting plan
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/greeting.md`
+- docs/specs/greeting.md, blob be16f04058d4
 
 ## Approach
 

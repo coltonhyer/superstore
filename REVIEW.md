@@ -80,16 +80,16 @@ a skill description is not evidence. For a claim about history, paste the
   failure path says what it leaves behind for everything the success path
   changes.
 - Every passage with a twin still agrees with it on every shared rule: the
-  approval-trigger rules of `delivery/specs` and `delivery/plans` (post-approval
-  commit and revise mechanics live in `plugins/delivery/references/okf-commit.md`
-  for `delivery/specs`; `delivery/plans` migrates in Plan 3); the recording
-  check in `implementing-plans`, its
-  `execution-state.md`, and the Finish section of `subagent-execution`; the
-  execution gate in `implementing-plans` and `subagent-execution`; the plan
-  template's locator and the plans skill; the Library skill's frontmatter
-  table and the frontmatter that `specs`, `plans`, and `execution-state.md`
-  write; the README tier lists and defaults and the skills and runner they
-  describe. Name both passages.
+  approval-trigger rules of `delivery/specs` and `delivery/plans` (both delegate
+  post-approval commit and revise mechanics to
+  `plugins/delivery/references/okf-commit.md`); the recording check in
+  `implementing-plans`, its `execution-state.md`, and the Finish section of
+  `subagent-execution`; the execution gate in `implementing-plans` and
+  `subagent-execution`; the plan template's approved-specifications blob
+  citation and the plans skill; the Library skill's frontmatter table and the
+  frontmatter that `specs`, `plans`, and `execution-state.md` write; the README
+  tier lists and defaults and the skills and runner they describe. Name both
+  passages.
 - For each removed sentence that told the agent to do or not do something,
   name where that rule now lives or what retired it.
 - When a change removes or renames a skill, field, path, or term, search
@@ -118,9 +118,10 @@ a skill description is not evidence. For a claim about history, paste the
 - A fixture pair that must read as two versions differs in byte length; the
   runner keeps file times and `jj` keys its snapshot on size and time.
 - Fixtures satisfy the shapes the skills demand: library documents carry the
-  Library skill's frontmatter, a sample handoff note has a non-empty Result
-  range, a file the case expects to be changed exists at baseline, and no
-  shared fixture already performs the behavior under test.
+  Library skill's frontmatter, a sample handoff note carries committed blob
+  citations, a Change line, and the fixed handoff headings, a file the case
+  expects to be changed exists at baseline, and no shared fixture already
+  performs the behavior under test.
 
 ### Documents and records (`docs/specs/`, `docs/plans/`, `docs/handoffs/`, `docs/notes/`, `evals/notebook/`)
 
@@ -131,9 +132,14 @@ a skill description is not evidence. For a claim about history, paste the
   `jj file show -r <revision> <path>`, `git cat-file -p <blob>` or
   `git --git-dir="$(jj git root)" cat-file -p <blob>`, and `jj log -r <id>`.
   Ids a writeup records as observed during a run are original observations.
-- A handoff note is its own revision with no other files. Its Result range is
-  `<start>..<end>` from the execution's starting revision and excludes the
-  note itself.
+- A handoff note is its own revision with no other files. New handoff notes
+  use `<plan-slug>.md` (or `-2`, `-3`, ... on collision), committed blob
+  citations (`<path>, blob <12-char hash>`), a `Change` line without branch or
+  pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch
+  paths, and the fixed headings (`Whole-change checks`, `Review outcomes and
+  dispositions`, `Incidental fixes`, `Limitations`, `Decisions for review`,
+  `Tactical decisions`); existing historical handoffs keep their original
+  revision citations.
 - Every sentence the change adds or edits that states commit order, counts,
   or ids agrees with `jj log`; ids a writeup records as observed during a
   run are exempt. A `BOOK.md` row matches its writeup's results table.

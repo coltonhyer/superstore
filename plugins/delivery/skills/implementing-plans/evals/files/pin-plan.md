@@ -10,9 +10,9 @@ implements: docs/specs/pin.md
 
 # Pin plan
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/pin.md`
+- docs/specs/pin.md, blob 82c3887dbaea
 
 ## Approach
 

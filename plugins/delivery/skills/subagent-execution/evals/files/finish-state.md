@@ -1,11 +1,11 @@
 # Execution finish-run
 
-- **Approved plan:** `docs/plans/finish.md` at the revision described
-  `eval fixture`.
-- **Approved spec:** `docs/specs/finish.md` at the same revision.
-- **Workspace and start:** Jujutsu workspace; the synthetic fixture co-records
-  FINISH-1's `finish.py` and `test_finish.py` in the bootstrap revision
-  described `eval fixture`, resolved to its immutable ID before use.
+- **Approved plan:** docs/plans/finish.md, blob c51ec765cac7
+- **Approved specs:** docs/specs/finish.md, blob 79ccde076cc0
+- **Authorization and choices:** interactive execution authorized; default whole-plan finish
+- **Workspace and start:** Jujutsu workspace; synthetic eval fixture co-records FINISH-1's `finish.py` and `test_finish.py` in the bootstrap revision described `eval fixture`, resolved to its immutable ID before use; scratch `.agents/execution/finish-run/` excluded via `.git/info/exclude`
+
+## Tasks
 
 | Task | Status | Agent | Report/evidence | Recorded revisions | Review findings and dispositions |
 | --- | --- | --- | --- | --- | --- |
@@ -13,8 +13,8 @@
 
 ## Decisions, blockers, and recovery
 
-- **Whole-change review and verification:** passed with no material findings;
-  `python3 test_finish.py` exits 0.
-- **Tactical decisions:** none.
-- **Next action:** record the handoff note at
-  `docs/handoffs/finish-run.md`, then remove this scratch.
+- **Decisions for review:** none
+- **Tactical decisions:** none
+- **Incidental fixes:** none
+- **Blockers or scope escalation:** none (whole-change review and `python3 test_finish.py` passed; handoff note written at `docs/handoffs/finish.md`)
+- **Next action:** record the handoff note at `docs/handoffs/finish.md`, then remove this scratch.

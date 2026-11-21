@@ -10,9 +10,9 @@ implements: docs/specs/finish.md
 
 # Finish plan
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/finish.md`
+- docs/specs/finish.md, blob 79ccde076cc0
 
 ## Tasks
 

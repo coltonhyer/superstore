@@ -10,9 +10,9 @@ implements: docs/specs/sequence.md
 
 # Sequence plan
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `docs/specs/sequence.md`
+- docs/specs/sequence.md, blob b9d427b7b2f2
 
 ## Approach
 

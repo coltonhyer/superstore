@@ -4,18 +4,18 @@
     {
       "id": 1,
       "prompt": "Start implementing team exports. I have a design note but no approved specification.",
-      "expected_output": "Do not create a plan or start implementation; use Planning when available or request an approved specification.",
+      "expected_output": "Do not create a plan or start implementation; route to specs or request an approved specification.",
       "files": [],
       "expectations": [
         "Does not treat the request or design note as approved specification input",
         "Does not draft a plan, commit a document, or start implementation",
-        "Routes to Planning when it is available or requests the missing approved specification"
+        "Routes to specs or requests the missing approved specification"
       ]
     },
     {
       "id": 2,
       "prompt": "The attached docs/specs/team-export.md is an approved specification. Create its implementation plan, inspect the repository conventions first, obtain the required plan review, and request approval. This is a plan-only request: do not begin implementation or commit anything yet.",
-      "expected_output": "Create a concise, fixture-grounded small plan at docs/plans/team-export.md with draft frontmatter, an exact spec locator, and a concrete completion check, obtain usable independent review or disclose one self-review fallback, then request approval without committing or executing.",
+      "expected_output": "Create a concise, fixture-grounded small plan at docs/plans/team-export.md with draft frontmatter, a ## Approved specifications section pinning docs/specs/team-export.md, blob a19cd83ee5ad, and a concrete completion check, obtain usable independent review or disclose one self-review fallback, then request approval without committing or executing.",
       "files": [
         {
           "source": "files/eval-repo-readme.md",
@@ -53,7 +53,7 @@
         "Selects a defensible small task boundary with the intended deliverable, exact spec reference, relevant paths or patterns, and a concrete completion check",
         "Uses usable independent reviewer output only when actually returned or discloses the self-review fallback",
         "Does not set status: stable, write a verified line, commit, or execute the plan before explicit approval",
-        "Writes the draft to docs/plans/team-export.md with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/team-export.md frontmatter, and a Locator line holding docs/specs/team-export.md@<revision>",
+        "Writes the draft to docs/plans/team-export.md with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/team-export.md frontmatter, and ## Approved specifications citing committed docs/specs/team-export.md, blob a19cd83ee5ad",
         "Does not begin implementation for the plan-only request",
         "When the host exposes model or effort controls, sets them explicitly for the reviewer and steps one tier down from the strongest model for this ordinary plan, neither keeping the strongest tier nor going lower",
         "Starts the reviewer without forking or sharing the managing conversation"
@@ -62,7 +62,7 @@
     {
       "id": 3,
       "prompt": "I explicitly approve the specification at docs/specs/release-publishing.md; draft its implementation plan. The parser module must be available before persistence, and the command must use persisted release data. Review the plan before requesting approval; do not commit or execute it.",
-      "expected_output": "Accept the user-approved spec that has no frontmatter and write a draft plan to docs/plans/release-publishing.md whose implements names docs/specs/release-publishing.md and whose Locator line holds the supplied spec path, with fixture-grounded, ordered, delegatable tasks whose dependencies name the parser-to-persistence-to-command interface flow, spec references, and completion checks.",
+      "expected_output": "Accept the user-approved spec that has no frontmatter and write a draft plan to docs/plans/release-publishing.md whose implements names docs/specs/release-publishing.md and whose ## Approved specifications section cites committed docs/specs/release-publishing.md, blob 1ac2474b40ea, with fixture-grounded, ordered, delegatable tasks whose dependencies name the parser-to-persistence-to-command interface flow, spec references, and completion checks.",
       "files": [
         {
           "source": "files/eval-repo-readme.md",
@@ -108,7 +108,7 @@
         "Reviews before requesting approval and does not commit or execute",
         "Accepts the user's explicit approval of the spec, which has no type: spec frontmatter and no status line",
         "Writes the draft to docs/plans/release-publishing.md with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/release-publishing.md frontmatter",
-        "The plan's Locator line holds docs/specs/release-publishing.md with its revision"
+        "The plan's ## Approved specifications section cites committed docs/specs/release-publishing.md, blob 1ac2474b40ea"
       ]
     },
     {
@@ -155,7 +155,7 @@
     {
       "id": 6,
       "prompt": "The completed independent-review attempt for the attached plan at docs/plans/team-export.md returned only 'working on it' and no review result. Complete the required review stage against docs/specs/team-export.md, disclose the fallback, resolve what the specification determines, and request approval. Do not commit or execute.",
-      "expected_output": "Perform and disclose one self-review fallback because the completed reviewer attempt returned unusable output, show dispositions for any material findings, and request approval without committing or executing.",
+      "expected_output": "Perform and disclose one self-review fallback because the completed reviewer attempt returned unusable output, show dispositions for any material findings (Addressed, Elevated, or Dismissed for Blocking findings; Declined allowed only for Non-blocking findings), and request approval without committing or executing.",
       "files": [
         {
           "source": "files/team-export-spec.md",
@@ -171,14 +171,14 @@
       "expectations": [
         "Does not claim the unusable reviewer output was an independent review",
         "Discloses a single self-review fallback under the plan-review contract",
-        "Uses only Addressed, Elevated, or Dismissed for material-finding dispositions",
+        "Uses only Addressed, Elevated, or Dismissed for Blocking findings, allowing Declined only for Non-blocking findings",
         "Does not set status: stable, write a verified line, commit, or execute before approval"
       ]
     },
     {
       "id": 7,
       "prompt": "I explicitly approve the reviewed plan at docs/plans/team-export.md. Do not start implementation.",
-      "expected_output": "Set status: stable and write the verified line, commit only that plan through the active version-control workflow, verify that it entered history, and report its locator with the revision, without offering any preservation choice or executing.",
+      "expected_output": "Set status: stable and write the verified line, commit only that plan through the active version-control workflow, verify that it entered history, and report its committed blob citation (<path>, blob <12-char hash>), without offering any preservation choice or executing.",
       "files": [
         {
           "source": "files/team-export-spec.md",
@@ -196,14 +196,14 @@
         "Sets status: stable in the plan's frontmatter and writes verified: { by: human:Eval Reviewer, at: <UTC time> } after status, with the time an ISO 8601 UTC instant",
         "Commits only docs/plans/team-export.md through the active version-control workflow",
         "Verifies that the plan entered repository history before claiming it was committed",
-        "Reports the locator docs/plans/team-export.md@<revision> with the actual revision",
+        "Reports the committed blob citation docs/plans/team-export.md, blob <12-char hash> computed from the committed revision",
         "Does not offer a preservation choice or any alternative to committing, and does not begin execution"
       ]
     },
     {
       "id": 8,
       "prompt": "I explicitly approve the reviewed plan at docs/plans/team-export.md. README.md is unrelated existing working-copy work. Do not start implementation.",
-      "expected_output": "Set status: stable, write the verified line, and commit only the plan through the active version-control workflow, leaving the unrelated README.md change out of that commit and untouched, without executing.",
+      "expected_output": "Set status: stable, write the verified line, and commit only the plan through the active version-control workflow, leaving the unrelated README.md change out of that commit and untouched, and reporting the committed blob citation without executing.",
       "files": [
         {
           "source": "files/team-export-spec.md",
@@ -225,7 +225,7 @@
         "Does not ask for approval or a preservation choice again",
         "Sets status: stable, writes verified: { by: human:Eval Reviewer, at: <UTC time> } after status, and commits only docs/plans/team-export.md",
         "Leaves the unrelated README.md change uncommitted and untouched",
-        "Reports the plan's locator with its revision and does not begin execution"
+        "Reports the plan's committed blob citation docs/plans/team-export.md, blob <12-char hash> and does not begin execution"
       ]
     },
     {
@@ -256,7 +256,7 @@
     {
       "id": 10,
       "prompt": "The approved plan at docs/plans/team-export.md needs a material revision: split EXPORT-1 into an API export-route task followed by a separate UI action task that depends on it. Revise the plan; do not start implementation.",
-      "expected_output": "Revise the plan in place: set status: draft and remove the verified line, split the task with the stated dependency, review the revision, and request approval; after approval set status: stable, write a new verified line, and commit only that file, reporting its locator with the revision.",
+      "expected_output": "Revise the plan in place: set status: draft and remove the verified line, split the task with the stated dependency, review the revision, and request approval; after approval set status: stable, write a new verified line, and commit only that file, reporting its committed blob citation (<path>, blob <12-char hash>).",
       "files": [
         {
           "source": "files/team-export-spec.md",
@@ -277,14 +277,14 @@
         "The first turn sets status: draft and removes the verified line before or with the change, and does not commit",
         "The first turn splits EXPORT-1 into an API task and a dependent UI task, reviews the revised plan, and requests explicit approval",
         "After approval, sets status: stable, writes a new verified line naming human:Eval Reviewer, and commits only that file",
-        "After approval, reports the plan's locator with its revision",
+        "After approval, reports the plan's committed blob citation docs/plans/team-export.md, blob <12-char hash>",
         "Does not offer a preservation choice or begin execution"
       ]
     },
     {
       "id": 11,
       "prompt": "Create the implementation plan for the specification at docs/specs/team-export.md.",
-      "expected_output": "Refuse to plan because the spec carries status: draft, route it back through Planning for approval because a spec document must carry status: stable, do not accept a verbal approval for it, and write no plan file.",
+      "expected_output": "Refuse to plan because the spec carries status: draft, route it back through specs for approval because a spec document must carry status: stable, do not accept a verbal approval for it, and write no plan file.",
       "files": [
         {
           "source": "files/draft-spec.md",
@@ -295,14 +295,14 @@
       "expectations": [
         "Identifies that the spec has status: draft and is not approved",
         "Does not draft a plan or write any file under docs/plans/",
-        "Routes the spec back through Planning for approval (a spec document must carry status: stable) and does not accept a verbal approval in its place",
+        "Routes the spec back through specs for approval (a spec document must carry status: stable) and does not accept a verbal approval in its place",
         "Does not change the spec's status or commit anything"
       ]
     },
     {
       "id": 12,
       "prompt": "I explicitly approve the reviewed plan at docs/plans/team-export-split.md, which replaces the plan at docs/plans/team-export.md. Do not start implementation.",
-      "expected_output": "Set status: stable and write the verified line on the new plan, set the replaced plan's status to deprecated, commit exactly those two files in one revision, verify that both entered history, and report the new plan's locator with the revision, without executing.",
+      "expected_output": "Set status: stable and write the verified line on the new plan, set the replaced plan's status to deprecated, commit exactly those two files in one revision, verify that both entered history, and report the new plan's committed blob citation (<path>, blob <12-char hash>), without executing.",
       "files": [
         {
           "source": "files/team-export-spec.md",
@@ -326,7 +326,95 @@
         "Sets status: deprecated on docs/plans/team-export.md, which the new plan's supersedes names, and changes nothing else in it",
         "Commits docs/plans/team-export-split.md and docs/plans/team-export.md together in one new revision and no other file",
         "Verifies that both paths entered repository history before claiming the commit",
-        "Reports the locator docs/plans/team-export-split.md@<revision> with the actual revision and does not begin execution"
+        "Reports the committed blob citation docs/plans/team-export-split.md, blob <12-char hash> and does not begin execution"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Draft an implementation plan for the approved specification at docs/specs/team-export.md. I explicitly approve the current working-copy wording. Do not commit or execute.",
+      "expected_output": "Refuse to plan because docs/specs/team-export.md has uncommitted working-copy changes and is not committed and clean, route it back through specs, write no plan file under docs/plans/, and do not modify or commit the spec.",
+      "files": [
+        {
+          "source": "files/team-export-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/team-export-dirty-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Identifies that docs/specs/team-export.md is dirty or uncommitted in the working copy and therefore not plan-ready",
+        "Does not accept verbal approval to override the uncommitted working-copy spec",
+        "Routes docs/specs/team-export.md back through specs",
+        "Writes no plan file under docs/plans/ and does not modify or commit docs/specs/team-export.md"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Draft an implementation plan for docs/specs/team-export.md.",
+      "expected_output": "Flag that docs/specs/team-export.md is machine-confirmed (verified by process:delivery-autonomous rather than a human: actor), route confirmation through specs for explicit user approval before planning, draft no plan file under docs/plans/, and modify or commit nothing yet.",
+      "files": [
+        {
+          "source": "files/team-export-autonomous-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Flags that docs/specs/team-export.md carries status: stable with a non-human verifier (process:delivery-autonomous)",
+        "Routes confirmation through specs for explicit user approval before drafting a plan",
+        "Does not draft a plan file under docs/plans/ and does not modify or commit docs/specs/team-export.md yet"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "The living specification at docs/specs/team-export.md has been updated with the new audit_exported_at column requirement (docs/plans/team-export.md is an earlier completed plan for EXPORT-1). Create a reviewed draft plan for the newly added requirement without committing or executing.",
+      "expected_output": "Create a new draft plan under docs/plans/<change-scoped-slug>.md using a change-scoped slug rather than overwriting docs/plans/team-export.md, leave docs/plans/team-export.md untouched, and pin docs/specs/team-export.md, blob bf974871eda1 in ## Approved specifications without committing or executing.",
+      "files": [
+        {
+          "source": "files/eval-repo-readme.md",
+          "target": "README.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/team-routes.py",
+          "target": "app/teams.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/team-list.js",
+          "target": "web/team-list.js",
+          "state": "baseline"
+        },
+        {
+          "source": "files/test-package-init.py",
+          "target": "tests/__init__.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/test-team-list.py",
+          "target": "tests/test_team_list.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/team-export-v2-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/team-export-approved-plan.md",
+          "target": "docs/plans/team-export.md",
+          "state": "baseline"
+        }
+      ],
+      "expectations": [
+        "Creates a new draft plan under docs/plans/<change-scoped-slug>.md (not docs/plans/team-export.md) with status: draft and implements: docs/specs/team-export.md",
+        "Leaves docs/plans/team-export.md untouched",
+        "Pins committed docs/specs/team-export.md, blob bf974871eda1 in ## Approved specifications",
+        "Reviews the draft plan and does not set status: stable, commit, or execute"
       ]
     }
   ]

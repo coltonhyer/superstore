@@ -8,9 +8,9 @@ implements: docs/plans/finish.md
 
 # Finish execution
 
-- **Plan:** `docs/plans/finish.md@<revision described "eval fixture">`
-- **Spec:** `docs/specs/finish.md@<revision described "eval fixture">`
-- **Start:** `<revision described "eval fixture">-` **Result:** `<revision described "eval fixture">-..<revision described "eval fixture">`
+- **Plan:** docs/plans/finish.md, blob c51ec765cac7
+- **Specs:** docs/specs/finish.md, blob 79ccde076cc0
+- **Change:** Implement FINISH-1 so `finish.value()` returns `done`
 
 ## Whole-change checks
 
@@ -20,7 +20,15 @@ implements: docs/plans/finish.md
 
 FINISH-1 and whole-change review: no material findings.
 
+## Incidental fixes
+
+none
+
 ## Limitations
+
+none
+
+## Decisions for review
 
 none
 
