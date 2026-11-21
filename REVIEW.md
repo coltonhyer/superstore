@@ -63,7 +63,7 @@ a skill description is not evidence. For a claim about history, paste the
 
 ## Always check
 
-### Skill text (`plugins/*/skills/*/SKILL.md`, `references/`)
+### Skill text (`plugins/*/skills/*/SKILL.md`, `plugins/*/skills/*/references/*.md`, `plugins/*/references/*.md`)
 
 - For each changed sentence that decides what the agent does to the
   repository or tells the user, name the most plausible wrong reading that
@@ -96,9 +96,10 @@ a skill description is not evidence. For a claim about history, paste the
 - A rule that restricts reading names what counts as a read (`head`, `cat`,
   `show`, `diff`) and gives the filter command that replaces it.
 - Run every changed shell snippet that `tests/test_skill_commands.py` does not
-  run (it runs each fenced `sh`, `bash`, or `shell` block in a skill, and the
-  inline `grep` patterns it asserts verbatim in the library and requirements
-  skills) in a scratch repository with
+  run (it runs every fenced `sh`, `bash`, or `shell` block in
+  `plugins/*/skills/*/SKILL.md`, `plugins/*/skills/*/references/*.md`, and
+  `plugins/*/references/*.md`, plus the inline `grep` patterns it asserts
+  verbatim in the library and requirements skills) in a scratch repository with
   `JJ_CONFIG=/dev/null JJ_EDITOR=false GIT_EDITOR=false` and stdin from
   `/dev/null`. A snippet that opens an editor, matches hyphenated slugs with
   `\b`, or needs GNU-only syntax without saying so is a finding.
@@ -123,9 +124,11 @@ a skill description is not evidence. For a claim about history, paste the
 
 - Frontmatter follows the Library skill, and every link path resolves except
   a `supersedes` target.
-- Every `path@revision` and change id the change adds resolves:
-  `jj file show -r <revision> <path>` and `jj log -r <id>`. Ids a writeup
-  records as observed during a run are original observations.
+- Every `path@revision`, committed blob citation (`<path>`, blob
+  `<12-char hash>`), and change id the change adds resolves:
+  `jj file show -r <revision> <path>`, `git cat-file -p <blob>` or
+  `git --git-dir="$(jj git root)" cat-file -p <blob>`, and `jj log -r <id>`.
+  Ids a writeup records as observed during a run are original observations.
 - A handoff note is its own revision with no other files. Its Result range is
   `<start>..<end>` from the execution's starting revision and excludes the
   note itself.

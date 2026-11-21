@@ -121,7 +121,9 @@ docs/
   at the repository root, in a sentence such as `Specs live in design/specs/.`
   A path the user names for one document wins over both.
 - The filename slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and is neither `index`
-  nor `log`.
+  nor `log`. Point-in-time standalone notes in the notes folder (default
+  `docs/notes/`) may prefix filenames with `YYYY-MM-DD-` (which fits the slug
+  rule); living specs keep undated domain slugs.
 - Each document starts with a frontmatter block, one field per line, in this
   order:
 
@@ -140,21 +142,34 @@ docs/
   `type`, `title`, `description`, and `tags` are always present, and `title`
   and `description` are in double quotes. `status` (`draft`, `stable`, or
   `deprecated`) appears on specs and plans; drafts are written with
-  `status: draft`. Explicit approval sets `status: stable`, writes
-  `verified: { by: human:<approver>, at: <approval time> }` from the user name
-  version control is configured with (no `verified` line when that name is
-  empty or has a `,` `[` `]` `{` `}` `#` or `:`), sets a superseded document
-  to `deprecated` unless it already is (a target without a `type` line is not
-  yet migrated and stays unchanged, with a note in the report), and commits
-  exactly the files that step changed. `implements` and `supersedes` take one
-  repository path, and `references` takes an inline list of paths, all
-  relative to the repository root. No block lists or nesting, so every field
-  is one line.
+  `status: draft`. Approval (explicit human or explicitly authorized autonomous
+  clean review) sets `status: stable` and writes `verified`: explicit human
+  approval writes `verified: { by: human:<approver>, at: <approval time> }`
+  from the user name version control is configured with (omitting `verified`
+  with a note in the report when unset, empty, or containing `,` `[` `]` `{` `}`
+  `#` `:`), and explicitly authorized autonomous clean review writes
+  `verified: { by: process:delivery-autonomous, at: <approval time> }` (OKF
+  `machine-confirmed`, never `human:`). Approving a document with `supersedes`
+  iterates over every listed target across scalar and inline-list forms:
+  setting each migrated target to `deprecated` unless it already is, leaving
+  unmigrated targets (no frontmatter or no `type` line) unchanged and reporting
+  them, ignoring missing targets, and deprecating a split spec only once the
+  replacement set is complete and approved, then committing strictly the files
+  that step changed. `implements` takes one repository path or an inline list
+  (`[path-a, path-b]`) for multi-spec plans, `supersedes` takes one repository
+  path or an inline list (`[path-a, path-b]`) for merges and splits, and
+  `references` takes an inline list of paths — all relative to the repository
+  root without a leading slash. No block lists or nesting, so every field is
+  one line.
 - A document is current when its `status` is absent or `stable`. Revising a
   stable document in place flips it back to `draft` and removes `verified`
-  until it is approved again.
-- A locator is a repository-relative path, written `path@revision` when pinned
-  to a Jujutsu change id or Git commit.
+  until it is approved again, except for a mechanical blob-citation-only
+  refresh on a `stable` plan whose tasks and content are unchanged, which
+  commits without flipping `status` to `draft` or re-requesting approval.
+- A locator is a repository-relative path, pinned as `<path>`, blob
+  `<12-char hash>` (computed only from committed revisions) for committed plans
+  and handoffs, or `path@revision` for ad-hoc pinned reads via a Jujutsu change
+  or commit id or Git commit.
 - `library` is optional for discovery in the planning and execution skills:
   `requirements` may load `library` to find current documents on a subject, or
   filter frontmatter directly without it.
@@ -178,7 +193,8 @@ cannot change underneath readers. Nothing here claims that `docs/` as a whole
 is an OKF bundle.
 
 `skills/library/references/pin-and-compare.md` holds the Jujutsu and Git
-commands for pinned reads, diffs, and history.
+commands for computing and reading 12-character committed Git blob hashes,
+pinned reads, diffs, and history.
 
 To upgrade the copy:
 
