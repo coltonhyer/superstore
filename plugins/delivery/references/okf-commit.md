@@ -70,16 +70,17 @@ of the changed document again before committing.
    plan). Report the exact failure outcome without claiming completion or
    working around it.
 
-5. **Compute the committed blob citation:** Downstream committed plans and
-   handoffs cite an approved, committed spec or plan by repository path and
-   12-character committed Git blob hash (`<path>`, blob `<12-char hash>`);
-   ad-hoc revision reports may still use `<path>@<revision>` when quoting
-   history (see `library`'s `pin-and-compare.md` for blob lookups and revision
-   diffs). Compute the hash only from the committed revision, never from a
-   dirty working copy:
+5. **Compute and report the committed blob citation:** Compute the
+   12-character committed Git blob hash only from the committed revision, never
+   from a dirty working copy:
    - With Jujutsu (colocated and non-colocated):
      `git --git-dir="$(jj git root)" rev-parse --short=12 "$(jj log -r @- --no-graph -T commit_id):<path>"`
    - With Git: `git rev-parse --short=12 HEAD:<path>`
+   Explicitly report `<path>, blob <12-char hash>` using the resolved path
+   (downstream committed plans and handoffs cite approved, committed specs and
+   plans this way; ad-hoc history queries and revision reports may still use
+   `<path>@<revision>` — see `library`'s `pin-and-compare.md` for blob lookups
+   and revision diffs).
 
 ## Revise vs. refresh a stable document
 
