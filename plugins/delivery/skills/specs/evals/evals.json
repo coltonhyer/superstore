@@ -18,23 +18,22 @@
     {
       "id": 2,
       "prompt": "Use this approved summary to write the spec: admins export currently filtered team rows as UTF-8 CSV; scheduled export is out of scope; UI and API behavior must be verified.",
-      "expected_output": "Write a concise default-format spec to docs/specs/ with OKF frontmatter and status: draft, whose verification section names test surfaces before their behaviors, then review it before requesting approval.",
+      "expected_output": "Write a concise default-format living spec to docs/specs/ with OKF frontmatter and status: draft, using Summary, Goals and non-goals, and Requirements and expected behavior with flat R1, R2, ... requirements and inline observable UI and API acceptance criteria (omitting a separate Verification section, empty conditional sections, and internal file paths, line numbers, or test names), then launch parallel Reviewer A and Reviewer B in fresh context before requesting approval.",
       "files": [],
       "expectations": [
-        "Uses every required default section",
-        "Omits empty conditional sections",
-        "Organizes verification by UI and API surfaces followed by behaviors",
-        "Runs one review before requesting approval",
+        "Uses required living-spec default sections (Summary, Goals and non-goals, and Requirements and expected behavior with flat R1, R2, ... requirements)",
+        "Places observable acceptance criteria covering UI and API behavior inline under Requirements and expected behavior",
+        "Omits a separate Verification section, empty conditional sections, and internal implementation file paths, line numbers, or test names",
+        "Launches parallel Reviewer A and Reviewer B in fresh context without forking or sharing the managing conversation (disabling parent history, such as fork_turns: \"none\", where exposed) before requesting approval",
         "Writes the draft to docs/specs/<slug>.md with frontmatter type: spec, quoted title and description, status: draft, and tags, and no topics field",
         "Does not commit or set status: stable before approval",
-        "When the host exposes model or effort controls, sets them explicitly for the reviewer and steps one tier down from the strongest model for this ordinary spec, neither keeping the strongest tier nor going lower",
-        "Starts the reviewer without forking or sharing the managing conversation"
+        "When the host exposes model or effort controls, sets them explicitly for the reviewers and steps one tier down from the strongest model for this ordinary spec, neither keeping the strongest tier nor going lower"
       ]
     },
     {
       "id": 3,
       "prompt": "Use this approved requirements summary: administrators export the currently filtered team rows as UTF-8 CSV; scheduled exports are out of scope; UI and API behaviors must be verifiable. Write the spec and follow the repository template at docs/spec-template.md.",
-      "expected_output": "Prefer the repository template's headings over Planning's default headings while retaining all required information, and write the draft to docs/specs/ rather than beside the template.",
+      "expected_output": "Prefer the repository template's headings over the default spec headings while retaining all required information, and write the draft to docs/specs/ rather than beside the template.",
       "files": [
         {
           "source": "files/repository-template.md",
@@ -52,7 +51,7 @@
     {
       "id": 4,
       "prompt": "Use this approved requirements summary: existing sessions remain valid for 24 hours after deployment; newly issued sessions use rotation immediately; verification covers new-session issuance and existing-session continuity. Continue the specs workflow using the attached draft at docs/specs/session-rotation.md, run the required review, resolve what the approved summary determines, and show the disposition list.",
-      "expected_output": "Remove immediate revocation because it contradicts the approved summary, simplify the dense prose without losing facts, replace vague verification with test surfaces and behaviors, and classify every material finding.",
+      "expected_output": "Launch parallel Reviewer A and Reviewer B where Reviewer A catches the unauthorized immediate-revocation contradiction, the dense prose, and the separate Verification section lacking inline observable acceptance criteria; remove immediate revocation, simplify the dense prose without losing facts, remove the separate Verification section and place observable acceptance criteria for new-session issuance and existing-session continuity inline under requirements and expected behavior, assign every finding using only Addressed, Elevated, Dismissed, or Declined, and run a Round-2 re-review of both reviewers after the blocking edits.",
       "files": [
         {
           "source": "files/flawed-spec.md",
@@ -61,12 +60,13 @@
         }
       ],
       "expectations": [
-        "Finds that immediate revocation contradicts the approved 24-hour lifetime",
+        "Reviewer A catches that immediate revocation contradicts the approved 24-hour lifetime",
         "Addresses the unauthorized immediate-revocation requirement",
-        "Flags verification that names no test surface or behavior",
-        "Allows a concise human-readability correction without unrelated style nits",
-        "Uses only Addressed, Elevated, or Dismissed dispositions",
-        "When the host exposes model or effort controls, keeps the strongest available tier for the reviewer because the spec governs session authentication"
+        "Reviewer A flags the separate Verification section (\"Write appropriate tests.\") and missing inline observable acceptance criteria, and the managing agent removes the separate Verification section and places observable acceptance criteria for new-session issuance and existing-session continuity inline under requirements and expected behavior",
+        "Allows a concise human-readability correction simplifying the dense prose without losing facts or raising unrelated style nits",
+        "Assigns every finding using only Addressed, Elevated, Dismissed, or Declined",
+        "Runs a Round-2 re-review of both reviewers after the blocking edits",
+        "When the host exposes model or effort controls, keeps the strongest available tier for the reviewers because the spec governs session authentication"
       ]
     },
     {
@@ -89,7 +89,7 @@
     {
       "id": 6,
       "prompt": "I explicitly approve the reviewed spec at docs/specs/approved-spec.md.",
-      "expected_output": "Set status: stable, write a verified line naming human:Eval Reviewer with a UTC time, commit only that file through the active version-control workflow, verify that it entered history, and report its locator with the revision, without offering any other preservation choice.",
+      "expected_output": "Set status: stable, write a verified line naming human:Eval Reviewer with a UTC time, commit only that file through the active version-control workflow, verify that it entered history, and report the committed path and 12-character Git blob hash (docs/specs/approved-spec.md, blob <12-char hash>), without offering any other preservation choice.",
       "files": [
         {
           "source": "files/approved-spec.md",
@@ -103,7 +103,7 @@
         "Writes a verified line, verified: { by: human:Eval Reviewer, at: <UTC time> }, with an ISO 8601 UTC time ending in Z",
         "Commits only the approved spec through the active version-control workflow",
         "Verifies that the spec entered repository history before claiming it was committed",
-        "Reports the locator docs/specs/approved-spec.md@<revision> with the actual revision",
+        "Reports the committed path and 12-character Git blob hash (docs/specs/approved-spec.md, blob <12-char hash>)",
         "Does not offer a preservation choice or any alternative to committing"
       ]
     },
@@ -152,25 +152,25 @@
     {
       "id": 9,
       "prompt": "I explicitly approve this requirements summary; proceed directly to the spec: workspace administrators use an Export CSV action to export all team rows matching the current filters across pagination as UTF-8 CSV; columns in order are team_id, team_name, owner_email, and member_count; member_count uses the same value and semantics as the current team-list rows; the endpoint is GET /api/workspaces/{workspace_id}/teams/export.csv and the UI sends its active team-list query string unchanged; scheduled exports and payload bodies are out of scope; UI and API behavior must be verified.",
-      "expected_output": "Draft the spec at docs/specs/ with status: draft and review it without committing, request approval, then after approval set status: stable, write the verified line, and commit only the spec through the repository's version-control workflow without offering any other preservation choice.",
+      "expected_output": "Draft the spec at docs/specs/ with status: draft and run parallel Reviewer A and Reviewer B without committing, request approval, then after approval set status: stable, write the verified line, commit only the spec through the repository's version-control workflow, and report the committed path and 12-character Git blob hash (docs/specs/<slug>.md, blob <12-char hash>) without offering any other preservation choice.",
       "files": [],
       "replies": [
         "Approved."
       ],
       "expectations": [
         "The first turn writes an implementation-ready spec to docs/specs/<slug>.md with type: spec, quoted title and description, status: draft, and tags frontmatter",
-        "The first turn uses findings returned by the launched reviewer or discloses a self-review fallback when no usable output returns, and then requests approval",
+        "The first turn launches parallel Reviewer A and Reviewer B, uses findings returned by the launched reviewers or discloses a self-review fallback per missing role when no usable output returns, and then requests approval",
         "The first turn makes no version-control commit",
-        "The review reports no material findings or classifies every material finding as Addressed, Elevated, or Dismissed",
+        "The review reports no material findings or classifies every material finding as Addressed, Elevated, Dismissed, or Declined",
         "After approval, sets status: stable, writes verified: { by: human:Eval Reviewer, at: <UTC time> }, and commits only the approved spec",
-        "After approval, reports the spec's locator with its revision",
+        "After approval, reports the committed path and 12-character Git blob hash (docs/specs/<slug>.md, blob <12-char hash>)",
         "Does not offer a preservation choice or any alternative to committing"
       ]
     },
     {
       "id": 10,
       "prompt": "Continue the specs workflow from the review stage for the attached draft at docs/specs/review-lifecycle-spec.md. The approved requirements are: only workspace administrators may export currently filtered team rows as UTF-8 CSV; users without the administrator role must be rejected; scheduled exports are out of scope. The draft is not approved. Run the required review, resolve what the approved requirements determine, show the disposition report, and request approval.",
-      "expected_output": "Wait for the launched reviewer to finish or fail, then obtain and read usable review text before adjudication. Use independent reviewer output when one is actually returned; otherwise fall back once to a disclosed self-review. Address the draft's member-access contradiction, report the disposition, and request approval without committing the draft or marking it approved.",
+      "expected_output": "Launch parallel Reviewer A and Reviewer B, wait for launched reviewers to finish or fail, and obtain and read usable review text before adjudication. Claim independent review only for roles whose usable contract output came from a distinct launched reviewer; otherwise fall back once per gate per missing role to a disclosed self-review without retrying a failed dispatch, halting and escalating if a fallback cannot complete or a later round fails after the one-time fallback is spent. Address the draft's unauthorized ordinary-member export without changing approved filters, encoding, or scheduling scope, run a Round-2 re-review of both reviewers after the blocking edit (unless halted by a post-fallback failure), show an Addressed disposition, and request approval without committing the draft or setting status: stable.",
       "files": [
         {
           "source": "files/review-lifecycle-spec.md",
@@ -179,19 +179,20 @@
         }
       ],
       "expectations": [
-        "Obtains and reads a usable review result before adjudicating: either actual independent reviewer output or a disclosed self-review",
-        "Does not claim an independent review unless the trajectory contains usable review output from a distinct reviewer that the managing agent processes",
+        "Launches parallel Reviewer A and Reviewer B and waits for launched reviewers to finish or fail before adjudicating",
+        "Claims independent review only for roles whose usable contract output came from a distinct launched reviewer",
         "Does not treat a reviewer that is still running as a failed attempt",
-        "After the initial review attempt, either processes its usable output or, when none is returned, falls back once to a disclosed self-review without retrying that failed attempt",
+        "When any reviewer fails or returns no usable output, falls back once per gate per missing role to a disclosed self-review without retrying the failed dispatch, and halts and escalates if a fallback cannot complete or a later round fails after the one-time fallback is spent",
         "Finds and addresses the draft's unauthorized ordinary-member export without changing the approved filters, encoding, or scheduling scope",
-        "Shows an Addressed disposition and requests approval without committing the draft or setting status: stable",
-        "When the host exposes model or effort controls, treats the administrator-only permission check as ordinary work and steps the reviewer one tier down from the strongest model rather than keeping the strongest tier"
+        "Runs a Round-2 re-review of both reviewers after the blocking edit, or halts and escalates if a later round fails after the one-time fallback is spent",
+        "Shows an Addressed disposition and requests approval without committing the draft or setting status: stable (unless halted by a post-fallback failure)",
+        "When the host exposes model or effort controls, treats the administrator-only permission check as ordinary work and steps the reviewers one tier down from the strongest model rather than keeping the strongest tier"
       ]
     },
     {
       "id": 11,
       "prompt": "The approved spec at docs/specs/team-export.md needs a material change: the export must add a member_count column after the existing columns, using the same value as the team-list rows. Revise the spec.",
-      "expected_output": "Revise the spec in place: set status: draft and remove the verified line, add the member_count requirement and its verification, review the change, and request approval; after approval set status: stable, write a new verified line, and commit only that file.",
+      "expected_output": "Revise docs/specs/team-export.md in place: set status: draft and remove the verified line, add the member_count requirement and its inline observable acceptance criterion while consolidating the historical spec into the slim living-spec shape in place (removing Context and motivation and the separate Verification section), run parallel Reviewer A and Reviewer B, and request explicit approval without committing; after approval set status: stable, write a new verified line naming human:Eval Reviewer, commit only docs/specs/team-export.md, and report the committed path and 12-character Git blob hash (docs/specs/team-export.md, blob <12-char hash>).",
       "files": [
         {
           "source": "files/baseline-approved-spec.md",
@@ -205,9 +206,10 @@
       "expectations": [
         "Edits docs/specs/team-export.md in place rather than creating a new spec file",
         "The first turn sets status: draft and removes the verified line before or with the change, and does not commit",
-        "The first turn reviews the revised spec and requests explicit approval",
-        "After approval, sets status: stable, writes a new verified line naming human:Eval Reviewer, and commits only that file",
-        "After approval, reports the spec's locator with its revision",
+        "Adds the member_count requirement and its observable acceptance criterion inline while consolidating docs/specs/team-export.md into the slim living-spec shape in place (removing Context and motivation and the separate Verification section)",
+        "The first turn runs parallel Reviewer A and Reviewer B on the revised spec and requests explicit approval",
+        "After approval, sets status: stable, writes a new verified line naming human:Eval Reviewer, and commits only docs/specs/team-export.md",
+        "After approval, reports the committed path and 12-character Git blob hash (docs/specs/team-export.md, blob <12-char hash>)",
         "Does not offer a preservation choice or any alternative to committing"
       ]
     },
@@ -232,7 +234,7 @@
     {
       "id": 13,
       "prompt": "I explicitly approve the reviewed replacement spec at docs/specs/team-data-export.md. It replaces the team-export spec.",
-      "expected_output": "Set the replacement to status: stable with a verified line, set the replaced docs/specs/team-export.md to status: deprecated, and commit both files in one revision with nothing else, then verify and report the replacement's locator with the revision.",
+      "expected_output": "Set the replacement to status: stable with a verified line, set the replaced docs/specs/team-export.md to status: deprecated, and commit both files in one revision with nothing else, then verify and report the committed path and 12-character Git blob hash (docs/specs/team-data-export.md, blob <12-char hash>).",
       "files": [
         {
           "source": "files/baseline-approved-spec.md",
@@ -251,7 +253,7 @@
         "Sets docs/specs/team-export.md to status: deprecated and changes nothing else in it",
         "Commits docs/specs/team-data-export.md and docs/specs/team-export.md together in one revision, and nothing else",
         "Verifies that both paths entered repository history before claiming a commit",
-        "Reports the locator docs/specs/team-data-export.md@<revision> with the actual revision"
+        "Reports the committed path and 12-character Git blob hash (docs/specs/team-data-export.md, blob <12-char hash>)"
       ]
     },
     {
@@ -281,6 +283,104 @@
         "Commits only docs/specs/team-data-export.md",
         "Leaves docs/specs/team-export.md unchanged and out of the commit because it is already deprecated",
         "Verifies that the replacement entered repository history before claiming a commit"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Continue the specs workflow from the review stage for the attached draft at docs/specs/billing-status.md. The approved requirements are: (1) rename observable subscription status \"past_due\" to \"payment_overdue\" and ensure every consumer of subscription status recognizes and handles \"payment_overdue\", and (2) reject invoice generation for \"payment_overdue\" accounts with an \"account_payment_overdue\" error across every production entry point (including API and webhook/batch triggers). The draft is not approved. Run the required review, resolve what the approved requirements determine, show the disposition list, and request approval without committing.",
+      "expected_output": "Launch parallel Reviewer A and Reviewer B where Reviewer A receives only the approved requirements and spec draft (flagging app/billing.py under ask-for-less without citing repository code) and Reviewer B inspects the repository read-only to flag the missed delinquency-reporting consumer (app/reporting.py) and the hollow invoice-gating guarantee bypassed by the webhook entry point (app/webhooks.py); address all three defect classes so the revised docs/specs/billing-status.md covers every subscription-status consumer and every production entry point with no internal implementation file paths, run a Round-2 re-review of both reviewers, surface dispositions in conversation only, and request approval without committing or setting status: stable.",
+      "files": [
+        {
+          "source": "files/billing.py",
+          "target": "app/billing.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/reporting.py",
+          "target": "app/reporting.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/webhooks.py",
+          "target": "app/webhooks.py",
+          "state": "baseline"
+        },
+        {
+          "source": "files/billing-status-draft.md",
+          "target": "docs/specs/billing-status.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Reviewer A's findings cite only the approved requirements and spec draft (never repository code files or symbols outside the spec draft, with prompt and tool isolation verified where exposed) and flag app/billing.py under ask-for-less",
+        "Reviewer B inspects the repository read-only and flags both the missed second consumer (app/reporting.py checking \"past_due\") and the hollow guarantee (app/webhooks.py bypassing the active-subscription guard)",
+        "Addresses all three defect classes with Addressed dispositions",
+        "The revised docs/specs/billing-status.md covers every subscription-status consumer (including delinquency reporting) and every production entry point (including API and webhook/batch triggers) while containing no internal implementation file paths (app/billing.py, app/reporting.py, or app/webhooks.py)",
+        "Runs a Round-2 re-review of both reviewers after the blocking edits",
+        "Surfaces dispositions in the conversation (never inside docs/specs/billing-status.md) and requests approval without committing or setting status: stable"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Update the specification using this approved requirements summary (the updated spec is not approved yet): extend the team CSV export with an optional department filter parameter that restricts exported rows to that department, and ensure export execution stays within 64 MiB of memory for large workspaces while producing the identical CSV output. Note: what the export returns when the department filter matches zero team rows (for example, HTTP 200 with a header-only CSV vs. HTTP 204 or 404) is not yet decided, and how the 64 MiB memory ceiling is met internally is left for specification design as long as observable behavior and output stay identical.",
+      "expected_output": "In Turn 1, raise the undecided zero-row department-filter behavior for explicit user intent without silently deciding it, approving the spec, or committing (either asking before editing or drafting status: draft with a draft-only Open questions entry). After the reply, revise docs/specs/team-export.md in place (status: draft, verified removed, no remaining Open questions, no new spec file created under docs/specs/, and docs/specs/billing-invoices.md untouched), integrate the HTTP 200 header-only UTF-8 CSV behavior into Requirements and expected behavior, document the internal 64 MiB memory-bounding choice in Technical design and constraints, run parallel Reviewer A and Reviewer B, explicitly list that author-resolved internal choice and what it traded away in the review and approval summary, and request explicit approval without committing or setting status: stable.",
+      "files": [
+        {
+          "source": "files/living-team-export-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/billing-invoices-spec.md",
+          "target": "docs/specs/billing-invoices.md",
+          "state": "baseline"
+        }
+      ],
+      "replies": [
+        "When the department filter matches zero rows, return HTTP 200 with a UTF-8 CSV containing only the header row."
+      ],
+      "expectations": [
+        "Turn 1 raises the caller-visible empty-department-filter edge case for explicit user intent without silently deciding it, approving the spec, or committing (either asking before editing or drafting a status: draft update with a draft-only Open questions entry)",
+        "Revises docs/specs/team-export.md in place (status: draft, verified removed, and no remaining Open questions), creates no new spec file under docs/specs/, and leaves docs/specs/billing-invoices.md untouched",
+        "Integrates the user's answer (HTTP 200 with a header-only UTF-8 CSV when zero rows match) into Requirements and expected behavior",
+        "Runs parallel Reviewer A and Reviewer B before requesting approval",
+        "Documents the internal 64 MiB memory-bounding choice in Technical design and constraints and explicitly lists that author-resolved choice and what it traded away in the review and approval summary rather than burying it silently in spec prose",
+        "Requests explicit approval without committing or setting status: stable"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "I explicitly approve the reviewed replacement spec at docs/specs/team-export.md. It consolidates the export-api and export-ui specs. README.md is an unrelated existing working-copy change.",
+      "expected_output": "Set docs/specs/team-export.md to status: stable with a verified line naming human:Eval Reviewer and an ISO 8601 UTC time, set both docs/specs/export-api.md and docs/specs/export-ui.md to status: deprecated without changing anything else in them, commit all three spec files together in one revision leaving README.md untouched and out of the commit, verify that all three committed paths entered history, and report docs/specs/team-export.md, blob <12-char hash> without asking for approval again or running another review.",
+      "files": [
+        {
+          "source": "files/export-api-spec.md",
+          "target": "docs/specs/export-api.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/export-ui-spec.md",
+          "target": "docs/specs/export-ui.md",
+          "state": "baseline"
+        },
+        {
+          "source": "files/merged-team-export-spec.md",
+          "target": "docs/specs/team-export.md",
+          "state": "working"
+        },
+        {
+          "source": "files/unrelated-readme.md",
+          "target": "README.md",
+          "state": "working"
+        }
+      ],
+      "expectations": [
+        "Does not ask for approval again or run another review",
+        "Sets docs/specs/team-export.md to status: stable and writes verified: { by: human:Eval Reviewer, at: <UTC time> } with an ISO 8601 UTC time ending in Z",
+        "Sets both docs/specs/export-api.md and docs/specs/export-ui.md to status: deprecated and changes nothing else in them",
+        "Commits docs/specs/team-export.md, docs/specs/export-api.md, and docs/specs/export-ui.md together in one revision, leaving README.md untouched and out of the commit",
+        "Verifies that all three committed paths entered repository history before claiming a commit",
+        "Reports the committed path and 12-character Git blob hash (docs/specs/team-export.md, blob <12-char hash>)"
       ]
     }
   ]
