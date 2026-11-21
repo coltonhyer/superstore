@@ -20,7 +20,7 @@ class TurnResult:
 
 
 HOSTS = {
-    "codex": HostConfig("gpt-5.6-terra", "high"),
+    "codex": HostConfig("gpt-6.1-terra", "high"),
     "claude": HostConfig("claude-sonnet-5", "high"),
     "agy": HostConfig("gemini-3.8-flash-high", "high"),  # effort is part of the model id; the CLI rejects --effort
 }
