@@ -249,6 +249,9 @@ def prepare_workspace(
             destination / ".eval/skills" / name,
             ignore=shutil.ignore_patterns("evals"),
         )
+    shared_references = plugin_root / "references"
+    if shared_references.is_dir():
+        shutil.copytree(shared_references, destination / ".eval/references")
     for fixture in case.fixtures:
         if fixture.state == "baseline":
             copy_fixture(case, fixture, destination)

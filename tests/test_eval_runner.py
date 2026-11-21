@@ -293,20 +293,101 @@ class WorkspaceTests(unittest.TestCase):
                         )
 
     def test_delivery_case_skill_links_resolve_in_copied_layout(self):
+        fence_pattern = re.compile(
+            r"(?ms)^[ \t]*(`{3,}|~{3,})[^\n]*\n.*?^[ \t]*\1[ \t]*$"
+        )
+        link_pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
         for case in runner.load_cases(DELIVERY):
             with tempfile.TemporaryDirectory() as temporary, self.subTest(case=case.key):
                 prepared = runner.prepare_workspace(
                     ROOT, DELIVERY, case, Path(temporary) / "workspace"
                 )
-                skills = prepared.workspace / ".eval/skills"
-                for markdown in skills.rglob("*.md"):
+                eval_root = prepared.workspace / ".eval"
+                eval_root_resolved = eval_root.resolve()
+                for markdown in eval_root.rglob("*.md"):
                     if markdown.name in {"okf-spec.md", "okf-LICENSE.md"}:
                         continue
-                    for target in MARKDOWN_LINK.findall(markdown.read_text(encoding="utf-8")):
+                    prose = fence_pattern.sub("", markdown.read_text(encoding="utf-8"))
+                    for target in link_pattern.findall(prose):
+                        if "://" in target or target.startswith("#"):
+                            continue
+                        path_part = target.split("#", 1)[0]
+                        target_path = markdown.parent / path_part
+                        label = f"{markdown.relative_to(eval_root)} -> {target}"
+                        self.assertTrue(target_path.is_file(), label)
                         self.assertTrue(
-                            (markdown.parent / target).is_file(),
-                            f"{markdown.relative_to(skills)} -> {target}",
+                            target_path.resolve().is_relative_to(eval_root_resolved),
+                            label,
                         )
+
+    def test_prepare_workspace_copies_plugin_references_without_expanding_skills(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temp = Path(temporary)
+            plugin = temp / "plugin"
+            references = plugin / "references"
+            references.mkdir(parents=True)
+            (references / "shared.md").write_text("# Shared\n", encoding="utf-8")
+
+            skill_dir = plugin / "skills/alpha"
+            evals_dir = skill_dir / "evals"
+            evals_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: alpha\ndescription: Single skill.\n---\n\n"
+                "See [shared](../../references/shared.md).\n",
+                encoding="utf-8",
+            )
+            (evals_dir / "evals.json").write_text(
+                json.dumps(
+                    {
+                        "skill_name": "alpha",
+                        "evals": [
+                            {
+                                "id": 1,
+                                "prompt": "Run alpha.",
+                                "expected_output": "Expected",
+                                "expectations": ["Criterion"],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            case = runner.load_cases(plugin)[0]
+            prepared = runner.prepare_workspace(
+                temp, plugin, case, temp / "workspace"
+            )
+
+            copied_ref = prepared.workspace / ".eval/references/shared.md"
+            self.assertTrue(copied_ref.is_file())
+            self.assertEqual(copied_ref.read_text(encoding="utf-8"), "# Shared\n")
+
+            copied_skill = prepared.workspace / ".eval/skills/alpha/SKILL.md"
+            target = (copied_skill.parent / "../../references/shared.md").resolve()
+            self.assertTrue(target.is_file())
+            self.assertTrue(
+                target.is_relative_to((prepared.workspace / ".eval").resolve())
+            )
+            self.assertEqual(target, copied_ref.resolve())
+
+            prompt = runner.build_prompt(case)
+            self.assertEqual(case.skills, ("alpha",))
+            self.assertIn("- alpha: .eval/skills/alpha/SKILL.md", prompt)
+            self.assertNotIn(".eval/references", prompt)
+            self.assertEqual(
+                [line for line in prompt.splitlines() if ": .eval/" in line],
+                ["- alpha: .eval/skills/alpha/SKILL.md"],
+            )
+
+            evidence = runner.collect_evidence(prepared)
+            self.assertNotIn(".eval/references", evidence["status"])
+            self.assertNotIn("shared.md", evidence["status"])
+            self.assertFalse(
+                any(
+                    item["path"].startswith(".eval/references")
+                    for item in evidence["files"]
+                )
+            )
 
     def test_case_local_skill_fixture_replaces_only_its_listed_skill(self):
         with tempfile.TemporaryDirectory() as temporary:
