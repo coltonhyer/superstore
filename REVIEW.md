@@ -138,9 +138,8 @@ a skill description is not evidence. For a claim about history, paste the
 - Every flag the runner accepts changes the command it builds. A change to a
   CLI pin or default model cites a live run on that pin and model, in the
   change or its writeup.
-- The plugin version rule in `AGENTS.md` holds for a whole change set,
-  including equal versions in both manifests. A task review before a plan's
-  final task does not flag the missing bump.
+- The plugin version rule in `AGENTS.md` holds for a whole change set. A task
+  review before a plan's final task does not flag the missing bump.
 - Each commit is one logical change. A fix to text introduced earlier in the
   same change set belongs in the commit that introduced it, not after the
   version bump.

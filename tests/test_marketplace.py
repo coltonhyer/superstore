@@ -115,11 +115,57 @@ class MarketplaceLayoutTests(unittest.TestCase):
             with self.subTest(skill=skill):
                 self.assertIn(f"(skills/{skill}/SKILL.md)", readme_text)
 
-        for document in (readme, *sorted(expected_skill_files)):
-            for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
+        skill_references = sorted(
+            path
+            for skill_dir in (plugin_root / "skills").iterdir()
+            if skill_dir.is_dir() and (skill_dir / "references").is_dir()
+            for path in (skill_dir / "references").rglob("*.md")
+            if path.name not in {"okf-spec.md", "okf-LICENSE.md"}
+        )
+        plugin_references_dir = plugin_root / "references"
+        plugin_references = (
+            sorted(plugin_references_dir.rglob("*.md"))
+            if plugin_references_dir.is_dir()
+            else []
+        )
+        contained_documents = [
+            *sorted(expected_skill_files),
+            *skill_references,
+            *plugin_references,
+        ]
+        plugin_root_resolved = plugin_root.resolve()
+        fence_pattern = re.compile(
+            r"(?ms)^[ \t]*(`{3,}|~{3,})[^\n]*\n.*?^[ \t]*\1[ \t]*$"
+        )
+        link_pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+        for document in (readme, *contained_documents):
+            prose = fence_pattern.sub("", document.read_text(encoding="utf-8"))
+            for target in link_pattern.findall(prose):
                 if "://" not in target and not target.startswith("#"):
+                    path_part = target.split("#", 1)[0]
+                    target_path = document.parent / path_part
                     with self.subTest(document=document.relative_to(ROOT), target=target):
-                        self.assertTrue((document.parent / target.split("#")[0]).is_file())
+                        self.assertTrue(target_path.is_file())
+                        if document != readme:
+                            self.assertTrue(
+                                target_path.resolve().is_relative_to(plugin_root_resolved),
+                                f"{document.relative_to(ROOT)} -> {target}",
+                            )
+
+    def test_listed_plugins_have_matching_manifest_versions(self):
+        for name in self.codex:
+            plugin_root = ROOT / "plugins" / name
+            with self.subTest(plugin=name):
+                claude_version = load_json(
+                    plugin_root / ".claude-plugin/plugin.json"
+                ).get("version")
+                codex_version = load_json(
+                    plugin_root / ".codex-plugin/plugin.json"
+                ).get("version")
+                self.assertIsInstance(claude_version, str)
+                self.assertIsInstance(codex_version, str)
+                self.assertTrue(claude_version.strip())
+                self.assertEqual(claude_version, codex_version)
 
     def test_maintenance_has_two_public_skills_and_valid_links(self):
         plugin_root = ROOT / "plugins/maintenance"
