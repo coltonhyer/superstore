@@ -10,8 +10,9 @@ defined by the owning skill.
 Explicit approval or authorized autonomous clean review authorizes the commit:
 do not run another review, change the document's content, or ask for approval
 again. Any content edit made after approval, other than the edits steps 1 and
-2 make (or a mechanical blob-citation-only refresh below), requires approval
-of the changed document again before committing.
+2 make (or a mechanical blob-citation-only refresh below), requires approval (or
+authorized autonomous clean independent review) of the changed document again
+before committing.
 
 ## Commit an approved document
 
@@ -43,7 +44,8 @@ of the changed document again before committing.
      the `status` line or, when none exists, adding `status: deprecated` after
      `description`.
    For a spec split, deprecate the split spec only once the replacement set is
-   complete and approved.
+   complete and approved (or cleanly reviewed in explicitly authorized
+   autonomous mode).
 
 3. **Commit strictly the changed files and verify recording:** Commit, through
    the repository's active version-control workflow, strictly the files steps 1
@@ -86,12 +88,24 @@ of the changed document again before committing.
 
 - **In-place revision:** Revise in place; do not create a new file for a new
   revision. Set `status: draft` and remove the `verified` line, make the
-  change, and review it again when the change is material. Obtain approval of
-  the revised document again, then re-commit through steps 1–5 (setting
-  `status: stable` and writing a new `verified` line).
+  change, and review it again when the change is material (in explicitly
+  authorized autonomous mode, every `draft` revision must pass a clean
+  independent review round). Obtain explicit approval (skipping human approval
+  in explicitly authorized autonomous mode after that clean round), then
+  re-commit through steps 1–5 (setting `status: stable` and writing a new
+  `verified` line).
 - **Mechanical blob-citation-only refresh on a `stable` plan:** When a
   `stable` plan's tasks and content are unchanged and only its cited spec blob
-  hash(es) need updating, update only the cited spec blob hash(es), commit the
-  refreshed plan through steps 3–4, and compute its new committed blob hash
-  with step 5 — without flipping `status` to `draft`, changing `verified`, or
-  re-requesting approval.
+  hash(es) need updating, run this two-step sequence so a refreshed handoff is
+  never bundled with the plan commit or hashed pre-commit:
+  1. Update only the cited spec blob hash(es) in the `stable` plan, commit
+     **only** the refreshed plan through steps 3–4 (without flipping `status`
+     to `draft`, changing `verified`, or re-requesting approval), and compute
+     the plan's new committed blob hash via step 5.
+  2. If a downstream handoff note for that change already exists before merge,
+     update its cited plan (and spec) blob hash(es) and commit the refreshed
+     handoff note **as its own separate revision** through steps 3–4 (never
+     bundled with the plan commit). On failure of this second commit, the
+     refreshed plan stays committed, the refreshed handoff note remains in place
+     in the working copy, and the report states the handoff refresh is
+     uncommitted.

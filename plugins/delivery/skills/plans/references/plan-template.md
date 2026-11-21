@@ -1,18 +1,22 @@
 # <Plan title>
 
-## Approved specification
+## Approved specifications
 
-- **Locator:** `<spec path>@<approved revision>`
+- `<spec path>, blob <12-char hash>` (omit `, blob <12-char hash>` for
+  non-repository specs; never cite branch or pre-merge commit hashes, Jujutsu
+  change IDs, or revision ranges)
 
 ## Approach
 
-<The smallest approach that satisfies the approved specification.>
+<Brief per-change motivation and the smallest approach that satisfies the
+approved specification(s).>
 
 ## Tasks
 
 ### <Stable task ID>: <Deliverable>
 
-- **Spec references:** <sections or requirement identifiers>
+- **Spec references:** `<spec-slug>:R#` or section citations against the pinned
+  spec blob(s)
 - **Deliverable:** <observable result>
 - **Prerequisites and order:** <earlier task IDs and supplied interface, or none>
 - **Relevant paths and patterns:** <files, conventions, and constraints>

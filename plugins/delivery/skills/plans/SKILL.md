@@ -5,42 +5,60 @@ description: Turn an approved specification into a reviewed, explicitly approved
 
 # Plans
 
-Use this skill when an approved specification needs task definitions for later
+Use this skill when approved specification(s) need task definitions for later
 implementation. Plan creation is not authorization to execute.
 
-## Require an approved specification
+## Require approved specifications
 
-Identify the approved specification by its locator: a repository-relative
-path, written `path@revision` when pinned; read a pinned locator through the
-active version control. A spec document (`type: spec`) must carry a
-`status: stable` line. One whose `status` is `draft` or `deprecated` is not
-approved, and an approval statement does not stand in for it: route it back
-through Planning. A spec supplied in another form, including a file without
-that frontmatter or a `type: spec` file with no status line, needs the user's
-explicit approval statement.
-Its requirements, rationale, and acceptance criteria remain authoritative. Do
-not treat a file, draft, issue, or request as approval. If the specification is
-missing or unapproved, use Planning when available or request the missing input.
-An execution request with only an approved specification routes here first; do
-not begin implementation.
+Interactive human approval is strictly the default at every gate; ordinary
+multi-stage prompts (*"implement this ticket end-to-end"*, *"take this spec to
+code"*, *"preserve"*, *"save"*, *"commit"*) never waive it. Preserve approval
+and execution choices already supplied by the user. When the user explicitly
+authorizes unattended end-to-end execution, load
+[the autonomous mode reference](../../references/autonomous-mode.md) first.
 
-Preserve approval and execution choices already supplied by the user. A plan
-instruction that conflicts with the specification does not override it.
+A repository spec is **committed and clean** only when: with Jujutsu,
+`jj diff -r @ <path>` prints nothing and `jj file list -r @- <path>` prints
+`<path>`; with Git, `git status --porcelain <path>` prints nothing and
+`git ls-tree --name-only HEAD -- <path>` prints `<path>` (never use
+`jj log -r @- <path>` for readiness checks). An uncommitted or dirty repository
+spec is not plan-ready.
+
+Every repository spec (`type: spec`) the plan implements must be committed and
+clean and carry `status: stable`. An approval statement cannot override `draft`
+or `deprecated`: route missing, unapproved, dirty, or uncommitted specs back
+through sibling `specs`. In interactive mode, if any implemented `status:
+stable` spec carries `verified` only from a non-`human:` actor (e.g.,
+`process:delivery-autonomous`), flag it and route confirmation through sibling
+`specs` per [the autonomous mode reference](../../references/autonomous-mode.md)
+before planning; a `status: stable` spec with no `verified` line (such as a
+migrated historical spec or one approved without a valid VCS `user.name`) is
+**not** machine-confirmed.
+
+A spec supplied in another form — including a committed and clean `type: spec`
+file without a `status` line, a frontmatterless repository file, or a
+non-repository spec — requires the user's explicit approval statement (and if
+it is a repository file, it must still be committed and clean and pin its
+committed blob hash). Do not treat a rough file, issue, or request as approval.
+Spec requirements, rationale, and acceptance criteria remain authoritative; a
+plan instruction that conflicts with a spec does not override it. In
+interactive mode, an execution request with only an approved spec routes here
+first — do not begin implementation.
 
 ## Draft the plan
 
-Inspect relevant repository behavior and conventions before drafting.
+Inspect relevant repository behavior and conventions before drafting. Resolve
+the draft folder in order: (1) a user-named path, (2) a folder `AGENTS.md` or
+`CLAUDE.md` at repository root names for plans (`Plans live in design/plans/.`),
+or (3) `docs/plans/` (kind folders are flat).
 
-Resolve the folder for the draft in this order:
+Write `<folder>/<slug>.md`. The slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and is
+neither `index` nor `log`. Default to the spec's slug when targeting one
+living spec with no earlier plan; when targeting multiple specs or an existing
+living spec that already has an earlier plan, use a change-scoped slug so each
+change preserves its own plan and handoff history.
 
-1. A path the user names for this plan.
-2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
-   plans, in a sentence such as `Plans live in design/plans/.`
-3. `docs/plans/`. Kind folders are flat.
-
-Write the draft to `<folder>/<slug>.md`. The slug defaults to the spec's slug,
-matches `^[a-z0-9]+(-[a-z0-9]+)*$`, and is neither `index` nor `log`. Start the
-file with this frontmatter, followed by one blank line and the body:
+Start the file with this frontmatter, followed by one blank line and the body:
 
 ```markdown
 ---
@@ -54,29 +72,38 @@ implements: <spec path>
 ```
 
 Write one field per line in this order, with no block lists or nesting.
-Write `title` and `description` in double quotes, with `\` and `"` inside them
-escaped as `\\` and `\"`; quote no other field. `tags` defaults to the spec's
-tags. Omit `implements` when the spec is not a repository file. Add
-`supersedes: <path>` after `implements` only when this plan replaces a
-differently named plan. A repository path is relative to the repository root,
-without a leading slash, and includes `.md`, such as `docs/specs/<spec-slug>.md`.
-The template's Locator line holds the spec's path and the revision of its
-approved content, or the identity the user supplied when the spec is not a
-repository file.
+Double-quote only `title` and `description`, escaping `\` and `"` inside them as
+`\\` and `\"`; quote no other field. `tags` defaults to implemented spec(s)'
+tags. `implements` holds a single repo path or inline list `[path-a, path-b]`,
+omitted when all specs are non-repository. Add `supersedes` after `implements`
+(scalar `<path>` or inline list `[path-a, path-b]`) only when replacing earlier
+plan(s). Repository paths are repo-root relative, without a leading slash, and
+include `.md`, such as `docs/specs/<spec-slug>.md`.
+
+Committed plans never cite branch or pre-merge commit hashes, Jujutsu change
+IDs, or revision ranges. Pin every cited repository spec as
+`<path>, blob <12-char hash>` computed strictly from its committed blob via
+step 5 of [the OKF commit reference](../../references/okf-commit.md) or
+`library`'s `pin-and-compare.md` — never from a dirty working copy.
+Non-repository specs are excluded from `implements` (omit `implements` when
+all specs are non-repository), omit blob hashes, and cite the user-supplied
+identity.
 
 Use [the plan template](references/plan-template.md) unless a higher-precedence
-repository or user structure covers the same information. Keep one plan to one
-independently integrable change. A small change can have one short task. When a
-specification cannot fit a coherent, reasonably sized plan, recommend separate
-plans with independently deliverable scopes and their dependencies; do not
-manufacture tasks merely to fill a template.
+repository or user structure covers the same information. Carry per-change
+context (brief motivation and approach), exact tasks, relevant file paths and
+conventions, and concrete completion checks. Keep one plan to one independently
+integrable change; a small change can have one short task. When specs cannot fit
+a coherent, reasonably sized plan, recommend separate plans with independently
+deliverable scopes and their dependencies; do not manufacture tasks merely to
+fill a template.
 
-Give tasks stable identifiers. Each task must state its deliverable and exact
-spec references, prerequisites and order, relevant files and established
-patterns, constraints, and a concrete completion check. A task brief may quote
-the exact spec excerpt needed by an isolated worker, but does not replace the
-specification. Do not include complete implementation code or mutable progress
-in the plan.
+Give tasks stable identifiers. Each task states its deliverable, exact spec
+references (`<spec-slug>:R#` or section against pinned spec blob(s)),
+prerequisites and order, relevant files and established patterns, constraints,
+and a concrete completion check. A task brief may quote the exact spec excerpt
+needed by an isolated worker, but does not replace the spec. Do not include
+complete implementation code or mutable progress in the plan.
 
 Do not use a discovery task to hide an unresolved material repository or scope
 decision. A discovery task is valid when it has an observable deliverable and
@@ -84,23 +111,24 @@ a check that establishes it; a command is required only when known, and a
 specific manual or behavioral observation can be the check. Escalate only when
 the missing owner, location, or verification approach is a material scope,
 ownership, or authority boundary that bounded inspection and ordinary
-engineering judgment consistent with the approved spec cannot resolve.
-Otherwise, select a new within-scope file or check, or define the bounded
-discovery task, instead of leaving an empty task placeholder for implementation.
+engineering judgment consistent with the approved spec cannot resolve; otherwise
+select a new within-scope file or check, or define the bounded discovery task.
 
 ## Review before approval
 
-When the user explicitly approves a plan they describe as already reviewed,
-skip this section and go to the commit section; the earlier review need not
-have happened in this conversation.
+In interactive mode, when the user explicitly approves a plan they describe as
+already reviewed, skip this section and go to the commit section; the earlier
+review need not have happened in this conversation.
 
-Read [the plan-review contract](references/plan-review.md) before asking for
-approval. Run one fresh, read-only independent review when an independent
-reviewer is available. Give it the approved spec, exact plan, relevant
-repository context, and this contract. Do not fork or share your conversation
-with it, even when the host offers to; a reviewer that has seen the drafting
-discussion is not independent. It returns findings; it does not edit, approve,
-preserve, or execute the plan.
+Before approval or autonomous promotion, read
+[the plan-review contract](references/plan-review.md) and
+[the shared review loop](../../references/review-loop.md). Review the draft
+file itself. Launch one fresh, read-only independent reviewer when subagent
+creation is available, giving it the approved spec(s), exact plan, relevant
+repository context, and plan-review contract. Explicitly disable parent history
+(such as `fork_turns: "none"`) on hosts exposing that control; a reviewer that
+has seen the drafting discussion is not independent. It returns findings; it
+does not edit, approve, commit, assign dispositions, or execute the plan.
 
 Set the reviewer's model and reasoning effort explicitly when the host exposes
 those controls; omitting them inherits yours, which is usually the costliest
@@ -113,94 +141,89 @@ secrets, or cryptography; data migration; public contracts; or broad
 architecture. A routine role or permission check is ordinary work. This skill
 names no models; choose from those the host lists.
 
-Read usable reviewer output before adjudicating it. A usable result contains
-the contract's findings or an explicit no-material-findings result. If an
-independent reviewer is unavailable, or an attempted reviewer returns no
-usable output after it finishes or fails, perform one self-review under the
-same contract and disclose that fallback. Do not claim independence without
-the usable reviewer text.
+Wait for a running reviewer and require `usable` output before claiming an `independent` review. Follow [the shared review loop](../../references/review-loop.md) for reviewer-failure fallbacks (in interactive mode: disclosed self-review across rounds when subagent creation is unavailable, and once-per-gate disclosed self-review without retrying a failed dispatch when subagent creation is available, halting if fallback fails or a later round fails after the one-time fallback is spent; in autonomous mode, halt immediately before promotion if an independent reviewer is unavailable, fails, or returns unusable output — never fall back to self-review), round scoping (Rounds 1–2 full plan; Round 3 onward diff-only within the supplied plan, spec(s), and relevant code), blocking-edit re-runs (any blocking edit triggers the next round up to round 3 plus the step-back final round; `Non-blocking` findings record without forcing another round), and halting and escalating — never promoting — if any `Blocking` finding remains unresolved after the final round.
 
-The managing agent assigns every material finding one disposition in the
-conversation: `Addressed`, `Elevated`, or `Dismissed`, with evidence or a
-reason. Show each finding and its disposition before requesting approval. An
-`Addressed` disposition identifies the plan change and evidence; an
-`Elevated` disposition identifies the user decision that blocks approval; and
-a `Dismissed` disposition gives its reason. A later reviewer conclusion does
-not adjudicate earlier findings. Resolve all material findings before approval.
-Re-review only when a correction materially changes scope or task structure.
+Assign every finding one disposition in the conversation (never inside the
+plan): `Addressed`, `Elevated`, `Dismissed` with checkable evidence, or
+`Declined` for `Non-blocking` only. Resolve every instance of an addressed
+defect class across the plan, and never add prose solely to satisfy a reviewer.
 
 ## Obtain approval
 
-Ask the user to approve or correct the exact reviewed plan. Incorporate
-corrections. Run another review only when they materially change scope or task
-structure.
+In interactive mode, after the review loop finishes clean with all findings
+adjudicated, present the review summary and ask the user to approve or correct
+the exact reviewed plan. Incorporate corrections; re-run review when corrections
+materially change scope, approach, or task structure (or resolve any blocking
+edit). In explicitly authorized autonomous mode, skip asking for human approval
+and proceed directly to commit after a clean independent review round.
 
-Do not commit the plan, set `status: stable`, write `verified`, deprecate the
-plan it supersedes, or execute it before explicit approval.
-A request to preserve, save, record, or commit the plan is not approval, and
-calling it reviewed is not approval; only an explicit statement that the user
-approves it is. When such a request arrives without approval, say that the
-plan stays an uncommitted draft and ask the user to approve or correct it,
-rather than reporting it preserved.
+Except in explicitly authorized autonomous mode, do not commit the plan, set
+`status: stable`, write `verified`, deprecate `supersedes` targets, or execute
+it before explicit approval. A request to preserve, save, record, or commit
+the plan is not approval, and calling it reviewed is not approval; only an
+explicit statement that the user approves it is. When such a request arrives
+without approval, say that the plan stays an uncommitted draft and ask the user
+to approve or correct it, rather than reporting it preserved. Keep execution
+authorization separate from plan approval in interactive mode.
 
 ## Commit the approved plan
 
-Explicit approval authorizes the commit; do not ask again or offer another
-preservation choice. When the user explicitly approves a plan they describe
-as reviewed, proceed to the commit: do not run another review, change the
-document's content, or ask for approval again. Any change made after approval,
-other than the edits steps 1 and 2 make, needs the user's approval of the
-changed document before it is committed.
+Explicit approval (or a clean independent review round under explicitly
+authorized autonomous mode) authorizes the commit; do not ask again or offer
+another preservation choice. When the user explicitly approves a plan they
+describe as already reviewed, proceed to commit: do not run another review,
+change the document's content, or ask for approval again. Any edit after
+approval, other than promotion/deprecation edits (or a mechanical
+blob-citation-only refresh), requires approval (or clean autonomous independent
+review) of the changed plan before committing.
 
-1. Set `status: stable` in the plan's frontmatter and write its `verified`
-   line, `verified: { by: human:<approver>, at: <approval time> }`, after
-   `status`. The approver is the user name version control is configured with:
-   with Jujutsu, `jj config get user.name`; with Git, `git config user.name`.
-   The approval time is the UTC instant printed by
-   `date -u +%Y-%m-%dT%H:%M:%SZ`. When the name is empty or contains any of
-   `,` `[` `]` `{` `}` `#` `:`, write no `verified` line and say so in the
-   report.
-2. When the plan has `supersedes`, check the named plan first. A target
-   without a `type` line is not yet migrated: leave it unchanged and say so in
-   the report. Otherwise set its `status` to `deprecated` unless it already
-   is, replacing its `status` line or, when it has none, adding one after
-   `description`. A `supersedes` target that does not exist affects nothing.
-3. Commit, through the repository's active version-control workflow, exactly
-   the files steps 1 and 2 changed: the plan and, when step 2 changed it, the
-   replaced plan. Leave unrelated working-copy changes out of the commit and
-   untouched. Describing the working-copy change is not a commit. List each
-   path once per command. With Jujutsu,
-   `jj commit -m '<message>' <path> <path>` moves the files into a finished
-   revision. With Git,
-   `git add <path> <path> && git commit -m '<message>' <path> <path>`.
-4. Verify that every committed path entered repository history and is no
-   longer only in the mutable working copy. With Jujutsu, confirm that
-   `jj diff -r @ <path>` prints nothing and that `jj log -r @- <path>` shows a
-   revision newer than the one you started from, for each path. With Git,
-   confirm that `git status --porcelain <path>` prints nothing and that
-   `git log -1 -- <path>` shows the new commit, for each path. Claim a commit
-   only when both checks hold for every committed path.
-5. Report the plan's locator with its revision, such as
-   `docs/plans/<slug>.md@<revision>`, using the resolved path.
+Read and execute steps 1–5 of [the OKF commit reference](../../references/okf-commit.md) to set `status: stable` and `verified`, deprecate scalar or inline-list `supersedes` targets, commit strictly the modified files and verify the Jujutsu or Git recording checks, preserve changed files and report them uncommitted and not execution-ready on failure, and compute and report `<path>, blob <12-char hash>` using the resolved path. Continue only an execution request the user already authorized.
 
-When no supported version control exists or the commit is refused or fails,
-leave every file step 3 would have committed in place with its new status and
-report those files uncommitted. On any failure, report the exact outcome
-without claiming completion or working around it. An uncommitted plan is not
-execution-ready.
+## Revise or refresh an approved plan
 
-After a successful commit, return the locator to the user or continue only an
-execution request the user already authorized. Later workflows read the plan
-at that locator, through version control when it names a revision.
+- **In-place revision:** Revise in place per
+  [the OKF commit reference](../../references/okf-commit.md) — never create a
+  new file for a new revision. Set `status: draft` and remove `verified`, make
+  the change, review again when material (or always complete a clean
+  independent review round in explicitly authorized autonomous mode), obtain
+  explicit approval (skipping human approval in explicitly authorized autonomous
+  mode after that clean round), and re-commit through steps 1–5. Work on
+  affected scope waits for the re-approved commit; a revision unsupported by the
+  spec(s) needs an approved spec revision first.
+- **Mechanical blob-citation-only refresh:** When a `stable` plan's tasks and
+  content are unchanged and only cited spec blob hash(es) need updating, run the
+  two-step mechanical refresh in
+  [the OKF commit reference](../../references/okf-commit.md) without flipping
+  `status` to `draft`, changing `verified`, or re-requesting approval, and
+  commit any refreshed pre-merge handoff as its own separate revision.
 
-## Revise an approved plan
+## Autonomous mode and machine-confirmed plans
 
-Revise in place; do not create a new file for a new revision. Set
-`status: draft` and remove the `verified` line, make the change, and review it
-again when the change is material. Obtain explicit approval of the revised
-plan, then commit it as above, which sets `status: stable` and writes a new
-`verified` line.
+Load [the autonomous mode reference](../../references/autonomous-mode.md)
+whenever either condition applies:
 
-Material changes to approved scope or approach revise the plan this way, and
-work on the affected scope waits for the re-approved commit. A revision the
-approved specification does not support needs an approved spec revision first.
+- **Explicitly authorized autonomous mode:** Resolve `Elevated` findings and
+  other intent choices (including unstated caller-visible behavior not
+  following directly from a requirement) conservatively under
+  `Decisions for review` (never marked human-approved), and record internal
+  trade-offs under `Tactical decisions` in the stage report (and handoff note).
+  On reviewer unavailability/failure or unconverged review, halt before
+  promotion leaving an uncommitted `draft` (never self-review) and emit
+  accumulated `Decisions for review`. A clean independent review round sets
+  `status: stable` and `verified: { by: process:delivery-autonomous, at: <UTC> }`,
+  commits via steps 1–5 of
+  [the OKF commit reference](../../references/okf-commit.md) (preserving changed
+  files and emitting `Decisions for review` on commit failure), and emits
+  `Decisions for review` and `Tactical decisions` in the stage report.
+- **Interactive confirmation of a `machine-confirmed` `stable` plan:** When an
+  interactive gate encounters a `status: stable` plan verified only by a
+  non-`human:` actor, obtain explicit user approval, update `verified` (or
+  remove it with an omission note if VCS `user.name` is empty or invalid) via
+  step 1 and commit via steps 3–5 of
+  [the OKF commit reference](../../references/okf-commit.md) without re-running
+  review when content is unchanged (a `status: stable` plan with no `verified`
+  line is **not** machine-confirmed), and refresh any existing pre-merge
+  handoff as its own separate revision via step 2 of the mechanical refresh in
+  [the OKF commit reference](../../references/okf-commit.md) (verifying the steps
+  3–4 recording check and leaving the refreshed handoff in place as uncommitted
+  on failure).
