@@ -26,7 +26,7 @@ skill once and record what it finds; fix nothing in the skills.
   one case at a time.
 - REVIEW.md asks reviewers to run every changed shell snippet by hand. The
   skills' commands have only run under mawk; BSD and macOS `awk` and `find`
-  never ran them (Limitations in `docs/handoffs/okf-documents-pkqymxxw.md`).
+  never ran them (Limitations in `docs/notes/okf-documents-pkqymxxw.md`).
 - Nothing checks whether a skill's text is instructive or distracting, though
   agentskills.io publishes best practices for exactly that.
 

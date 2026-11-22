@@ -3,7 +3,7 @@ type: spec
 title: "OKF documents in docs"
 description: "Makes Superstore's documents Open Knowledge Format concepts stored under docs/, with the library skill as the OKF encoder and approval recorded as stable with a verified field."
 status: stable
-verified: { by: human:Colton Hyer, at: 2026-11-20T23:33:47Z }
+verified: { by: human:Colton Hyer, at: 2026-11-22T01:42:41Z }
 tags: [delivery-plugin, library, open-knowledge-format, agent-skills]
 supersedes: docs/specs/library-retrofit.md
 references: [docs/specs/specifications.md, docs/specs/review-loop.md, docs/specs/plan-execution.md, docs/specs/autonomous-execution.md, docs/specs/skill-checks.md]
@@ -14,7 +14,9 @@ references: [docs/specs/specifications.md, docs/specs/review-loop.md, docs/specs
 ## Summary
 
 Superstore's documents become Open Knowledge Format (OKF) v0.2 concepts,
-stored by default in one flat folder per kind under `docs/`. The library skill
+stored by default in flat folders under `docs/` (`docs/specs/`, `docs/plans/`,
+and `docs/notes/` for both ordinary notes and `type: handoff` execution
+receipts; or `docs/<plural>/` for other types). The library skill
 becomes superstore's OKF encoder: it ships an unmodified copy of the OKF spec
 and states only what OKF leaves open, namely document types, locations, extra
 fields, when each status is set, and how to find, write, pin, and compare
@@ -55,8 +57,9 @@ has to.
 Goals:
 
 - Every document a superstore skill writes is a valid OKF v0.2 concept.
-- Documents live in `docs/<kind>/<slug>.md` by default, and a repository can
-  name other locations once in its agent instructions.
+- Documents live under `docs/` (`docs/specs/`, `docs/plans/`, and `docs/notes/`
+  for `note` and `handoff` by default; `docs/<plural>/` for other types), and a
+  repository can name other locations once in its agent instructions.
 - An unmodified, pinned copy of OKF's `SPEC.md` inside the library skill is the
   single source for the format.
 - One field, `status`, decides whether a document is current.
@@ -121,10 +124,13 @@ field per line, in this order when present:
   document OKF `machine-confirmed` (§5.2–§5.3) and never `human:`.
 - The body is free Markdown after the frontmatter block and one blank line.
 - A file is named `<slug>.md`. The slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and
-  is neither `index` nor `log`, which OKF reserves (§3.1). Point-in-time
-  standalone notes in the notes folder (default `docs/notes/`) may prefix
-  filenames with `YYYY-MM-DD-` (which satisfies the slug rule); living specs
-  keep undated domain slugs (`docs/specs/specifications.md`).
+  is neither `index` nor `log`, which OKF reserves (§3.1). Living specs
+  (`docs/specs/`) keep undated domain slugs (`docs/specs/specifications.md`).
+  New plans (`docs/plans/`), handoff notes (`<plan-slug>-handoff.md`, prefixed
+  with `YYYY-MM-DD-` if `<plan-slug>` is undated), and point-in-time standalone
+  notes (`docs/notes/`) default to `YYYY-MM-DD-<slug>.md` using the current
+  date (unless the user names another filename for a standalone note);
+  existing undated files remain valid and edit in place without renaming.
 - A document without `status` is final when written. OKF reads an absent
   status as `stable` (§5.4).
 - The `references` field is superstore's own and is unrelated to OKF's
@@ -136,9 +142,11 @@ The folder for a document type resolves in this order:
 
 1. A path the user names for this document.
 2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
-   that type, in a sentence such as `Specs live in design/specs/.`
-3. `docs/<kind>/`, where the kind is the type's plural: `docs/specs/`,
-   `docs/plans/`, `docs/handoffs/`. Kind folders are flat.
+   that type, in a sentence such as `Specs live in design/specs/.` For
+   `handoff`, check for `handoffs` first and fall back to `notes`.
+3. `docs/specs/` for `spec`, `docs/plans/` for `plan`, `docs/notes/` for
+   `handoff` and `note`, and `docs/<plural>/` for any other lowercase type. Kind
+   folders are flat.
 
 Skills that read documents resolve folders in the same order. A document at a
 one-off user path is still valid; readers find it when a task names it.
@@ -200,9 +208,9 @@ commands described below.
   frontmatter table; the status rules; Find; Pin and compare; Write; and when
   to open the spec.
 - **Document folders** are the resolved folders of `spec`, `plan`, `handoff`,
-  and `note`, plus any folder `AGENTS.md` or `CLAUDE.md` at the repository
-  root names for a type. A document of another type is found when a task
-  names that type.
+  and `note` (by default `docs/specs/`, `docs/plans/`, and `docs/notes/`), plus
+  any folder `AGENTS.md` or `CLAUDE.md` at the repository root names for a type.
+  A document of another type is found when a task names that type.
 - **Find:** filter on frontmatter lines inside the document folders only,
   never the whole repository, whose eval fixtures and other Markdown can
   carry similar lines; a folder that does not exist yields no hits.
@@ -281,9 +289,13 @@ commands described below.
 ### Delivery: requirements
 
 When history is plausibly relevant, the requirements skill reads the current
-documents on the subject, by type and tags, in the resolved locations. It
-applies the currency rule above. A missing document folder is not an error,
-and it does not search on every task.
+documents on the subject, by type and tags, in the resolved locations (by
+default `docs/specs/`, `docs/plans/`, `docs/notes/`). It applies the currency
+rule above. A missing document folder is not an error, and it does not search
+on every task. Its completion gate requires the summary to state what happens
+today and what the change makes different (answered from the repository when
+possible, asking the user only when it cannot, or stating that nothing handles
+this today for something new).
 
 ### Delivery: plans
 
@@ -298,10 +310,13 @@ and it does not search on every task.
   the spec's repository path (or an inline list `[path-a, path-b]` when one plan
   implements multiple repository specs; omitted when none are repository files).
   It adds `supersedes` (scalar or inline list) only when it replaces differently
-  named plans. Its location follows the location order; its slug defaults to the
-  spec's when targeting one living spec with no earlier plan, or uses a
-  change-scoped slug when targeting multiple specs or a living spec that already
-  has an earlier plan (`docs/specs/plan-execution.md`).
+  named plans. Its location follows the location order (default `docs/plans/`).
+  New plans default to `YYYY-MM-DD-<name>.md` using the current date when
+  first drafted, where `<name>` defaults to the spec's slug when targeting one
+  living spec with no earlier plan, or a change-scoped slug when targeting
+  multiple specs or a living spec that already has an earlier plan
+  (`docs/specs/plan-execution.md`); existing undated plans remain valid and edit
+  in place without renaming.
 - Approval, revision, recording, and committed blob pinning follow the shared
   plugin-level reference rules (`plugins/delivery/references/`).
 - The plan-review contract forbids browsing the repository's documents beyond
@@ -321,25 +336,31 @@ Delivery README states the same gate.
 ### Delivery: handoff notes
 
 `implementing-plans`, its `execution-state.md`, and `subagent-execution` write
-the handoff note to `<handoffs folder>/<plan-slug>.md` (appending `-2`, `-3` on
-collision, per `docs/specs/plan-execution.md`), with `docs/handoffs/` as the
-default. The note carries `type: handoff`, `title` (the plan's title without its
-trailing word `plan`, in any letter case, followed by ` execution`), a
-one-sentence `description` of what the execution delivered, `tags` copied from
-the plan, and `implements` naming the plan's repository path when the plan is a
-repository file. The slug must satisfy the file-name rule above. Its body
-carries blob citations for the plan and every implemented repository spec, a
-`Change` line, and fixed `## Decisions for review` and `## Tactical decisions`
-headings (`docs/specs/plan-execution.md`). Recording rules and scratch handling
-stay unchanged. `type: note` stays free for ordinary notes, which the library
-skill writes.
+the handoff note to `<notes/handoffs folder>/<handoff-slug>.md` (appending
+`-2`, `-3` on collision, per `docs/specs/plan-execution.md`), resolving the
+folder in order: user-named path, a folder root `AGENTS.md` or `CLAUDE.md`
+names for handoffs or else for notes, then `docs/notes/` by default. The
+filename is `<plan-slug>-handoff.md` when `<plan-slug>` starts with
+`YYYY-MM-DD-`, or `YYYY-MM-DD-<plan-slug>-handoff.md` (current execution date)
+when `<plan-slug>` is undated or from a non-repository plan. The note carries
+`type: handoff`, `title` (the plan's title without its trailing word `plan`, in
+any letter case, followed by ` execution`), a one-sentence `description` of what
+the execution delivered, `tags` copied from the plan, and `implements` naming
+the plan's repository path when the plan is a repository file. The slug must
+satisfy the file-name rule above. Its body carries blob citations for the plan
+and every implemented repository spec, a `Change` line, and fixed
+`## Decisions for review` and `## Tactical decisions` headings
+(`docs/specs/plan-execution.md`). Recording rules and scratch handling stay
+unchanged. `type: note` stays free for ordinary notes, which the library skill
+writes.
 
 ### READMEs, manifests, and REVIEW.md
 
 - `plugins/delivery/README.md` describes the OKF convention, the default
   location and how a repository names its own, and the copied spec and its
   license. It drops the argument for `.agents/` over `docs/`. It carries
-  migration notes, each targeting `docs/<kind>/` with OKF frontmatter, for a
+  migration notes, each targeting `docs/` (`docs/specs/`, `docs/plans/`,
+  `docs/notes/`, or `docs/<plural>/`) with OKF frontmatter, for a
   0.2.0 library, a 0.1.0 ledger, and documents that Planning or
   Implementation 0.2.0 wrote under `docs/` without frontmatter; those gain
   frontmatter in place, since their file names already fit the slug rule. It
@@ -366,7 +387,8 @@ record a `verified` line under the rule above.
 
 - Every document under `.agents/library/` moves to `docs/<kind>/<slug>.md`
   with its slug unchanged: six specs, six plans, and one handoff note, plus
-  this spec and its plan. The handoff note moves to `docs/handoffs/`.
+  this spec and its plan. The handoff note moved initially to `docs/handoffs/`
+  (and subsequently into `docs/notes/` alongside the other repository handoffs).
 - Frontmatter: `type` from the old folder, with `notes/` becoming `handoff`;
   `title` unchanged in wording and written in double quotes; a new
   one-sentence `description`; `status: approved` becomes `stable`, except that
@@ -379,8 +401,8 @@ record a `verified` line under the rule above.
 - Each body stays byte-identical. Locators inside bodies keep their old paths,
   which still resolve at the revisions they name.
 - `.agents/library/` is removed.
-- The handoff note for this change's own execution is written under
-  `docs/handoffs/`.
+- The handoff note for this change's own execution was initially written under
+  `docs/handoffs/` (and subsequently moved into `docs/notes/`).
 
 ### Versions
 
@@ -433,7 +455,7 @@ type: handoff
 title: "Authentication sessions execution"
 description: "Token rotation and the idle timeout landed and passed whole-change checks."
 tags: [auth, session-management]
-implements: docs/plans/auth-sessions.md
+implements: docs/plans/2026-11-01-auth-sessions.md
 ---
 ```
 
@@ -466,7 +488,7 @@ has no `type` line, including an empty file, or whose `status` is outside the
 three values, except `index.md` and `log.md`:
 
 ```sh
-find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
+find -H docs/specs docs/plans docs/notes -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
   \( -size 0 -print -o -exec awk '{ sub(/\r$/, "") }
        FNR == 1 { if (f != "" && !t) print f; f = FILENAME; t = 0; fm = ($0 == "---"); next }
        fm && /^---$/ { fm = 0 }
@@ -509,9 +531,11 @@ find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' 
 - **`docs/` over `.agents/`.** Hidden folders are skipped by indexers and many
   tools. A `deprecated` status, not location, now keeps old documents out of
   current answers.
-- **`handoff` over `note` for handoff notes.** People call any note a note.
-  Reserving `note` for one workflow's records would stop the library skill
-  from writing ordinary notes.
+- **`handoff` in frontmatter, stored in `docs/notes/`.** Keeping `type: handoff`
+  in frontmatter leaves `type: note` free for ordinary notes written by `library`
+  and lets tools filter execution receipts cleanly, while storing them in
+  `docs/notes/` avoids a fourth top-level folder for another point-in-time
+  supplementary artifact.
 - **Shared plugin-level references within `delivery`.** `library`, `requirements`,
   `specs`, `plans`, `implementing-plans`, `subagent-execution`,
   `reviewing-implementation`, and `verifying-changes` ship together in
@@ -560,8 +584,9 @@ find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' 
 
 ### Migration check
 
-- Fifteen documents exist under `docs/specs/`, `docs/plans/`, and
-  `docs/handoffs/` with the required fields, a `type` matching their folder, the
+- Fifteen documents exist under `docs/specs/`, `docs/plans/`, and (as
+  migrated initially) `docs/handoffs/` (subsequently moved into `docs/notes/`)
+  with the required fields, a `type` matching their kind, the
   specified statuses, and `tags` equal to their former `topics`. Every
   `title` and `description` line is double-quoted, and none carries
   `verified`.
@@ -578,7 +603,8 @@ paths and OKF frontmatter:
 
 - `library`: selects the current document by status, excluding `draft` and
   `deprecated` ones; reads a pinned version through version control; answers a
-  convention question with the OKF fields and `docs/<kind>/` without writing a
+  convention question with the OKF fields and default `docs/` folders
+  (`docs/specs/`, `docs/plans/`, `docs/notes/`, and `docs/<plural>/`) without writing a
   script or index; reads only matching documents when the subject is known;
   honors a location named in `AGENTS.md`; writes a document of an unowned type
   with valid frontmatter and leaves it uncommitted; opens
@@ -598,14 +624,16 @@ paths and OKF frontmatter:
   re-approving a revised replacement commits only the spec when its target is
   already `deprecated`.
 - `plans`: requires a `stable` spec; accepts a spec without frontmatter on
-  explicit approval; writes the plan to `docs/plans/` with `implements` as a
-  repository path; approval and replacement commits behave as for specs; a
-  recording failure is reported as not execution-ready.
+  explicit approval; drafts new plans at `docs/plans/YYYY-MM-DD-<slug>.md`
+  with `implements` as a repository path (leaving existing undated plans valid);
+  approval and replacement commits behave as for specs; a recording failure is
+  reported as not execution-ready.
 - `implementing-plans` and `subagent-execution`: refuse a plan that is not
-  committed, clean, and `stable`; write and record the handoff note at
-  `docs/handoffs/<plan-slug>.md` (appending `-2`, `-3` on collision) with
+  committed, clean, and `stable`; write and record the handoff note in
+  `docs/notes/` named `<plan-slug>-handoff.md` (prefixing `YYYY-MM-DD-` if
+  `<plan-slug>` is undated, and appending `-2`, `-3` on collision) with
   `type: handoff`, `implements`, blob citations, and fixed decision headings
   before deleting scratch.
 - `requirements`: reads current documents under `docs/` when history is
-  relevant, skips `draft` and `deprecated` ones, and does not search on an
-  unrelated task.
+  relevant, skips `draft` and `deprecated` ones, states what happens today
+  and what changes in the summary, and does not search on an unrelated task.
