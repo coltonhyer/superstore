@@ -3,7 +3,7 @@ type: spec
 title: "Plans, execution, and handoff history"
 description: "Defines per-change implementation plans, committed-document readiness gates, blob-pinned handoff notes, and implementation execution and review checks in the delivery plugin."
 status: stable
-verified: { by: human:Colton Hyer, at: 2026-11-22T00:15:14Z }
+verified: { by: human:Colton Hyer, at: 2026-11-22T01:42:41Z }
 tags: [delivery-plugin, implementation-planning, code-review, verification, agent-skills]
 supersedes: docs/specs/spec-to-integration-plugin.md
 references: [docs/specs/okf-documents.md, docs/specs/specifications.md, docs/specs/review-loop.md, docs/specs/autonomous-execution.md]
@@ -35,7 +35,7 @@ Non-goals:
 ### Plans and readiness gates
 
 - **R1:** Each plan carries the per-change context (brief motivation and approach), exact tasks, relevant file paths and conventions, and concrete completion checks.
-- **R2:** When a plan targets multiple specs, or targets an existing living spec that already has an earlier plan, give the new plan a change-scoped slug so each change preserves its own plan and handoff history instead of overwriting earlier plans.
+- **R2:** New plans default to `YYYY-MM-DD-<name>.md` using the current date when first drafted (existing undated plans remain valid and edit in place). When a plan targets multiple specs, or targets an existing living spec that already has an earlier plan, give the new plan a change-scoped slug (`YYYY-MM-DD-<change-slug>.md`) so each change preserves its own plan and handoff history instead of overwriting earlier plans.
 - **R3:** An uncommitted or dirty repository spec is not plan-ready, and an uncommitted or dirty repository plan (or any repository spec it implements) is not execution-ready; each must be committed before a downstream plan or handoff pins its blob (non-repository specs and plans omit the blob hash).
 - **R4:** Committed plans and handoff notes never cite branch or pre-merge commit hashes, Jujutsu change IDs, or revision ranges; they pin cited repository specs and plans by repository path and 12-character Git blob hash (`<path>`, blob `<12-char hash>`), computed only from the post-approval committed blob per `docs/specs/okf-documents.md` (uncommitted execution scratch directories may still use revision identifiers).
 - **R5:** When any cited spec or plan is revised in place before merge, refresh its blob citation to the final committed blob; a mechanical citation-only refresh on a `stable` plan whose tasks and content are unchanged commits without flipping the plan to `draft` or re-requesting approval, and refreshes the plan's blob in any downstream handoff.
@@ -48,7 +48,7 @@ Non-goals:
 
 ### Handoff notes and skill boundaries
 
-- **R9:** Handoff notes resolve their folder through the standard folder order (`docs/specs/okf-documents.md`, defaulting to `docs/handoffs/`) and are named `<plan-slug>.md` with no revision suffix, appending `-2`, `-3`, and so on if a prior handoff for that slug already exists.
+- **R9:** Handoff notes resolve their folder through `docs/specs/okf-documents.md` (user path, then `AGENTS.md`/`CLAUDE.md` for handoffs or else notes, defaulting to `docs/notes/`) and are named `<plan-slug>-handoff.md` — prefixing `YYYY-MM-DD-` using the current execution date when `<plan-slug>` does not already start with `YYYY-MM-DD-` (including non-repository plans) — with no revision suffix, appending `-2`, `-3`, and so on before `.md` if a prior handoff with that filename already exists.
 - **R10:** Each handoff note cites its plan and every implemented repository spec by repository path and committed blob hash (when repository files), identifies the change on a `Change` line (issue, pull/merge request, or short description) rather than commit or revision ranges, and references review findings by finding ID and disposition without commit hashes or scratch paths.
 - **R11:** Each handoff note includes fixed `## Decisions for review` and `## Tactical decisions` headings (writing `none` when empty), classifying entries per `docs/specs/autonomous-execution.md`.
 - **R12:** `plans`, `implementing-plans`, `subagent-execution`, `reviewing-implementation`, and `verifying-changes` treat sibling skills in `delivery` as part of the same plugin without missing-sibling-plugin hedging, and load shared workflow rules from plugin-level shared references (`docs/specs/okf-documents.md`).
