@@ -109,7 +109,7 @@ or inline work was explicitly requested.
 Before creating plan-associated scratch, add its exact execution directory to
 the active VCS's local exclusion mechanism. Use one directory per workspace and
 plan version, normally `.agents/execution/<run-id>/` (`<run-id>` may use a run
-or revision identifier; committed handoff notes use `<plan-slug>.md`).
+or revision identifier; committed handoff notes carry no revision identifier).
 
 Initialize or restore execution state from the committed, clean plan and spec
 files (never bypass dirty repository files via `@revision` — dirty plans or
@@ -182,11 +182,12 @@ retain scratch, and emit each accumulated `Decisions for review` entry in full
 (all five fields) in autonomous mode). Do not push, create a PR/MR, merge, or deploy.
 
 After whole-change checks pass, write the handoff note at
-`<handoffs folder>/<plan-slug>.md` (resolving the folder and appending `-2`,
-`-3`, ... if a prior handoff for that slug exists per
-[execution state](references/execution-state.md)), citing the committed plan and
-every implemented repository spec by `<path>, blob <12-char hash>` (omitting
-blob hashes for non-repository docs), a `Change` line (no commit hashes,
+`<notes/handoffs folder>/<handoff-slug>.md` (`<plan-slug>-handoff.md` when
+`<plan-slug>` starts with `YYYY-MM-DD-`, or `YYYY-MM-DD-<plan-slug>-handoff.md`
+when undated, resolving the folder — default `docs/notes/` — and appending `-2`,
+`-3`, ... on collision per [execution state](references/execution-state.md)),
+citing the committed plan and every implemented repository spec by
+`<path>, blob <12-char hash>` (omitting blob hashes for non-repository docs), a `Change` line (no commit hashes,
 Jujutsu change IDs, revision ranges, or scratch paths), whole-change checks,
 review outcomes by finding ID and disposition, `## Incidental fixes`,
 `## Limitations`, `## Decisions for review`, and `## Tactical decisions` (writing

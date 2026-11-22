@@ -48,15 +48,20 @@ halt report.
 ## Handoff note
 
 At successful whole-plan handoff, after whole-change checks pass, the primary
-writes the note to `<handoffs folder>/<plan-slug>.md` with no revision suffix,
-appending `-2`, `-3`, and so on if a prior handoff for that slug already exists.
-The slug must match `^[a-z0-9]+(-[a-z0-9]+)*$` and be neither `index` nor
-`log`, which OKF reserves. Resolve the handoffs folder in this order:
+writes the note to `<notes/handoffs folder>/<handoff-slug>.md` with no revision
+suffix, where `<handoff-slug>` is `<plan-slug>-handoff` when `<plan-slug>`
+starts with `YYYY-MM-DD-`, or `YYYY-MM-DD-<plan-slug>-handoff` (current
+execution date) when `<plan-slug>` is undated or from a non-repository plan,
+appending `-2`, `-3`, and so on before `.md` if a prior handoff with that exact
+filename already exists. The slug must match `^[a-z0-9]+(-[a-z0-9]+)*$` and be
+neither `index` nor `log`, which OKF reserves. Resolve the destination folder in
+this order:
 
 1. A path the user names for this note.
 2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
-   handoffs, in a sentence such as `Handoffs live in design/handoffs/.`
-3. `docs/handoffs/`. Kind folders are flat.
+   handoffs (in a sentence such as `Handoffs live in design/handoffs/.`), or if
+   none, for notes (`Notes live in design/notes/.`).
+3. `docs/notes/`. Kind folders are flat.
 
 The note's frontmatter holds these fields, one per line, in this order:
 

@@ -178,8 +178,10 @@ Retain any lasting diagnostic or report outside scratch, for example in the
 handoff note's `## Limitations` or `## Tactical decisions` sections.
 
 After whole-change checks pass, write the handoff note at
-`<handoffs folder>/<plan-slug>.md` (resolving the folder and appending `-2`,
-`-3`, ... if a prior handoff for that slug exists per
+`<notes/handoffs folder>/<handoff-slug>.md` (`<plan-slug>-handoff.md` when
+`<plan-slug>` starts with `YYYY-MM-DD-`, or `YYYY-MM-DD-<plan-slug>-handoff.md`
+when undated, resolving the folder — default `docs/notes/` — and appending `-2`,
+`-3`, ... on collision per
 [the execution state](../implementing-plans/references/execution-state.md)) in
 the shape the execution state gives — citing the committed plan and every
 implemented repository spec by `<path>, blob <12-char hash>` (omitting blob

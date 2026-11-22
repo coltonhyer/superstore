@@ -95,9 +95,11 @@ approval (or promoting after a clean independent round in autonomous mode).
 explicit user approval exception applies to committed and clean `type: spec`
 files without a `status` line, frontmatterless files, or non-repository specs;
 `draft`, `deprecated`, and dirty or uncommitted specs are rejected and routed
-back through `specs`). It uses the spec's slug for one living spec with no
-earlier plan and a change-scoped slug for multi-spec plans or living specs
-with earlier plans, writes scalar or inline-list `implements` and optional
+back through `specs`). New plans default to `YYYY-MM-DD-<name>.md` (using
+the spec's slug when targeting one living spec with no earlier plan, or a
+change-scoped slug for multi-spec plans or living specs with earlier plans;
+existing undated plans remain valid and edit in place). It writes scalar or
+inline-list `implements` and optional
 `supersedes`, pins committed specs in `## Approved specifications` as
 `<path>, blob <12-char hash>` (with a two-step mechanical refresh on `stable`
 plans when only cited spec blob hashes change), runs the bounded review loop
@@ -130,10 +132,11 @@ against backing code, and commit separation for incidental pre-existing fixes
 (allowed only when blocking or explicitly authorized, and always landed in
 their own separate commit); unrelated working-copy changes stay outside
 implementation recordings. At successful whole-plan handoff, execution writes
-`docs/handoffs/<plan-slug>.md` (or `-2`, `-3`, ... on collision) with `Plan`
-and `Specs` blob citations, a `Change` line (without commit hashes, Jujutsu
-change IDs, revision ranges, or scratch paths), and the six fixed headings
-(`Whole-change checks`, `Review outcomes and dispositions`,
+`docs/notes/<plan-slug>-handoff.md` (prefixing `YYYY-MM-DD-` if `<plan-slug>`
+is undated, and appending `-2`, `-3`, ... on collision) with `type: handoff`,
+`Plan` and `Specs` blob citations, a `Change` line (without commit hashes,
+Jujutsu change IDs, revision ranges, or scratch paths), and the six fixed
+headings (`Whole-change checks`, `Review outcomes and dispositions`,
 `Incidental fixes`, `Limitations`, `Decisions for review`,
 `Tactical decisions`), committing it as its own separate revision before
 cleaning up only that execution's scratch.
@@ -156,25 +159,28 @@ execution write specs, plans, and handoff notes themselves.
 ```text
 docs/
   specs/<slug>.md
-  plans/<slug>.md
-  handoffs/<slug>.md
-  notes/<slug>.md
+  plans/YYYY-MM-DD-<slug>.md
+  notes/YYYY-MM-DD-<slug>.md
   <another-plural-kind>/<slug>.md
 ```
 
 - Each document is an OKF concept. Its `type` is `spec`, `plan`, `handoff`, or
-  another lowercase slug such as `note`. By default it lives in one flat
-  folder per kind under `docs/`, named with the type's plural. At successful
-  whole-plan handoff, execution writes a `type: handoff` note to
-  `docs/handoffs/<plan-slug>.md` (appending `-2`, `-3`, and so on if a prior
-  handoff for that slug already exists).
+  another lowercase slug such as `note`. By default specs live in
+  `docs/specs/`, plans live in `docs/plans/`, both `note` and `handoff` live
+  together in `docs/notes/`, and any other type lives in `docs/<plural>/`. At
+  successful whole-plan handoff, execution writes a `type: handoff` note to
+  `docs/notes/<plan-slug>-handoff.md` (prefixing `YYYY-MM-DD-` if `<plan-slug>`
+  is undated, and appending `-2`, `-3`, and so on if a prior handoff with that
+  exact filename already exists).
 - A repository names its own folder for a type in `AGENTS.md` or `CLAUDE.md`
   at the repository root, in a sentence such as `Specs live in design/specs/.`
-  A path the user names for one document wins over both.
+  (for `handoff`, checking `handoffs` first and falling back to `notes`). A path
+  the user names for one document wins over both.
 - The filename slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and is neither `index`
-  nor `log`. Point-in-time standalone notes in the notes folder (default
-  `docs/notes/`) may prefix filenames with `YYYY-MM-DD-` (which fits the slug
-  rule); living specs keep undated domain slugs.
+  nor `log`. Living specs keep undated domain slugs; new plans, handoffs, and
+  point-in-time standalone notes default to `YYYY-MM-DD-<slug>.md` using the
+  current date (unless the user names another filename for a standalone note),
+  and existing undated files remain valid.
 - Each document starts with a frontmatter block, one field per line, in this
   order:
 
@@ -264,7 +270,8 @@ To upgrade the copy:
 
 ## Migrating
 
-Every migration targets `docs/<kind>/<slug>.md` with the OKF frontmatter
+Every migration targets `docs/` (`docs/specs/`, `docs/plans/`, `docs/notes/`,
+or `docs/<plural>/`) with the OKF frontmatter
 above. There is no migration script; migrate by hand or ask an agent to.
 
 ### From Library 0.2.0
@@ -277,7 +284,7 @@ move stays at the old path. The rewrite is:
 
 - Add `type`: `spec` for `specs/`, `plan` for `plans/`. A file in `notes/`
   written by Implementation 0.3.0's whole-plan execution is a handoff note:
-  `type: handoff` in `docs/handoffs/`. Any other note is `type: note` in
+  `type: handoff` in `docs/notes/`. Any other note is `type: note` in
   `docs/notes/`.
 - Quote `title` and add a one-sentence quoted `description`.
 - Map `status: approved` to `stable`. Add no `verified` line: who approved
@@ -286,7 +293,7 @@ move stays at the old path. The rewrite is:
 - Rename `topics` to `tags`.
 - Prefix `implements`, `supersedes`, and `references` paths with `docs/` so
   they are repository paths. A link to a note that became a handoff note
-  points into `docs/handoffs/`, not `docs/notes/`.
+  points into `docs/notes/`, where handoffs live alongside other notes.
 - Currency was computed from `supersedes` chains. Set `status: deprecated` on
   each document that an approved document names in `supersedes`.
 
