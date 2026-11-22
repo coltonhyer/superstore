@@ -158,7 +158,7 @@
     {
       "id": 6,
       "prompt": "Add a note to the repository recording that the nightly build now runs at 02:00 UTC so it no longer overlaps the 01:30 database backup.",
-      "expected_output": "Writes docs/notes/<slug>.md with valid OKF frontmatter for type note, and leaves it uncommitted in the working copy.",
+      "expected_output": "Writes docs/notes/YYYY-MM-DD-<slug>.md (current date) with valid OKF frontmatter for type note, and leaves it uncommitted in the working copy.",
       "files": [
         {
           "source": "files/onboarding-note.md",
@@ -167,7 +167,7 @@
         }
       ],
       "expectations": [
-        "Writes one new file docs/notes/<slug>.md whose slug is lowercase and hyphenated, and does not edit docs/notes/onboarding.md",
+        "Writes one new file docs/notes/YYYY-MM-DD-<slug>.md whose filename starts with the current YYYY-MM-DD- date and lowercase hyphenated slug, and does not edit docs/notes/onboarding.md",
         "The new file starts with a frontmatter block with fields in this order: type: note, title, description, tags",
         "title and description are each one line in double quotes; tags is an inline list of one or more slugs",
         "The frontmatter has no status line and no verified line",

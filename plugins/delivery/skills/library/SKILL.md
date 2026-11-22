@@ -25,28 +25,30 @@ file. Nothing here claims that `docs/` as a whole is an OKF bundle.
 | --- | --- | --- |
 | `spec` | the specs workflow | `docs/specs/` |
 | `plan` | the plans workflow | `docs/plans/` |
-| `handoff` | the whole-plan execution workflow | `docs/handoffs/` |
-| `note` and any other lowercase slug | this skill | `docs/<kind>/`, the type's plural, such as `docs/notes/` |
+| `handoff` | the whole-plan execution workflow | `docs/notes/` |
+| `note` and any other lowercase slug | this skill | `docs/notes/` (`note`), or `docs/<plural>/` |
 
 A document's folder resolves in this order:
 
 1. A path the user names for this document.
 2. A folder that `AGENTS.md` or `CLAUDE.md` at the repository root names for
-   that type, in a sentence such as `Specs live in design/specs/.`
-3. `docs/<kind>/`. Kind folders are flat.
+   that type (`Specs live in design/specs/.`; `handoff` checks `handoffs` then
+   `notes`).
+3. `docs/specs/`, `docs/plans/`, `docs/notes/` (`handoff`/`note`), or
+   `docs/<plural>/`. Kind folders are flat.
 
 Reading follows the same order; a document at a one-off user path is valid
 and found when a task names it.
 
 The **document folders** are the resolved folders of `spec`, `plan`,
-`handoff`, and `note`, plus any folder `AGENTS.md` or `CLAUDE.md` names for a
-type; other types are found when named. `.agents/execution/` is execution
-scratch, not a document folder.
+`handoff`, and `note` (default `docs/specs/`, `docs/plans/`, `docs/notes/`), plus
+any folder `AGENTS.md` or `CLAUDE.md` names for a type; other types are found
+when named. `.agents/execution/` is execution scratch, not a document folder.
 
 A file is named `<slug>.md`, matching `^[a-z0-9]+(-[a-z0-9]+)*$` and neither
-`index` nor `log`, which OKF reserves (§3.1). Point-in-time standalone notes in
-the notes folder (default `docs/notes/`) may prefix filenames with `YYYY-MM-DD-`
-(which fits the slug rule); living specs keep undated domain slugs.
+`index` nor `log` (§3.1). Living specs keep undated domain slugs; new plans,
+handoffs (`<plan-slug>-handoff.md`, prefixed `YYYY-MM-DD-` if undated), and
+notes default to today's `YYYY-MM-DD-<slug>.md` (existing undated files stay valid).
 
 ## Frontmatter
 
@@ -141,8 +143,7 @@ present:
    whole tag slugs on inline-list delimiters (not `\b`, which breaks on `-`):
    `grep ': tags: .*[[, ]auth[],]'` (over `docs/specs docs/plans`),
    `grep ': title: '` for titles. To find documents naming a path in
-   `supersedes`, search every document folder (`docs/specs docs/plans
-   docs/handoffs docs/notes`) with
+   `supersedes`, search every document folder (`docs/specs docs/plans docs/notes`) with
    `grep -E ': supersedes: (.*[, [])?docs/specs/auth-sessions\.md([],]|$)'`
    (matches scalar and inline-list forms without prefix/suffix false matches).
 
@@ -162,7 +163,7 @@ present:
    matches it; name it in the answer as not yet migrated.
 
    ```sh
-   find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
+   find -H docs/specs docs/plans docs/notes -maxdepth 1 -name '*.md' ! -name index.md ! -name log.md \
      \( -size 0 -print -o -exec awk '{ sub(/\r$/, "") }
           FNR == 1 { if (f != "" && !t) print f; f = FILENAME; t = 0; fm = ($0 == "---"); next }
           fm && /^---$/ { fm = 0 }
@@ -216,7 +217,7 @@ recording. Do not edit an existing file unless the task asks to change it.
   write nothing there until they answer.
 - Never create `index.md` or `log.md`, nor an index, cache, script, or ignore entry.
 
-A complete note, `docs/notes/ci-runners.md`:
+A complete note, `docs/notes/2026-11-01-ci-runners.md`:
 
 ```markdown
 ---

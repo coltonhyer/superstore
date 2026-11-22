@@ -24,8 +24,9 @@ or changes established behavior:
 
 - When history is plausibly relevant, resolve the document folders in this
   order: a path the user names, a folder that `AGENTS.md` or `CLAUDE.md` at the
-  repository root names for that type (such as `Specs live in design/specs/.`),
-  then `docs/<kind>/` (`docs/specs/`, `docs/plans/`, `docs/handoffs/`). When
+  repository root names for that type (such as `Specs live in design/specs/.`;
+  for `handoff`, check `handoffs` then `notes`), then `docs/specs/`,
+  `docs/plans/`, or `docs/notes/` (for both `note` and `handoff`). When
   any of those folders exists, use the sibling `library` skill in `delivery` to
   read the current documents on the subject by type and tags, or filter the
   documents' frontmatter lines in those folders directly (for example with the
@@ -96,6 +97,9 @@ state that the requirements remain incomplete rather than inventing it.
 
 Continue gathering requirements until all of these are true:
 
+- What happens today and what the change makes different are stated (answered
+  from the repository when possible, asking the user only when it cannot, or
+  stating that nothing handles this today for something new).
 - Scope boundaries are explicit.
 - No known requirements contradict one another.
 - Expected behavior and constraints are unambiguous.

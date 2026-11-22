@@ -21,7 +21,7 @@ FIND_STABLE = (
     "! -name log.md \\"
 )
 FIND_UNMIGRATED = (
-    "find -H docs/specs docs/plans docs/handoffs docs/notes -maxdepth 1 "
+    "find -H docs/specs docs/plans docs/notes -maxdepth 1 "
     "-name '*.md' ! -name index.md ! -name log.md \\"
 )
 FIND_REVIEWS = (
@@ -393,7 +393,7 @@ def build_docs(work, shared_plans):
     write_all(work / "docs/solo", {"only.md": doc("title: Only")})
     write_all(shared_plans, PLANS)
     os.symlink(shared_plans, work / "docs/plans")
-    # docs/notes and docs/handoffs are absent on purpose.
+    # docs/notes is absent on purpose.
 
 
 class SkillCommandTests(unittest.TestCase):
@@ -508,7 +508,7 @@ class SkillCommandTests(unittest.TestCase):
             (TITLE_PATTERN, "docs/specs docs/plans", TITLES),
             (
                 SUPERSEDES_PATTERN,
-                "docs/specs docs/plans docs/handoffs docs/notes",
+                "docs/specs docs/plans docs/notes",
                 SUPERSEDING,
             ),
         )
@@ -522,21 +522,20 @@ class SkillCommandTests(unittest.TestCase):
                         command,
                         env,
                         expected,
-                        stderr_has=[f for f in ("docs/notes", "docs/handoffs") if f in folders]
-                        or None,
+                        stderr_has=["docs/notes"] if "docs/notes" in folders else None,
                     )
                 )
 
     @covers(LIBRARY, FIND_UNMIGRATED)
     def test_find_unmigrated(self, text):
-        # docs/handoffs and docs/notes are absent; the other hits still print.
+        # docs/notes is absent; the other hits still print.
         self.each_awk(
             lambda env: self.check_output(
                 text,
                 env,
                 UNMIGRATED,
                 group=False,
-                stderr_has=["docs/handoffs", "docs/notes"],
+                stderr_has=["docs/notes"],
             )
         )
 
@@ -544,7 +543,7 @@ class SkillCommandTests(unittest.TestCase):
         # Only the END clause can report a lone untyped file.
         text = block(LIBRARY, FIND_UNMIGRATED)
         command = text.replace(
-            "docs/specs docs/plans docs/handoffs docs/notes ", "docs/solo ", 1
+            "docs/specs docs/plans docs/notes ", "docs/solo ", 1
         )
         self.each_awk(
             lambda env: self.check_output(

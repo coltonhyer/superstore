@@ -47,7 +47,7 @@
     {
       "id": 2,
       "prompt": "Execute this approved multi-task plan inline. The exact spec is docs/specs/text.md; the exact plan is docs/plans/text.md. Task TEXT-1 is to make slug.py normalize outer whitespace and lowercase. Task TEXT-2 is to make summary.py format `count=<number>`. Work in .agents/execution/text-run/, adding it to a local VCS exclusion before creating it. No subagent capability is available, so perform and disclose self-review under the review contract. Verify each task before recording, reconcile and maintain execution state, then perform whole-change verification and final handoff. On success, remove only this execution scratch. notes.md and the existing excluded .agents/execution/unrelated-run/sentinel.md are unrelated work and must remain separate.",
-      "expected_output": "Complete the two tasks through verify-then-record ordering, disclose self-review because subagents are unavailable, perform final assembled-change verification and a handoff, write and record the handoff note at docs/handoffs/text.md, preserve unrelated work, and remove only the successful execution scratch after the note is recorded.",
+      "expected_output": "Complete the two tasks through verify-then-record ordering, disclose self-review because subagents are unavailable, perform final assembled-change verification and a handoff, write and record the handoff note at docs/notes/YYYY-MM-DD-text-handoff.md, preserve unrelated work, and remove only the successful execution scratch after the note is recorded.",
       "skills": [
         "subagent-execution",
         "reviewing-implementation",
@@ -105,8 +105,8 @@
         "Uses and discloses self-review rather than claiming independent review",
         "Runs a whole-change check after task work and reports final handoff evidence",
         "Keeps notes.md and unrelated-run/sentinel.md outside task revisions and removes only text-run scratch after success",
-        "After whole-change checks pass, writes docs/handoffs/text.md with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/text.md frontmatter, Plan (docs/plans/text.md, blob f770fba88ff4) and Specs (docs/specs/text.md, blob 67ab185d74ce) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions",
-        "Records docs/handoffs/text.md as its own revision before removing text-run scratch"
+        "After whole-change checks pass, writes docs/notes/YYYY-MM-DD-text-handoff.md (current date) with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/text.md frontmatter, Plan (docs/plans/text.md, blob f770fba88ff4) and Specs (docs/specs/text.md, blob 67ab185d74ce) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions",
+        "Records docs/notes/YYYY-MM-DD-text-handoff.md as its own revision before removing text-run scratch"
       ]
     },
     {
@@ -328,7 +328,7 @@
     {
       "id": 8,
       "prompt": "Execute the whole approved plan at docs/plans/greeting.md against docs/specs/greeting.md. Delegation is available and inline work was not requested. Route through subagent-execution: give one fresh implementer only GREET-1's bounded brief, read its report and complete recorded range, arrange independent review and verified fixes if needed, then finish with whole-change review and verification. Do not implement the greeting task yourself, publish, merge, or create a worker worktree unless repository instructions require it.",
-      "expected_output": "Routes default delegated whole-plan execution through sequential supervision, retaining task and whole-change verification/review boundaries without inline implementation, and writes and records the handoff note at docs/handoffs/greeting.md before scratch cleanup.",
+      "expected_output": "Routes default delegated whole-plan execution through sequential supervision, retaining task and whole-change verification/review boundaries without inline implementation, and writes and records the handoff note at docs/notes/YYYY-MM-DD-greeting-handoff.md before scratch cleanup.",
       "skills": [
         "subagent-execution",
         "reviewing-implementation",
@@ -360,7 +360,7 @@
         "Routes the primary agent through subagent-execution when delegation is available by default",
         "Dispatches a fresh bounded worker rather than implementing GREET-1 inline",
         "Requires returned report, complete task-range review, verified fixes when needed, and whole-change review and verification",
-        "After whole-change checks pass, writes docs/handoffs/greeting.md with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/greeting.md frontmatter, Plan (docs/plans/greeting.md, blob 07df7ff6b927) and Specs (docs/specs/greeting.md, blob be16f04058d4) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the fixed headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions, and records it as its own revision before removing that execution's scratch",
+        "After whole-change checks pass, writes docs/notes/YYYY-MM-DD-greeting-handoff.md (current date) with type: handoff, quoted title and description, tags copied from the plan, and implements: docs/plans/greeting.md frontmatter, Plan (docs/plans/greeting.md, blob 07df7ff6b927) and Specs (docs/specs/greeting.md, blob be16f04058d4) lines, a Change line (with no branch or pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch paths), and the fixed headings Whole-change checks, Review outcomes and dispositions, Incidental fixes, Limitations, Decisions for review, and Tactical decisions, and records it as its own revision before removing that execution's scratch",
         "Does not publish, merge, or require a worker worktree without repository instruction"
       ]
     },

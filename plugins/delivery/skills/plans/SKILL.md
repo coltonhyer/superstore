@@ -52,11 +52,14 @@ the draft folder in order: (1) a user-named path, (2) a folder `AGENTS.md` or
 `CLAUDE.md` at repository root names for plans (`Plans live in design/plans/.`),
 or (3) `docs/plans/` (kind folders are flat).
 
-Write `<folder>/<slug>.md`. The slug matches `^[a-z0-9]+(-[a-z0-9]+)*$` and is
-neither `index` nor `log`. Default to the spec's slug when targeting one
-living spec with no earlier plan; when targeting multiple specs or an existing
-living spec that already has an earlier plan, use a change-scoped slug so each
-change preserves its own plan and handoff history.
+Unless the user names a file path, default new plans to
+`<folder>/YYYY-MM-DD-<name>.md` using today's date when first drafted
+(existing undated plans remain valid and edit in place). `<name>` defaults to
+the spec's slug when targeting one living spec with no earlier plan; when
+targeting multiple specs or an existing living spec that already has an earlier
+plan, use a change-scoped slug so each change preserves its own plan and
+handoff history without overwriting earlier plans. The filename stem matches
+`^[a-z0-9]+(-[a-z0-9]+)*$` and is neither `index` nor `log`.
 
 Start the file with this frontmatter, followed by one blank line and the body:
 

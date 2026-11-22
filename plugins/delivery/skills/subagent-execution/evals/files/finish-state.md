@@ -16,5 +16,5 @@
 - **Decisions for review:** none
 - **Tactical decisions:** none
 - **Incidental fixes:** none
-- **Blockers or scope escalation:** none (whole-change review and `python3 test_finish.py` passed; handoff note written at `docs/handoffs/finish.md`)
-- **Next action:** record the handoff note at `docs/handoffs/finish.md`, then remove this scratch.
+- **Blockers or scope escalation:** none (whole-change review and `python3 test_finish.py` passed; handoff note written at `docs/notes/2026-11-01-finish-handoff.md`)
+- **Next action:** record the handoff note at `docs/notes/2026-11-01-finish-handoff.md`, then remove this scratch.

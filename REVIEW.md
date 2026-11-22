@@ -51,7 +51,7 @@ Report at most five Nits per review.
 - An eval case only because its expectations allow more than one defensible
   answer. Expectations are review questions, not ground truth.
 - A contract gap recorded Open in a writeup under `evals/notebook/writeups/`
-  or a handoff note under `docs/handoffs/`, unless the change touches
+  or a handoff note under `docs/notes/`, unless the change touches
   that passage.
 
 ## Evidence
@@ -123,7 +123,7 @@ a skill description is not evidence. For a claim about history, paste the
   expects to be changed exists at baseline, and no shared fixture already
   performs the behavior under test.
 
-### Documents and records (`docs/specs/`, `docs/plans/`, `docs/handoffs/`, `docs/notes/`, `evals/notebook/`)
+### Documents and records (`docs/specs/`, `docs/plans/`, `docs/notes/`, `evals/notebook/`)
 
 - Frontmatter follows the Library skill, and every link path resolves except
   a `supersedes` target.
@@ -133,13 +133,15 @@ a skill description is not evidence. For a claim about history, paste the
   `git --git-dir="$(jj git root)" cat-file -p <blob>`, and `jj log -r <id>`.
   Ids a writeup records as observed during a run are original observations.
 - A handoff note is its own revision with no other files. New handoff notes
-  use `<plan-slug>.md` (or `-2`, `-3`, ... on collision), committed blob
+  live in `docs/notes/` by default and use `<plan-slug>-handoff.md`
+  (prefixing `YYYY-MM-DD-` when `<plan-slug>` is undated, and appending `-2`,
+  `-3`, ... on collision), committed blob
   citations (`<path>, blob <12-char hash>`), a `Change` line without branch or
   pre-merge commit hashes, Jujutsu change IDs, revision ranges, or scratch
   paths, and the fixed headings (`Whole-change checks`, `Review outcomes and
   dispositions`, `Incidental fixes`, `Limitations`, `Decisions for review`,
   `Tactical decisions`); existing historical handoffs keep their original
-  revision citations.
+  revision citations and filenames.
 - Every sentence the change adds or edits that states commit order, counts,
   or ids agrees with `jj log`; ids a writeup records as observed during a
   run are exempt. A `BOOK.md` row matches its writeup's results table.

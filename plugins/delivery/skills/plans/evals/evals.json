@@ -15,7 +15,7 @@
     {
       "id": 2,
       "prompt": "The attached docs/specs/team-export.md is an approved specification. Create its implementation plan, inspect the repository conventions first, obtain the required plan review, and request approval. This is a plan-only request: do not begin implementation or commit anything yet.",
-      "expected_output": "Create a concise, fixture-grounded small plan at docs/plans/team-export.md with draft frontmatter, a ## Approved specifications section pinning docs/specs/team-export.md, blob a19cd83ee5ad, and a concrete completion check, obtain usable independent review or disclose one self-review fallback, then request approval without committing or executing.",
+      "expected_output": "Create a concise, fixture-grounded small plan at docs/plans/YYYY-MM-DD-team-export.md (current date) with draft frontmatter, a ## Approved specifications section pinning docs/specs/team-export.md, blob a19cd83ee5ad, and a concrete completion check, obtain usable independent review or disclose one self-review fallback, then request approval without committing or executing.",
       "files": [
         {
           "source": "files/eval-repo-readme.md",
@@ -53,7 +53,7 @@
         "Selects a defensible small task boundary with the intended deliverable, exact spec reference, relevant paths or patterns, and a concrete completion check",
         "Uses usable independent reviewer output only when actually returned or discloses the self-review fallback",
         "Does not set status: stable, write a verified line, commit, or execute the plan before explicit approval",
-        "Writes the draft to docs/plans/team-export.md with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/team-export.md frontmatter, and ## Approved specifications citing committed docs/specs/team-export.md, blob a19cd83ee5ad",
+        "Writes the draft to docs/plans/YYYY-MM-DD-team-export.md (current date) with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/team-export.md frontmatter, and ## Approved specifications citing committed docs/specs/team-export.md, blob a19cd83ee5ad",
         "Does not begin implementation for the plan-only request",
         "When the host exposes model or effort controls, sets them explicitly for the reviewer and steps one tier down from the strongest model for this ordinary plan, neither keeping the strongest tier nor going lower",
         "Starts the reviewer without forking or sharing the managing conversation"
@@ -62,7 +62,7 @@
     {
       "id": 3,
       "prompt": "I explicitly approve the specification at docs/specs/release-publishing.md; draft its implementation plan. The parser module must be available before persistence, and the command must use persisted release data. Review the plan before requesting approval; do not commit or execute it.",
-      "expected_output": "Accept the user-approved spec that has no frontmatter and write a draft plan to docs/plans/release-publishing.md whose implements names docs/specs/release-publishing.md and whose ## Approved specifications section cites committed docs/specs/release-publishing.md, blob 1ac2474b40ea, with fixture-grounded, ordered, delegatable tasks whose dependencies name the parser-to-persistence-to-command interface flow, spec references, and completion checks.",
+      "expected_output": "Accept the user-approved spec that has no frontmatter and write a draft plan to docs/plans/YYYY-MM-DD-release-publishing.md (current date) whose implements names docs/specs/release-publishing.md and whose ## Approved specifications section cites committed docs/specs/release-publishing.md, blob 1ac2474b40ea, with fixture-grounded, ordered, delegatable tasks whose dependencies name the parser-to-persistence-to-command interface flow, spec references, and completion checks.",
       "files": [
         {
           "source": "files/eval-repo-readme.md",
@@ -107,7 +107,7 @@
         "Gives every task exact specification references and a concrete completion check without requiring an arbitrary task count",
         "Reviews before requesting approval and does not commit or execute",
         "Accepts the user's explicit approval of the spec, which has no type: spec frontmatter and no status line",
-        "Writes the draft to docs/plans/release-publishing.md with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/release-publishing.md frontmatter",
+        "Writes the draft to docs/plans/YYYY-MM-DD-release-publishing.md (current date) with type: plan, quoted title and description, status: draft, tags, and implements: docs/specs/release-publishing.md frontmatter",
         "The plan's ## Approved specifications section cites committed docs/specs/release-publishing.md, blob 1ac2474b40ea"
       ]
     },
@@ -372,7 +372,7 @@
     {
       "id": 15,
       "prompt": "The living specification at docs/specs/team-export.md has been updated with the new audit_exported_at column requirement (docs/plans/team-export.md is an earlier completed plan for EXPORT-1). Create a reviewed draft plan for the newly added requirement without committing or executing.",
-      "expected_output": "Create a new draft plan under docs/plans/<change-scoped-slug>.md using a change-scoped slug rather than overwriting docs/plans/team-export.md, leave docs/plans/team-export.md untouched, and pin docs/specs/team-export.md, blob bf974871eda1 in ## Approved specifications without committing or executing.",
+      "expected_output": "Create a new draft plan under docs/plans/YYYY-MM-DD-<change-scoped-slug>.md using a current-date prefix and change-scoped slug rather than overwriting docs/plans/team-export.md, leave docs/plans/team-export.md untouched, and pin docs/specs/team-export.md, blob bf974871eda1 in ## Approved specifications without committing or executing.",
       "files": [
         {
           "source": "files/eval-repo-readme.md",
@@ -411,7 +411,7 @@
         }
       ],
       "expectations": [
-        "Creates a new draft plan under docs/plans/<change-scoped-slug>.md (not docs/plans/team-export.md) with status: draft and implements: docs/specs/team-export.md",
+        "Creates a new draft plan under docs/plans/YYYY-MM-DD-<change-scoped-slug>.md (not docs/plans/team-export.md) with status: draft and implements: docs/specs/team-export.md",
         "Leaves docs/plans/team-export.md untouched",
         "Pins committed docs/specs/team-export.md, blob bf974871eda1 in ## Approved specifications",
         "Reviews the draft plan and does not set status: stable, commit, or execute"
